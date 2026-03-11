@@ -1,0 +1,8 @@
+{
+  "name": "AstroWay",
+  "description": "Modern Indian Astrology Platform with Kundli, Horoscope, AI Astrologer, and Real-time Consultations.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
