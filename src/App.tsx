@@ -9,6 +9,10 @@ import {
 import { jsPDF } from "jspdf";
 import { Astrologer, User as UserType, ZODIAC_SIGNS, Category, Vendor, Product, Package } from './types';
 import { GoogleGenAI } from "@google/genai";
+import { storageApi, initStorage } from './services/storage';
+
+// Initialize local storage with seed data
+initStorage();
 
 let ai: any = null;
 try {
@@ -90,45 +94,15 @@ export default function App() {
   }, [astroProfile]);
 
   const fetchUser = (email = 'guest@example.com') => {
-    fetch(`/api/user/${email}`)
-      .then(res => {
-        if (!res.ok) throw new Error('Network response was not ok');
-        const contentType = res.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          throw new TypeError("Oops, we haven't got JSON!");
-        }
-        return res.json();
-      })
-      .then(setUser)
-      .catch(err => console.error("Fetch user failed:", err));
+    storageApi.getUser(email).then(setUser);
   };
 
   const fetchAstrologers = () => {
-    fetch('/api/astrologers')
-      .then(res => {
-        if (!res.ok) throw new Error('Network response was not ok');
-        const contentType = res.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          throw new TypeError("Oops, we haven't got JSON!");
-        }
-        return res.json();
-      })
-      .then(setAstrologers)
-      .catch(err => console.error("Fetch astrologers failed:", err));
+    storageApi.getAstrologers().then(setAstrologers);
   };
 
   const fetchTestimonials = () => {
-    fetch('/api/testimonials')
-      .then(res => {
-        if (!res.ok) throw new Error('Network response was not ok');
-        const contentType = res.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          throw new TypeError("Oops, we haven't got JSON!");
-        }
-        return res.json();
-      })
-      .then(setTestimonials)
-      .catch(err => console.error("Fetch testimonials failed:", err));
+    storageApi.getTestimonials().then(setTestimonials);
   };
 
   useEffect(() => {
