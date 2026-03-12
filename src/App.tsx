@@ -1056,7 +1056,7 @@ function Kundli({ user, onViewPackages }: { user: UserType | null, onViewPackage
   );
 }
 
-function CallInterface({ session, onEnd, isAstrologer }: { session: any, onEnd: (duration: number, cost: number) => void, isAstrologer: boolean }) {
+function CallInterface({ session, onEnd, isAstrologer, userBalance }: { session: any, onEnd: (duration: number, cost: number) => void, isAstrologer: boolean, userBalance?: number }) {
   const [duration, setDuration] = useState(0);
   const [cost, setCost] = useState(0);
 
@@ -1065,12 +1065,19 @@ function CallInterface({ session, onEnd, isAstrologer }: { session: any, onEnd: 
       setDuration(d => {
         const newDuration = d + 1;
         const effectiveRate = session.rate_per_min * (1 - (session.discount_percent / 100));
-        setCost(Math.ceil(newDuration / 60) * effectiveRate);
+        const currentCost = Math.ceil(newDuration / 60) * effectiveRate;
+        setCost(currentCost);
+        
+        if (!isAstrologer && userBalance !== undefined && currentCost >= userBalance) {
+          alert("Insufficient balance. Ending call.");
+          onEnd(newDuration, currentCost);
+        }
+        
         return newDuration;
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [session]);
+  }, [session, isAstrologer, userBalance, onEnd]);
 
   const formatTime = (s: number) => {
     const mins = Math.floor(s / 60);
@@ -1206,11 +1213,11 @@ function Chat({ astrologers, user, onRecharge }: { astrologers: Astrologer[], us
     }
   };
 
-  const endCall = async (callId: number) => {
+  const endCall = async (callId: number, durationSeconds?: number) => {
     const res = await localFetch('/api/calls/end', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ callId })
+      body: JSON.stringify({ callId, durationMinutes: (durationSeconds || 0) / 60 })
     });
     if (res.ok) {
       const { cost } = await res.json();
@@ -1255,7 +1262,8 @@ function Chat({ astrologers, user, onRecharge }: { astrologers: Astrologer[], us
       <CallInterface 
         session={{ ...activeCall, astrologer_name: activeCall.astrologer.name }} 
         isAstrologer={false} 
-        onEnd={() => endCall(activeCall.callId)} 
+        userBalance={user?.wallet_balance}
+        onEnd={(duration) => endCall(activeCall.callId, duration)} 
       />
     );
   }
@@ -1538,7 +1546,7 @@ function AstroProfileModal({ astro, onClose, onStartChat, onStartCall, canChat }
   );
 }
 
-function ChatWindow({ session, user, onEnd }: { session: { sessionId: number, astrologer: Astrologer }, user: UserType | null, onEnd: (cost: number) => void }) {
+function ChatWindow({ session, user, onEnd, isAstrologer }: { session: { sessionId: number, astrologer: Astrologer }, user: UserType | null, onEnd: (cost: number) => void, isAstrologer?: boolean }) {
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState('');
   const [seconds, setSeconds] = useState(0);
@@ -1547,7 +1555,17 @@ function ChatWindow({ session, user, onEnd }: { session: { sessionId: number, as
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setSeconds(s => s + 1);
+      setSeconds(s => {
+        const newSeconds = s + 1;
+        const currentCost = Math.ceil(newSeconds / 60) * session.astrologer.price_per_min;
+        
+        if (!isAstrologer && user && currentCost >= user.wallet_balance) {
+          alert("Insufficient balance. Ending chat.");
+          endChat(newSeconds);
+        }
+        
+        return newSeconds;
+      });
       
       // Check for inactivity (3 minutes = 180 seconds)
       if (Date.now() - lastActivity > 180000) {
@@ -1555,7 +1573,18 @@ function ChatWindow({ session, user, onEnd }: { session: { sessionId: number, as
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [lastActivity]);
+  }, [lastActivity, user, session, isAstrologer]);
+
+  useEffect(() => {
+    const pollMessages = setInterval(async () => {
+      const res = await localFetch(`/api/chat/messages/${session.sessionId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setMessages(data);
+      }
+    }, 2000);
+    return () => clearInterval(pollMessages);
+  }, [session.sessionId]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -1565,39 +1594,27 @@ function ChatWindow({ session, user, onEnd }: { session: { sessionId: number, as
     e?.preventDefault();
     if (!input.trim()) return;
 
-    const newMsg = { sender_type: 'user', message: input, timestamp: new Date() };
-    setMessages([...messages, newMsg]);
+    const senderType = isAstrologer ? 'astrologer' : 'user';
+    const newMsg = { sender_type: senderType, message: input, timestamp: new Date().toISOString() };
+    
+    // Optimistic update
+    setMessages(prev => [...prev, newMsg]);
     setInput('');
     setLastActivity(Date.now());
 
     await localFetch('/api/chat/message', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId: session.sessionId, senderType: 'user', message: input })
+      body: JSON.stringify({ sessionId: session.sessionId, senderType, message: input })
     });
 
-    // Simulate astrologer response
-    setTimeout(async () => {
-      const responses = [
-        "I see. Let me check your charts.",
-        "Your planetary positions suggest a positive change soon.",
-        "Could you provide your place of birth for more accuracy?",
-        "I understand your concern. Let's look deeper into this."
-      ];
-      const reply = responses[Math.floor(Math.random() * responses.length)];
-      const replyMsg = { sender_type: 'astrologer', message: reply, timestamp: new Date() };
-      setMessages(prev => [...prev, replyMsg]);
-      
-      await localFetch('/api/chat/message', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId: session.sessionId, senderType: 'astrologer', message: reply })
-      });
-    }, 2000);
+    // If user is chatting and it's a demo, we can still have simulated responses if no one is on the other side
+    // But for "non stop chat" between real user/astro roles, we rely on polling.
   };
 
-  const endChat = async () => {
-    const durationMinutes = seconds / 60;
+  const endChat = async (overrideSeconds?: number) => {
+    const finalSeconds = overrideSeconds !== undefined ? overrideSeconds : seconds;
+    const durationMinutes = finalSeconds / 60;
     const res = await localFetch('/api/chat/end', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1636,8 +1653,8 @@ function ChatWindow({ session, user, onEnd }: { session: { sessionId: number, as
 
       <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-stone-50">
         {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.sender_type === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[70%] p-3 rounded-2xl text-sm shadow-sm ${msg.sender_type === 'user' ? 'bg-saffron text-white rounded-tr-none' : 'bg-white text-slate-800 rounded-tl-none'}`}>
+          <div key={i} className={`flex ${((msg.sender_type === 'user' && !isAstrologer) || (msg.sender_type === 'astrologer' && isAstrologer)) ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[70%] p-3 rounded-2xl text-sm shadow-sm ${((msg.sender_type === 'user' && !isAstrologer) || (msg.sender_type === 'astrologer' && isAstrologer)) ? 'bg-saffron text-white rounded-tr-none' : 'bg-white text-slate-800 rounded-tl-none'}`}>
               <p>{msg.message}</p>
               <span className="text-[10px] opacity-50 mt-1 block">{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             </div>
@@ -3713,11 +3730,11 @@ function AstrologerPanel({ profile, onUpdate, onLogout }: { profile: any, onUpda
     setCallRequests([]);
   };
 
-  const endCall = async (callId: number) => {
+  const endCall = async (callId: number, durationSeconds?: number) => {
     const res = await localFetch('/api/calls/end', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ callId })
+      body: JSON.stringify({ callId, durationMinutes: (durationSeconds || 0) / 60 })
     });
     if (res.ok) {
       setActiveCall(null);
@@ -3743,11 +3760,11 @@ function AstrologerPanel({ profile, onUpdate, onLogout }: { profile: any, onUpda
   };
 
   if (activeChat) {
-    return <ChatWindow session={activeChat} user={{ name: 'User' } as any} onEnd={() => setActiveChat(null)} />;
+    return <ChatWindow session={activeChat} user={{ name: 'User', wallet_balance: 999999 } as any} isAstrologer={true} onEnd={() => setActiveChat(null)} />;
   }
 
   if (activeCall) {
-    return <CallInterface session={activeCall} isAstrologer={true} onEnd={() => endCall(activeCall.id)} />;
+    return <CallInterface session={activeCall} isAstrologer={true} onEnd={(duration) => endCall(activeCall.id, duration)} />;
   }
 
   return (

@@ -212,10 +212,95 @@ export const storageApi = {
     if (user.wallet_balance < astro.price_per_min * 5) throw new Error("Insufficient balance");
 
     const requests = get(STORAGE_KEYS.CHAT_REQUESTS);
-    const newRequest = { id: Date.now(), user_id: user.id, astrologer_id: astrologerId, status: 'accepted', timestamp: new Date().toISOString() };
+    const newRequest = { 
+      id: Date.now(), 
+      user_id: user.id, 
+      user_name: user.name,
+      astrologer_id: astrologerId, 
+      status: 'pending', 
+      timestamp: new Date().toISOString() 
+    };
     requests.push(newRequest);
     save(STORAGE_KEYS.CHAT_REQUESTS, requests);
     return { requestId: newRequest.id };
+  },
+  getChatRequests: async (astrologerId: number) => {
+    const requests = get(STORAGE_KEYS.CHAT_REQUESTS);
+    return requests.filter((r: any) => r.astrologer_id === astrologerId && r.status === 'pending');
+  },
+  updateChatStatus: async (requestId: number, action: 'accepted' | 'rejected') => {
+    const requests = get(STORAGE_KEYS.CHAT_REQUESTS);
+    const index = requests.findIndex((r: any) => r.id === requestId);
+    if (index !== -1) {
+      requests[index].status = action;
+      save(STORAGE_KEYS.CHAT_REQUESTS, requests);
+      return { success: true, sessionId: requestId };
+    }
+    throw new Error("Request not found");
+  },
+  getChatStatus: async (requestId: number) => {
+    const requests = get(STORAGE_KEYS.CHAT_REQUESTS);
+    const req = requests.find((r: any) => r.id === requestId);
+    return req ? { status: req.status, sessionId: req.id } : { status: 'not_found' };
+  },
+
+  // Calls
+  requestCall: async (userEmail: string, astrologerId: number) => {
+    const user = await storageApi.getUser(userEmail);
+    const astros = get(STORAGE_KEYS.ASTROLOGERS);
+    const astro = astros.find((a: any) => a.id === astrologerId);
+    if (!user || !astro) throw new Error("Not found");
+    
+    const calls = get(STORAGE_KEYS.CHAT_REQUESTS); // Reusing chat requests for call requests in mock
+    const newCall = { 
+      id: Date.now(), 
+      user_id: user.id, 
+      user_name: user.name,
+      astrologer_id: astrologerId, 
+      status: 'pending', 
+      type: 'call',
+      timestamp: new Date().toISOString() 
+    };
+    calls.push(newCall);
+    save(STORAGE_KEYS.CHAT_REQUESTS, calls);
+    return { callId: newCall.id };
+  },
+  getPendingCalls: async (astrologerId: number) => {
+    const requests = get(STORAGE_KEYS.CHAT_REQUESTS);
+    return requests.filter((r: any) => r.astrologer_id === astrologerId && r.status === 'pending' && r.type === 'call');
+  },
+  updateCallStatus: async (callId: number, action: 'accepted' | 'rejected') => {
+    const requests = get(STORAGE_KEYS.CHAT_REQUESTS);
+    const index = requests.findIndex((r: any) => r.id === callId);
+    if (index !== -1) {
+      requests[index].status = action === 'accepted' ? 'active' : 'rejected';
+      save(STORAGE_KEYS.CHAT_REQUESTS, requests);
+      return { success: true };
+    }
+    throw new Error("Call not found");
+  },
+  getCallStatus: async (callId: number) => {
+    const requests = get(STORAGE_KEYS.CHAT_REQUESTS);
+    const req = requests.find((r: any) => r.id === callId);
+    return req ? { status: req.status } : { status: 'not_found' };
+  },
+
+  saveChatMessage: async (sessionId: number, senderType: string, message: string) => {
+    const messages = get(STORAGE_KEYS.CHAT_MESSAGES);
+    const newMsg = {
+      id: Date.now(),
+      sessionId,
+      sender_type: senderType,
+      message,
+      timestamp: new Date().toISOString()
+    };
+    messages.push(newMsg);
+    save(STORAGE_KEYS.CHAT_MESSAGES, messages);
+    return { success: true };
+  },
+  getChatMessages: async (sessionId: number) => {
+    const messages = get(STORAGE_KEYS.CHAT_MESSAGES);
+    return messages.filter((m: any) => m.sessionId === sessionId);
   },
 
   // Generic Getters
@@ -399,15 +484,70 @@ export const apiFetch = async (url: string, init?: any): Promise<any> => {
 
   // Chat & Calls
   if (path === 'chat/start') return storageApi.requestChat(body.email, body.astrologerId);
-  if (path.startsWith('chat/status/')) return { status: 'accepted', sessionId: Date.now() };
-  if (path === 'chat/message') return { success: true };
-  if (path === 'chat/end') return { success: true, cost: 50 };
-  if (path === 'calls/request') return { callId: Date.now() };
-  if (path.startsWith('calls/status/')) return { status: 'active' };
-  if (path === 'calls/end') return { success: true, cost: 100 };
-  if (path.startsWith('calls/pending/')) return [];
+  if (path.startsWith('chat/status/')) return storageApi.getChatStatus(parseInt(path.split('/')[2]));
+  if (path === 'astrologer/request/action') return storageApi.updateChatStatus(body.requestId, body.action);
+  if (path === 'chat/message') return storageApi.saveChatMessage(body.sessionId, body.senderType, body.message);
+  if (path.startsWith('chat/messages/')) return storageApi.getChatMessages(parseInt(path.split('/')[2]));
+  if (path === 'chat/end') {
+    const { sessionId, durationMinutes } = body;
+    const requests = get(STORAGE_KEYS.CHAT_REQUESTS);
+    const req = requests.find((r: any) => r.id === sessionId);
+    if (req) {
+      const astros = get(STORAGE_KEYS.ASTROLOGERS);
+      const astro = astros.find((a: any) => a.id === req.astrologer_id);
+      if (astro) {
+        const cost = Math.ceil(durationMinutes) * astro.price_per_min;
+        const users = get(STORAGE_KEYS.USERS);
+        const userIndex = users.findIndex((u: any) => u.id === req.user_id);
+        if (userIndex !== -1) {
+          users[userIndex].wallet_balance -= cost;
+          save(STORAGE_KEYS.USERS, users);
+          
+          // Also add to astrologer balance
+          const astroIndex = astros.findIndex((a: any) => a.id === req.astrologer_id);
+          if (astroIndex !== -1) {
+            astros[astroIndex].wallet_balance = (astros[astroIndex].wallet_balance || 0) + cost;
+            save(STORAGE_KEYS.ASTROLOGERS, astros);
+          }
+        }
+        return { success: true, cost };
+      }
+    }
+    return { success: true, cost: 0 };
+  }
+  
+  if (path === 'calls/request') return storageApi.requestCall(body.userEmail, body.astrologerId);
+  if (path.startsWith('calls/status/')) return storageApi.getCallStatus(parseInt(path.split('/')[2]));
+  if (path === 'calls/accepted') return storageApi.updateCallStatus(body.callId, 'accepted');
+  if (path === 'calls/rejected') return storageApi.updateCallStatus(body.callId, 'rejected');
+  if (path === 'calls/end') {
+    const { callId, durationMinutes } = body;
+    const requests = get(STORAGE_KEYS.CHAT_REQUESTS);
+    const req = requests.find((r: any) => r.id === callId);
+    if (req) {
+      const astros = get(STORAGE_KEYS.ASTROLOGERS);
+      const astro = astros.find((a: any) => a.id === req.astrologer_id);
+      if (astro) {
+        const cost = Math.ceil(durationMinutes || 1) * astro.price_per_min;
+        const users = get(STORAGE_KEYS.USERS);
+        const userIndex = users.findIndex((u: any) => u.id === req.user_id);
+        if (userIndex !== -1) {
+          users[userIndex].wallet_balance -= cost;
+          save(STORAGE_KEYS.USERS, users);
 
-  // Admin
+          const astroIndex = astros.findIndex((a: any) => a.id === req.astrologer_id);
+          if (astroIndex !== -1) {
+            astros[astroIndex].wallet_balance = (astros[astroIndex].wallet_balance || 0) + cost;
+            save(STORAGE_KEYS.ASTROLOGERS, astros);
+          }
+        }
+        return { success: true, cost };
+      }
+    }
+    return { success: true, cost: 0 };
+  }
+  if (path.startsWith('calls/pending/')) return storageApi.getPendingCalls(parseInt(path.split('/')[2]));
+  if (path.startsWith('astrologer/') && path.endsWith('/requests')) return storageApi.getChatRequests(parseInt(path.split('/')[1]));
   if (path.startsWith('admin/')) {
     if (path === 'admin/pending-astrologers') return storageApi.getPendingAstrologers();
     if (path === 'admin/pending-users') return storageApi.getPendingUsers();
