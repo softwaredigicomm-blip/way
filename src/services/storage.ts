@@ -1,22 +1,22 @@
 import { Astrologer, User, Category, Vendor, Product, Package } from '../types';
 
 const STORAGE_KEYS = {
-  USERS: 'astroway_db_users',
-  ASTROLOGERS: 'astroway_db_astrologers',
-  CATEGORIES: 'astroway_db_categories',
-  VENDORS: 'astroway_db_vendors',
-  PRODUCTS: 'astroway_db_products',
-  PACKAGES: 'astroway_db_packages',
-  REVIEWS: 'astroway_db_reviews',
-  TRANSACTIONS: 'astroway_db_transactions',
-  CHAT_MESSAGES: 'astroway_db_chat_messages',
-  CHAT_REQUESTS: 'astroway_db_chat_requests',
-  PAYOUT_REQUESTS: 'astroway_db_payout_requests',
-  PUJA: 'astroway_db_puja',
-  PRODUCT_REVIEWS: 'astroway_db_product_reviews',
-  CALL_SESSIONS: 'astroway_db_call_sessions',
-  TESTIMONIALS: 'astroway_db_testimonials',
-  USER_PACKAGES: 'astroway_db_user_packages'
+  USERS: 'astroway_db_users_v2',
+  ASTROLOGERS: 'astroway_db_astrologers_v2',
+  CATEGORIES: 'astroway_db_categories_v2',
+  VENDORS: 'astroway_db_vendors_v2',
+  PRODUCTS: 'astroway_db_products_v2',
+  PACKAGES: 'astroway_db_packages_v2',
+  REVIEWS: 'astroway_db_reviews_v2',
+  TRANSACTIONS: 'astroway_db_transactions_v2',
+  CHAT_MESSAGES: 'astroway_db_chat_messages_v2',
+  CHAT_REQUESTS: 'astroway_db_chat_requests_v2',
+  PAYOUT_REQUESTS: 'astroway_db_payout_requests_v2',
+  PUJA: 'astroway_db_puja_v2',
+  PRODUCT_REVIEWS: 'astroway_db_product_reviews_v2',
+  CALL_SESSIONS: 'astroway_db_call_sessions_v2',
+  TESTIMONIALS: 'astroway_db_testimonials_v2',
+  USER_PACKAGES: 'astroway_db_user_packages_v2'
 };
 
 // Helper to get data from localStorage
@@ -81,7 +81,11 @@ const SEED_DATA = {
   ],
   users: [
     { id: 1, email: 'admin@astroway.com', name: 'Admin User', role: 'admin', wallet_balance: 1000, status: 'approved', is_active: true },
-    { id: 2, email: 'guest@example.com', name: 'Guest User', role: 'user', wallet_balance: 100, status: 'approved', is_active: true }
+    { id: 2, email: 'user@example.com', name: 'Guest User', role: 'user', wallet_balance: 100, status: 'approved', is_active: true },
+    { id: 3, email: 'vendor@example.com', name: 'Vendor User', role: 'vendor', wallet_balance: 0, status: 'approved', is_active: true }
+  ],
+  vendors: [
+    { id: 1, user_id: 3, name: "Astro Shop", status: 'approved', is_active: true, email: 'vendor@example.com' }
   ],
   categories: [
     { id: 1, name: 'Vedic Astrology', is_active: true },
@@ -120,6 +124,10 @@ const SEED_DATA = {
   testimonials: [
     { id: 1, name: "Rahul Sharma", role: "Business Owner", content: "The predictions were spot on. Helped me make a crucial decision for my startup.", rating: 5, image_url: "", is_active: 1 },
     { id: 2, name: "Priya Singh", role: "Software Engineer", content: "Acharya Sunita's numerology reading changed my perspective on my career path.", rating: 5, image_url: "", is_active: 1 }
+  ],
+  products: [
+    { id: 1, vendor_id: 1, name: "Natural Rudraksha Mala", description: "Authentic 108 beads Panchmukhi Rudraksha mala for meditation and peace.", price: 299, category: "Spiritual Items", status: "approved", image_url: "https://picsum.photos/seed/mala/400/400" },
+    { id: 2, vendor_id: 1, name: "Brass Ganesha Idol", description: "Beautifully crafted brass Ganesha idol for your home altar or office desk.", price: 899, category: "Idols", status: "approved", image_url: "https://picsum.photos/seed/ganesha/400/400" }
   ]
 };
 
@@ -130,6 +138,8 @@ export const initStorage = () => {
   if (get(STORAGE_KEYS.CATEGORIES).length === 0) save(STORAGE_KEYS.CATEGORIES, SEED_DATA.categories);
   if (get(STORAGE_KEYS.PACKAGES).length === 0) save(STORAGE_KEYS.PACKAGES, SEED_DATA.packages);
   if (get(STORAGE_KEYS.TESTIMONIALS).length === 0) save(STORAGE_KEYS.TESTIMONIALS, SEED_DATA.testimonials);
+  if (get(STORAGE_KEYS.VENDORS).length === 0) save(STORAGE_KEYS.VENDORS, SEED_DATA.vendors || []);
+  if (get(STORAGE_KEYS.PRODUCTS).length === 0) save(STORAGE_KEYS.PRODUCTS, SEED_DATA.products || []);
 };
 
 // API Mock Implementation
@@ -142,7 +152,7 @@ export const storageApi = {
   registerUser: async (data: any) => {
     const users = get(STORAGE_KEYS.USERS);
     if (users.find((u: any) => u.email === data.email)) throw new Error("Email already exists");
-    const newUser = { ...data, id: Date.now(), role: 'user', wallet_balance: 100, status: 'pending', is_active: false };
+    const newUser = { ...data, id: Date.now(), role: 'user', wallet_balance: 100, status: 'approved', is_active: true };
     users.push(newUser);
     save(STORAGE_KEYS.USERS, users);
     return newUser;
@@ -164,7 +174,7 @@ export const storageApi = {
   },
   registerAstrologer: async (data: any) => {
     const astros = get(STORAGE_KEYS.ASTROLOGERS);
-    const newAstro = { ...data, id: Date.now(), status: 'pending', is_active: false, wallet_balance: 0, rating: 5.0 };
+    const newAstro = { ...data, id: Date.now(), status: 'approved', is_active: true, wallet_balance: 0, rating: 5.0 };
     astros.push(newAstro);
     save(STORAGE_KEYS.ASTROLOGERS, astros);
     return newAstro;
@@ -202,10 +212,10 @@ export const storageApi = {
     if (user.wallet_balance < astro.price_per_min * 5) throw new Error("Insufficient balance");
 
     const requests = get(STORAGE_KEYS.CHAT_REQUESTS);
-    const newRequest = { id: Date.now(), user_id: user.id, astrologer_id: astrologerId, status: 'pending', timestamp: new Date().toISOString() };
+    const newRequest = { id: Date.now(), user_id: user.id, astrologer_id: astrologerId, status: 'accepted', timestamp: new Date().toISOString() };
     requests.push(newRequest);
     save(STORAGE_KEYS.CHAT_REQUESTS, requests);
-    return newRequest;
+    return { requestId: newRequest.id };
   },
 
   // Generic Getters
@@ -285,14 +295,14 @@ export const storageApi = {
   },
   registerVendor: async (data: any) => {
     const vendors = get(STORAGE_KEYS.VENDORS);
-    const newVendor = { ...data, id: Date.now(), status: 'pending', is_active: false };
+    const newVendor = { ...data, id: Date.now(), status: 'approved', is_active: true };
     vendors.push(newVendor);
     save(STORAGE_KEYS.VENDORS, vendors);
     return newVendor;
   },
   addProduct: async (data: any) => {
     const products = get(STORAGE_KEYS.PRODUCTS);
-    const newProduct = { ...data, id: Date.now(), status: 'pending' };
+    const newProduct = { ...data, id: Date.now(), status: 'approved' };
     products.push(newProduct);
     save(STORAGE_KEYS.PRODUCTS, products);
     return newProduct;
@@ -389,12 +399,12 @@ export const apiFetch = async (url: string, init?: any): Promise<any> => {
 
   // Chat & Calls
   if (path === 'chat/start') return storageApi.requestChat(body.email, body.astrologerId);
-  if (path.startsWith('chat/status/')) return { status: 'pending' };
+  if (path.startsWith('chat/status/')) return { status: 'accepted', sessionId: Date.now() };
   if (path === 'chat/message') return { success: true };
-  if (path === 'chat/end') return { success: true };
+  if (path === 'chat/end') return { success: true, cost: 50 };
   if (path === 'calls/request') return { callId: Date.now() };
-  if (path.startsWith('calls/status/')) return { status: 'connected' };
-  if (path === 'calls/end') return { success: true };
+  if (path.startsWith('calls/status/')) return { status: 'active' };
+  if (path === 'calls/end') return { success: true, cost: 100 };
   if (path.startsWith('calls/pending/')) return [];
 
   // Admin

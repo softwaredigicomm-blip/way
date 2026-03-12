@@ -41,6 +41,21 @@ try {
   console.error("Failed to initialize GoogleGenAI:", e);
 }
 
+const MOCK_HOROSCOPES: Record<string, string> = {
+  'Aries': 'Today is a day of high energy and new beginnings for Aries. Your ruling planet Mars is in a favorable position, boosting your confidence in career matters. In love, be patient with your partner. Health looks stable, but avoid overexertion.',
+  'Taurus': 'Focus on financial stability today. You might receive some unexpected gains. In relationships, communication is key. Health-wise, a balanced diet will work wonders.',
+  'Gemini': 'Your social life is buzzing! It is a great time to network. Career-wise, a new project might come your way. Love life is harmonious. Take care of your respiratory health.',
+  'Cancer': 'Emotional depth is your strength today. Trust your intuition in career decisions. Family time will bring joy. Practice meditation for mental peace.',
+  'Leo': 'You are in the spotlight! Your creativity is at its peak. Career growth is indicated. In love, express your feelings openly. Stay hydrated.',
+  'Virgo': 'Attention to detail will help you excel at work. A good day for planning future goals. In relationships, avoid being overly critical. Light exercise is recommended.',
+  'Libra': 'Balance is your mantra today. Social gatherings will be pleasant. Career-wise, collaboration is favored. Love life is romantic. Watch your back posture.',
+  'Scorpio': 'Intensity and passion drive you today. A breakthrough in a long-standing issue is likely. In love, deep connections are formed. Focus on detoxing.',
+  'Sagittarius': 'Adventure calls! A great day for learning something new. Career prospects are bright. In relationships, keep things light and fun. Spend time outdoors.',
+  'Capricorn': 'Hard work pays off today. Your discipline is noticed by superiors. In love, stability is important. Take care of your joints.',
+  'Aquarius': 'Innovation is your key to success. Share your unique ideas at work. Socially, you are very active. Love life brings surprises. Improve your sleep cycle.',
+  'Pisces': 'Your dreams provide valuable insights. A creative day for artistic pursuits. In love, empathy strengthens bonds. Swimming or water-based activities are good for health.'
+};
+
 export default function App() {
   const [user, setUser] = useState<UserType | null>(() => {
     try {
@@ -609,13 +624,22 @@ function Horoscope() {
   const fetchHoroscope = async (sign: string) => {
     setLoading(true);
     try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: `Provide a detailed daily horoscope for ${sign} in a professional, spiritual, and encouraging tone. Include categories for Love, Career, and Health.`,
-      });
-      setPrediction(response.text || 'Unable to fetch prediction.');
+      if (ai) {
+        const response = await ai.models.generateContent({
+          model: "gemini-3-flash-preview",
+          contents: `Provide a detailed daily horoscope for ${sign} in a professional, spiritual, and encouraging tone. Include categories for Love, Career, and Health.`,
+        });
+        setPrediction(response.text || 'Unable to fetch prediction.');
+      } else {
+        // Fallback to mock data if AI is not available
+        setTimeout(() => {
+          setPrediction(MOCK_HOROSCOPES[sign] || 'The stars are silent today.');
+          setLoading(false);
+        }, 1000);
+        return;
+      }
     } catch (error) {
-      setPrediction('Error connecting to the stars.');
+      setPrediction(MOCK_HOROSCOPES[sign] || 'Error connecting to the stars.');
     }
     setLoading(false);
   };
@@ -734,11 +758,30 @@ function Kundli({ user, onViewPackages }: { user: UserType | null, onViewPackage
          Include: Guna Milan score (out of 36), Manglik Dosha analysis, and a final compatibility verdict.`;
 
     try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt,
-      });
-      setReport(response.text || 'Unable to generate report.');
+      if (ai) {
+        const response = await ai.models.generateContent({
+          model: "gemini-3-flash-preview",
+          contents: prompt,
+        });
+        setReport(response.text || 'Unable to generate report.');
+      } else {
+        // Fallback to mock data if AI is not available
+        setTimeout(() => {
+          const mockReport = activeTab === 'making' 
+            ? `Vedic Kundli Analysis for ${formData.name}:
+               - Ascendant: Leo (Simha) - You possess a natural leadership quality and a warm heart.
+               - Moon Sign: Taurus (Vrishabha) - You are emotionally stable and value security.
+               - Nakshatra: Rohini - You are charming, creative, and have a love for the arts.
+               - Planetary Positions: Sun in 10th house indicates career success. Jupiter in 9th house brings good fortune and spiritual growth.`
+            : `Compatibility Analysis for ${formData.name} and ${formData.partnerName}:
+               - Guna Milan Score: 28/36 (Excellent Compatibility)
+               - Manglik Dosha: Both are Non-Manglik, ensuring a smooth marital life.
+               - Verdict: This is a highly compatible match with strong emotional and spiritual bonding.`;
+          setReport(mockReport);
+          setLoading(false);
+        }, 1500);
+        return;
+      }
     } catch (error) {
       setReport('Error connecting to the celestial servers.');
     }
@@ -3144,7 +3187,20 @@ function UserLogin({ onLogin }: { onLogin: (email: string) => void }) {
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-serif font-bold text-deep-blue">User & Vendor Login</h2>
         <p className="text-slate-500 text-sm">Login to consult experts or manage your shop</p>
-        <p className="text-[10px] text-saffron font-bold bg-saffron/5 py-1 px-2 rounded-lg">Hint: ID: user or vendor_user | Pass: 12345</p>
+        <div className="flex flex-col gap-2 mt-4">
+          <button 
+            onClick={() => { setId('user@example.com'); setPassword('12345'); }}
+            className="text-[10px] text-saffron font-bold bg-saffron/5 py-1 px-2 rounded-lg hover:bg-saffron/10 transition-all"
+          >
+            Demo User: user@example.com | Pass: 12345
+          </button>
+          <button 
+            onClick={() => { setId('vendor@example.com'); setPassword('12345'); }}
+            className="text-[10px] text-saffron font-bold bg-saffron/5 py-1 px-2 rounded-lg hover:bg-saffron/10 transition-all"
+          >
+            Demo Vendor: vendor@example.com | Pass: 12345
+          </button>
+        </div>
       </div>
       <form onSubmit={handleLogin} className="space-y-4">
         <div className="space-y-1">
