@@ -9,10 +9,27 @@ import {
 import { jsPDF } from "jspdf";
 import { Astrologer, User as UserType, ZODIAC_SIGNS, Category, Vendor, Product, Package } from './types';
 import { GoogleGenAI } from "@google/genai";
-import { storageApi, initStorage } from './services/storage';
+import { storageApi, initStorage, apiFetch } from './services/storage';
 
 // Initialize local storage with seed data
 initStorage();
+
+const localFetch = async (url: string, init?: any) => {
+  try {
+    const data = await apiFetch(url, init);
+    return {
+      ok: true,
+      json: async () => data,
+      text: async () => JSON.stringify(data)
+    };
+  } catch (error: any) {
+    return {
+      ok: false,
+      json: async () => ({ error: error.message }),
+      text: async () => JSON.stringify({ error: error.message })
+    };
+  }
+};
 
 let ai: any = null;
 try {
@@ -94,15 +111,15 @@ export default function App() {
   }, [astroProfile]);
 
   const fetchUser = (email = 'guest@example.com') => {
-    storageApi.getUser(email).then(setUser);
+    apiFetch(`/api/user/${email}`).then(setUser);
   };
 
   const fetchAstrologers = () => {
-    storageApi.getAstrologers().then(setAstrologers);
+    apiFetch('/api/astrologers').then(setAstrologers);
   };
 
   const fetchTestimonials = () => {
-    storageApi.getTestimonials().then(setTestimonials);
+    apiFetch('/api/testimonials').then(setTestimonials);
   };
 
   useEffect(() => {
@@ -163,7 +180,7 @@ export default function App() {
       case 'astrologer':
         return isAstroAuthenticated && astroProfile ? (
           <AstrologerPanel profile={astroProfile} onUpdate={() => {
-            fetch(`/api/astrologer/${astroProfile.id}/profile`).then(r => r.json()).then(setAstroProfile);
+            localFetch(`/api/astrologer/${astroProfile.id}/profile`).then(r => r.json()).then(setAstroProfile);
           }} onLogout={handleLogout} />
         ) : (
           <AstrologerLogin 
@@ -680,7 +697,7 @@ function Kundli({ user, onViewPackages }: { user: UserType | null, onViewPackage
 
   useEffect(() => {
     if (user?.email) {
-      fetch(`/api/user/${user.email}/packages`)
+      localFetch(`/api/user/${user.email}/packages`)
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) setUserPackages(data);
@@ -1071,7 +1088,7 @@ function Chat({ astrologers, user, onRecharge }: { astrologers: Astrologer[], us
   const [isCalling, setIsCalling] = useState(false);
 
   const handleRecharge = async () => {
-    await fetch('/api/user/recharge', {
+    await localFetch('/api/user/recharge', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: user?.email, amount: rechargeAmount })
@@ -1082,7 +1099,7 @@ function Chat({ astrologers, user, onRecharge }: { astrologers: Astrologer[], us
 
   const startChat = async (astro: Astrologer) => {
     try {
-      const res = await fetch('/api/chat/start', {
+      const res = await localFetch('/api/chat/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: user?.email, astrologerId: astro.id })
@@ -1090,7 +1107,7 @@ function Chat({ astrologers, user, onRecharge }: { astrologers: Astrologer[], us
       if (res.ok) {
         const { requestId } = await res.json();
         const poll = setInterval(async () => {
-          const statusRes = await fetch(`/api/chat/status/${requestId}`);
+          const statusRes = await localFetch(`/api/chat/status/${requestId}`);
           const { status, sessionId } = await statusRes.json();
           if (status === 'accepted') {
             clearInterval(poll);
@@ -1111,7 +1128,7 @@ function Chat({ astrologers, user, onRecharge }: { astrologers: Astrologer[], us
 
   const startCall = async (astro: Astrologer) => {
     try {
-      const res = await fetch('/api/calls/request', {
+      const res = await localFetch('/api/calls/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userEmail: user?.email, astrologerId: astro.id })
@@ -1120,7 +1137,7 @@ function Chat({ astrologers, user, onRecharge }: { astrologers: Astrologer[], us
         const { callId } = await res.json();
         setIsCalling(true);
         const poll = setInterval(async () => {
-          const statusRes = await fetch(`/api/calls/status/${callId}`);
+          const statusRes = await localFetch(`/api/calls/status/${callId}`);
           const { status } = await statusRes.json();
           if (status === 'active') {
             clearInterval(poll);
@@ -1628,22 +1645,22 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
   const fetchData = async () => {
     try {
       const [astroRes, userRes, catRes, venRes, prodRes, transRes, revRes, pRevRes, pendingVenRes, pendingProdRes, pendingAstroRes, pendingUserRes, pkgRes, pujaRes, testRes, callRes] = await Promise.all([
-        fetch('/api/admin/astrologers'),
-        fetch('/api/admin/users'),
-        fetch('/api/categories'),
-        fetch('/api/admin/vendors'),
-        fetch('/api/products'),
-        fetch('/api/admin/transactions'),
-        fetch('/api/admin/reviews'),
-        fetch('/api/admin/product-reviews'),
-        fetch('/api/admin/pending-vendors'),
-        fetch('/api/admin/pending-products'),
-        fetch('/api/admin/pending-astrologers'),
-        fetch('/api/admin/pending-users'),
-        fetch('/api/packages'),
-        fetch('/api/admin/puja'),
-        fetch('/api/admin/testimonials'),
-        fetch('/api/admin/calls')
+        localFetch('/api/admin/astrologers'),
+        localFetch('/api/admin/users'),
+        localFetch('/api/categories'),
+        localFetch('/api/admin/vendors'),
+        localFetch('/api/products'),
+        localFetch('/api/admin/transactions'),
+        localFetch('/api/admin/reviews'),
+        localFetch('/api/admin/product-reviews'),
+        localFetch('/api/admin/pending-vendors'),
+        localFetch('/api/admin/pending-products'),
+        localFetch('/api/admin/pending-astrologers'),
+        localFetch('/api/admin/pending-users'),
+        localFetch('/api/packages'),
+        localFetch('/api/admin/puja'),
+        localFetch('/api/admin/testimonials'),
+        localFetch('/api/admin/calls')
       ]);
 
       const results = await Promise.all([
@@ -3176,7 +3193,7 @@ function UserRegistration({ onComplete, onLoginClick }: { onComplete: () => void
     setError('');
 
     try {
-      const res = await fetch('/api/user/register', {
+      const res = await localFetch('/api/user/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -3496,7 +3513,7 @@ function AstrologerLogin({ onLogin, onRegisterClick }: { onLogin: (profile: any)
     setError('');
     
     try {
-      const res = await fetch('/api/astrologer/login', {
+      const res = await localFetch('/api/astrologer/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })

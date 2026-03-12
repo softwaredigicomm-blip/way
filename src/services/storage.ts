@@ -334,3 +334,119 @@ export const storageApi = {
       }));
   }
 };
+
+export const apiFetch = async (url: string, init?: any): Promise<any> => {
+  const path = url.replace('/api/', '');
+  const method = init?.method || 'GET';
+  const body = init?.body ? JSON.parse(init.body) : null;
+
+  console.log(`API Call: ${method} ${url}`, body);
+
+  // User routes
+  if (path.startsWith('user/')) {
+    const parts = path.split('/');
+    const email = parts[1];
+    if (method === 'GET') {
+      if (path.includes('/packages')) return storageApi.getUserPackages(email);
+      if (path.includes('/transactions')) return storageApi.getUserTransactions(email);
+      if (path.includes('/calls')) return storageApi.getUserCalls(email);
+      return storageApi.getUser(email);
+    } else if (method === 'POST') {
+      if (path === 'user/recharge') return storageApi.rechargeWallet(body.email, body.amount);
+      if (path === 'user/register') return storageApi.registerUser(body);
+      if (path === 'user/purchase') return { success: true }; // Simplified
+      if (path === 'user/purchase-package') return { success: true }; // Simplified
+      if (path === 'user/review') return storageApi.submitReview(body);
+    }
+  }
+  
+  // Astrologer routes
+  if (path === 'astrologers') return storageApi.getAstrologers();
+  if (path.startsWith('astrologer/')) {
+    const parts = path.split('/');
+    const id = parseInt(parts[1]);
+    if (path.includes('/reviews')) return storageApi.getReviews(id);
+    if (path.includes('/calls')) return []; // Mock
+    if (path.includes('/requests')) return []; // Mock
+    if (path.includes('/profile')) return storageApi.getAstrologers(false).then(list => list.find((a: any) => a.id === id));
+    if (path === 'astrologer/register') return storageApi.registerAstrologer(body);
+    if (path === 'astrologer/login') return storageApi.loginAstrologer(body.email, body.password);
+    if (path.includes('/withdraw')) return { success: true };
+    if (path.includes('/availability')) return { success: true };
+    if (path.includes('/update')) return { success: true };
+  }
+
+  // Other routes
+  if (path === 'testimonials') return storageApi.getTestimonials();
+  if (path === 'categories') return storageApi.getCategories();
+  if (path === 'packages') return storageApi.getPackages();
+  if (path === 'products') return storageApi.getProducts('approved');
+  if (path.startsWith('product/')) {
+    if (path.includes('/reviews')) return [];
+    if (path === 'product/review') return { success: true };
+  }
+  if (path === 'puja') return storageApi.getPuja();
+
+  // Chat & Calls
+  if (path === 'chat/start') return storageApi.requestChat(body.email, body.astrologerId);
+  if (path.startsWith('chat/status/')) return { status: 'pending' };
+  if (path === 'chat/message') return { success: true };
+  if (path === 'chat/end') return { success: true };
+  if (path === 'calls/request') return { callId: Date.now() };
+  if (path.startsWith('calls/status/')) return { status: 'connected' };
+  if (path === 'calls/end') return { success: true };
+  if (path.startsWith('calls/pending/')) return [];
+
+  // Admin
+  if (path.startsWith('admin/')) {
+    if (path === 'admin/pending-astrologers') return storageApi.getPendingAstrologers();
+    if (path === 'admin/pending-users') return storageApi.getPendingUsers();
+    if (path === 'admin/pending-vendors') return storageApi.getPendingVendors();
+    if (path === 'admin/pending-products') return storageApi.getPendingProducts();
+    if (path === 'admin/transactions') return storageApi.getTransactions();
+    if (path === 'admin/calls') return storageApi.getCalls();
+    if (path === 'admin/astrologers') return storageApi.getAstrologers(false);
+    if (path === 'admin/users') return storageApi.getUsers();
+    if (path === 'admin/vendors') return storageApi.getVendors();
+    if (path === 'admin/testimonials') return storageApi.getTestimonials();
+    if (path === 'admin/puja') return [];
+    if (path === 'admin/categories') return storageApi.getCategories();
+    if (path === 'admin/products') return storageApi.getProducts();
+    if (path === 'admin/packages') return storageApi.getPackages();
+    
+    if (path === 'admin/astrologer/approve') {
+      const { astroId, action } = body;
+      const astros = JSON.parse(localStorage.getItem('astroway_db_astrologers') || '[]');
+      const index = astros.findIndex((a: any) => a.id === astroId);
+      if (index !== -1) {
+        astros[index].status = action;
+        astros[index].is_active = action === 'approved';
+        localStorage.setItem('astroway_db_astrologers', JSON.stringify(astros));
+      }
+      return { success: true };
+    }
+    if (path === 'admin/user/approve') {
+      const { userId, action } = body;
+      const users = JSON.parse(localStorage.getItem('astroway_db_users') || '[]');
+      const index = users.findIndex((u: any) => u.id === userId);
+      if (index !== -1) {
+        users[index].status = action;
+        users[index].is_active = action === 'approved';
+        localStorage.setItem('astroway_db_users', JSON.stringify(users));
+      }
+      return { success: true };
+    }
+  }
+
+  // Vendor
+  if (path.startsWith('vendor/')) {
+    if (path.startsWith('vendor/profile/')) return storageApi.getVendorProfile(parseInt(path.split('/')[2]));
+    if (path === 'vendor/register') return storageApi.registerVendor(body);
+    if (path === 'vendor/product/add') return storageApi.addProduct(body);
+    if (path.includes('/products')) return storageApi.getVendorProducts(parseInt(path.split('/')[1]));
+  }
+
+  if (path === 'upload') return { url: 'https://picsum.photos/200' };
+
+  throw new Error(`Route not found: ${url}`);
+};
