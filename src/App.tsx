@@ -1164,7 +1164,7 @@ function Chat({ astrologers, user, onRecharge }: { astrologers: Astrologer[], us
   };
 
   const endCall = async (callId: number) => {
-    const res = await fetch('/api/calls/end', {
+    const res = await localFetch('/api/calls/end', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ callId })
@@ -1179,7 +1179,7 @@ function Chat({ astrologers, user, onRecharge }: { astrologers: Astrologer[], us
 
   const handleSubmitReview = async () => {
     if (!showReviewModal) return;
-    await fetch('/api/user/review', {
+    await localFetch('/api/user/review', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
@@ -1388,7 +1388,7 @@ function AstroProfileModal({ astro, onClose, onStartChat, onStartCall, canChat }
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/astrologer/${astro.id}/reviews`)
+    localFetch(`/api/astrologer/${astro.id}/reviews`)
       .then(res => res.json())
       .then(data => {
         setReviews(data);
@@ -1527,7 +1527,7 @@ function ChatWindow({ session, user, onEnd }: { session: { sessionId: number, as
     setInput('');
     setLastActivity(Date.now());
 
-    await fetch('/api/chat/message', {
+    await localFetch('/api/chat/message', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sessionId: session.sessionId, senderType: 'user', message: input })
@@ -1545,7 +1545,7 @@ function ChatWindow({ session, user, onEnd }: { session: { sessionId: number, as
       const replyMsg = { sender_type: 'astrologer', message: reply, timestamp: new Date() };
       setMessages(prev => [...prev, replyMsg]);
       
-      await fetch('/api/chat/message', {
+      await localFetch('/api/chat/message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId: session.sessionId, senderType: 'astrologer', message: reply })
@@ -1555,7 +1555,7 @@ function ChatWindow({ session, user, onEnd }: { session: { sessionId: number, as
 
   const endChat = async () => {
     const durationMinutes = seconds / 60;
-    const res = await fetch('/api/chat/end', {
+    const res = await localFetch('/api/chat/end', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sessionId: session.sessionId, durationMinutes })
@@ -1708,7 +1708,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
   }, []);
 
   const toggleAstro = async (id: number, currentStatus: boolean) => {
-    await fetch(`/api/admin/astrologers/${id}`, {
+    await localFetch(`/api/admin/astrologers/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ is_active: !currentStatus })
@@ -1717,7 +1717,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
   };
 
   const toggleUser = async (id: number, currentStatus: boolean) => {
-    await fetch(`/api/admin/users/${id}`, {
+    await localFetch(`/api/admin/users/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ is_active: !currentStatus })
@@ -1726,7 +1726,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
   };
 
   const toggleVendor = async (id: number, currentStatus: boolean) => {
-    await fetch(`/api/admin/vendors/${id}`, {
+    await localFetch(`/api/admin/vendors/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ is_active: !currentStatus })
@@ -1747,7 +1747,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
 
     const data = Object.fromEntries(formData.entries());
     delete data.image_file;
-    await fetch('/api/admin/astrologers', {
+    await localFetch('/api/admin/astrologers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...data, image_url: imageUrl })
@@ -1759,7 +1759,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
   const handleAddCategory = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    await fetch('/api/admin/categories', {
+    await localFetch('/api/admin/categories', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: formData.get('name') })
@@ -1772,7 +1772,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
-    await fetch('/api/admin/vendors', {
+    await localFetch('/api/admin/vendors', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -1794,7 +1794,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
 
     const data = Object.fromEntries(formData.entries());
     delete data.image_file;
-    await fetch('/api/admin/products', {
+    await localFetch('/api/admin/products', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...data, image_url: imageUrl })
@@ -1818,7 +1818,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
     delete data.image_file;
     // Parse features from comma separated string to JSON array
     const features = (data.features as string).split(',').map(f => f.trim());
-    await fetch('/api/admin/packages', {
+    await localFetch('/api/admin/packages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...data, image_url: imageUrl, features: JSON.stringify(features) })
@@ -1831,7 +1831,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
-    await fetch('/api/admin/testimonials', {
+    await localFetch('/api/admin/testimonials', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -1849,7 +1849,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
       rating: parseInt(formData.get('rating') as string),
       comment: formData.get('comment') as string
     };
-    await fetch('/api/admin/product/rate', {
+    await localFetch('/api/admin/product/rate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -1861,12 +1861,12 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
 
   const deleteTestimonial = async (id: number) => {
     if (!confirm('Are you sure?')) return;
-    await fetch(`/api/admin/testimonials/${id}`, { method: 'DELETE' });
+    await localFetch(`/api/admin/testimonials/${id}`, { method: 'DELETE' });
     fetchData();
   };
 
   const toggleTestimonial = async (id: number, currentStatus: boolean) => {
-    await fetch(`/api/admin/testimonials/${id}`, {
+    await localFetch(`/api/admin/testimonials/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ is_active: !currentStatus })
@@ -1887,7 +1887,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
 
     const data = Object.fromEntries(formData.entries());
     delete data.image_file;
-    await fetch('/api/admin/puja', {
+    await localFetch('/api/admin/puja', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...data, image_url: imageUrl })
@@ -1897,7 +1897,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
   };
 
   const togglePuja = async (id: number, currentStatus: boolean) => {
-    await fetch(`/api/admin/puja/${id}`, {
+    await localFetch(`/api/admin/puja/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ is_active: !currentStatus })
@@ -1906,7 +1906,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
   };
 
   const handleVendorAction = async (vendorId: number, action: 'approved' | 'rejected') => {
-    await fetch('/api/admin/vendor/approve', {
+    await localFetch('/api/admin/vendor/approve', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ vendorId, action })
@@ -1918,7 +1918,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
     const formData = new FormData();
     formData.append('image', file);
     try {
-      const res = await fetch('/api/upload', {
+      const res = await localFetch('/api/upload', {
         method: 'POST',
         body: formData
       });
@@ -1933,7 +1933,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
   };
 
   const handleAstroAction = async (astroId: number, action: 'approved' | 'rejected') => {
-    await fetch('/api/admin/astrologer/approve', {
+    await localFetch('/api/admin/astrologer/approve', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ astroId, action })
@@ -1942,7 +1942,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
   };
 
   const handleProductAction = async (productId: number, action: 'approved' | 'rejected') => {
-    await fetch('/api/admin/product/approve', {
+    await localFetch('/api/admin/product/approve', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ productId, action })
@@ -1951,7 +1951,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
   };
 
   const handleUserAction = async (userId: number, action: 'approved' | 'rejected') => {
-    await fetch('/api/admin/user/approve', {
+    await localFetch('/api/admin/user/approve', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId, action })
@@ -1961,14 +1961,14 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
 
   const handleDeleteProductReview = async (id: number) => {
     if (!confirm("Are you sure you want to delete this review?")) return;
-    await fetch(`/api/admin/product-review/${id}`, { method: 'DELETE' });
+    await localFetch(`/api/admin/product-review/${id}`, { method: 'DELETE' });
     fetchData();
   };
 
   const fetchChatHistory = async (transaction: any) => {
     if (!transaction?.id) return;
     try {
-      const res = await fetch(`/api/admin/chat-history/${transaction.id}`);
+      const res = await localFetch(`/api/admin/chat-history/${transaction.id}`);
       if (!res.ok) throw new Error("Failed to fetch chat history");
       const data = await res.json();
       setChatHistory(data);
@@ -2350,7 +2350,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
                         defaultValue={astro.discount_percent || 0}
                         onBlur={async (e) => {
                           const val = Number(e.target.value);
-                          await fetch(`/api/admin/astrologers/${astro.id}/discount`, {
+                          await localFetch(`/api/admin/astrologers/${astro.id}/discount`, {
                             method: 'PATCH',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ discount_percent: val })
@@ -2366,7 +2366,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
                         defaultValue={astro.commission_percent || 70}
                         onBlur={async (e) => {
                           const val = Number(e.target.value);
-                          await fetch(`/api/admin/astrologers/${astro.id}/commission`, {
+                          await localFetch(`/api/admin/astrologers/${astro.id}/commission`, {
                             method: 'PATCH',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ commission_percent: val })
@@ -3111,9 +3111,13 @@ function UserLogin({ onLogin }: { onLogin: (email: string) => void }) {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    fetch(`/api/user/${id}`)
+    localFetch(`/api/user/${id}`)
       .then(res => res.json())
       .then(user => {
+        if (!user || user.error) {
+          setError('User not found.');
+          return;
+        }
         if (user.status === 'pending') {
           setError('Your account is pending approval.');
           return;
@@ -3127,7 +3131,8 @@ function UserLogin({ onLogin }: { onLogin: (email: string) => void }) {
         } else {
           setError('Invalid password. Use 12345');
         }
-      });
+      })
+      .catch(() => setError('Login failed. Please try again.'));
   };
 
   if (showRegister) {
@@ -3340,7 +3345,7 @@ function AstrologerRegistration({ onComplete, onLoginClick }: { onComplete: () =
     setError('');
 
     try {
-      const res = await fetch('/api/astrologer/register', {
+      const res = await localFetch('/api/astrologer/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -3594,11 +3599,11 @@ function AstrologerPanel({ profile, onUpdate, onLogout }: { profile: any, onUpda
   useEffect(() => {
     if (!profile?.id) return;
     const interval = setInterval(async () => {
-      const chatRes = await fetch(`/api/astrologer/${profile.id}/requests`);
+      const chatRes = await localFetch(`/api/astrologer/${profile.id}/requests`);
       const chatData = await chatRes.json();
       setRequests(chatData);
 
-      const callRes = await fetch(`/api/calls/pending/${profile.id}`);
+      const callRes = await localFetch(`/api/calls/pending/${profile.id}`);
       const callData = await callRes.json();
       setCallRequests(callData);
       
@@ -3620,12 +3625,12 @@ function AstrologerPanel({ profile, onUpdate, onLogout }: { profile: any, onUpda
 
   useEffect(() => {
     if (!profile?.id) return;
-    fetch(`/api/astrologer/${profile.id}/reviews`).then(r => r.json()).then(setReviews);
-    fetch(`/api/astrologer/${profile.id}/calls`).then(r => r.json()).then(setCallHistory);
+    localFetch(`/api/astrologer/${profile.id}/reviews`).then(r => r.json()).then(setReviews);
+    localFetch(`/api/astrologer/${profile.id}/calls`).then(r => r.json()).then(setCallHistory);
   }, [profile?.id]);
 
   const handleAction = async (requestId: number, action: 'accepted' | 'rejected') => {
-    const res = await fetch('/api/astrologer/request/action', {
+    const res = await localFetch('/api/astrologer/request/action', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ requestId, action })
@@ -3639,7 +3644,7 @@ function AstrologerPanel({ profile, onUpdate, onLogout }: { profile: any, onUpda
   };
 
   const handleCallAction = async (callId: number, action: 'accepted' | 'rejected') => {
-    const res = await fetch(`/api/calls/${action}`, {
+    const res = await localFetch(`/api/calls/${action}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ callId })
@@ -3653,7 +3658,7 @@ function AstrologerPanel({ profile, onUpdate, onLogout }: { profile: any, onUpda
   };
 
   const endCall = async (callId: number) => {
-    const res = await fetch('/api/calls/end', {
+    const res = await localFetch('/api/calls/end', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ callId })
@@ -3666,7 +3671,7 @@ function AstrologerPanel({ profile, onUpdate, onLogout }: { profile: any, onUpda
 
   const handleWithdraw = async () => {
     if (!profile?.id) return;
-    const res = await fetch(`/api/astrologer/${profile.id}/withdraw`, {
+    const res = await localFetch(`/api/astrologer/${profile.id}/withdraw`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ amount: Number(withdrawAmount) })
@@ -3707,7 +3712,7 @@ function AstrologerPanel({ profile, onUpdate, onLogout }: { profile: any, onUpda
             <div className="flex gap-4">
               <button 
                 onClick={async () => {
-                  await fetch(`/api/astrologer/${profile.id}/availability`, {
+                  await localFetch(`/api/astrologer/${profile.id}/availability`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ is_online: !profile.is_online })
@@ -3720,7 +3725,7 @@ function AstrologerPanel({ profile, onUpdate, onLogout }: { profile: any, onUpda
               </button>
               <button 
                 onClick={async () => {
-                  await fetch(`/api/astrologer/${profile.id}/availability`, {
+                  await localFetch(`/api/astrologer/${profile.id}/availability`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ is_chat_active: !profile.is_chat_active })
@@ -3733,7 +3738,7 @@ function AstrologerPanel({ profile, onUpdate, onLogout }: { profile: any, onUpda
               </button>
               <button 
                 onClick={async () => {
-                  await fetch(`/api/astrologer/${profile.id}/availability`, {
+                  await localFetch(`/api/astrologer/${profile.id}/availability`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ is_call_active: !profile.is_call_active })
@@ -3789,7 +3794,7 @@ function AstrologerPanel({ profile, onUpdate, onLogout }: { profile: any, onUpda
             e.preventDefault();
             const formData = new FormData(e.currentTarget);
             const data = Object.fromEntries(formData.entries());
-            await fetch(`/api/astrologer/${profile.id}/update`, {
+            await localFetch(`/api/astrologer/${profile.id}/update`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(data)
@@ -3935,13 +3940,13 @@ function Shop({ user, onPurchase, onLogin }: { user: UserType | null, onPurchase
   const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
 
   useEffect(() => {
-    fetch('/api/products?status=approved')
+    localFetch('/api/products?status=approved')
       .then(res => res.json())
       .then(setProducts);
   }, []);
 
   const fetchReviews = (productId: number) => {
-    fetch(`/api/product/${productId}/reviews`)
+    localFetch(`/api/product/${productId}/reviews`)
       .then(res => res.json())
       .then(setReviews);
   };
@@ -3983,7 +3988,7 @@ function Shop({ user, onPurchase, onLogin }: { user: UserType | null, onPurchase
       // In a real app, we'd send quantity too, but our current API handles one at a time
       // Let's call it multiple times for now to match existing logic
       for (let i = 0; i < item.quantity; i++) {
-        const res = await fetch('/api/user/purchase', {
+        const res = await localFetch('/api/user/purchase', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: user.email, productId: item.product.id })
@@ -4010,7 +4015,7 @@ function Shop({ user, onPurchase, onLogin }: { user: UserType | null, onPurchase
     }
     if (!selectedProduct) return;
 
-    const res = await fetch('/api/product/review', {
+    const res = await localFetch('/api/product/review', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -4353,7 +4358,7 @@ function Puja() {
   useEffect(() => {
     const fetchPuja = async () => {
       try {
-        const res = await fetch('/api/puja');
+        const res = await localFetch('/api/puja');
         const data = await res.json();
         setServices(data);
       } catch (error) {
@@ -4503,7 +4508,7 @@ function VendorRegistration({ user, onComplete, onLoginClick }: { user: UserType
 
   useEffect(() => {
     if (user?.id) {
-      fetch(`/api/vendor/profile/${user.id}`)
+      localFetch(`/api/vendor/profile/${user.id}`)
         .then(res => res.json())
         .then(data => {
           if (data) setStatus(data.status);
@@ -4520,7 +4525,7 @@ function VendorRegistration({ user, onComplete, onLoginClick }: { user: UserType
     // Mock document upload
     const docs = ['https://picsum.photos/seed/doc1/400/600', 'https://picsum.photos/seed/doc2/400/600'];
     
-    const res = await fetch('/api/vendor/register', {
+    const res = await localFetch('/api/vendor/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -4629,11 +4634,11 @@ function VendorPanel({ user }: { user: UserType | null }) {
 
   useEffect(() => {
     if (user?.id) {
-      fetch(`/api/vendor/profile/${user.id}`)
+      localFetch(`/api/vendor/profile/${user.id}`)
         .then(res => res.json())
         .then(v => {
           setVendor(v);
-          if (v?.id) fetch(`/api/vendor/${v.id}/products`).then(r => r.json()).then(setProducts);
+          if (v?.id) localFetch(`/api/vendor/${v.id}/products`).then(r => r.json()).then(setProducts);
         });
     }
   }, [user?.id]);
@@ -4643,7 +4648,7 @@ function VendorPanel({ user }: { user: UserType | null }) {
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
     
-    const res = await fetch('/api/vendor/product/add', {
+    const res = await localFetch('/api/vendor/product/add', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -4656,7 +4661,7 @@ function VendorPanel({ user }: { user: UserType | null }) {
     if (res.ok) {
       setShowAddProduct(false);
       alert("Product submitted for approval!");
-      fetch(`/api/vendor/${vendor?.id}/products`).then(r => r.json()).then(setProducts);
+      localFetch(`/api/vendor/${vendor?.id}/products`).then(r => r.json()).then(setProducts);
     }
   };
 
@@ -4830,7 +4835,7 @@ function AstroPackages({ user, onPurchase }: { user: UserType | null, onPurchase
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/packages')
+    localFetch('/api/packages')
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) setPackages(data);
@@ -4844,7 +4849,7 @@ function AstroPackages({ user, onPurchase }: { user: UserType | null, onPurchase
       return;
     }
 
-    const res = await fetch('/api/user/purchase-package', {
+    const res = await localFetch('/api/user/purchase-package', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: user.email, packageId: pkgId })
@@ -4955,9 +4960,9 @@ function UserProfile({ user, onUpdate, onLogout }: { user: UserType | null, onUp
   useEffect(() => {
     if (user) {
       Promise.all([
-        fetch(`/api/user/${user.email}/packages`).then(res => res.json()),
-        fetch(`/api/user/${user.email}/transactions`).then(res => res.json()),
-        fetch(`/api/user/${user.email}/calls`).then(res => res.json())
+        localFetch(`/api/user/${user.email}/packages`).then(res => res.json()),
+        localFetch(`/api/user/${user.email}/transactions`).then(res => res.json()),
+        localFetch(`/api/user/${user.email}/calls`).then(res => res.json())
       ]).then(([pkgs, trans, calls]) => {
         setPurchasedPackages(Array.isArray(pkgs) ? pkgs : []);
         setTransactions(Array.isArray(trans) ? trans : []);
