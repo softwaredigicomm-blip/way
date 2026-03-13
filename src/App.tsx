@@ -33,9 +33,15 @@ const localFetch = async (url: string, init?: any) => {
 
 let ai: any = null;
 try {
-  const apiKey = process.env.GEMINI_API_KEY || '';
+  // Support both process.env (Vite define) and import.meta.env (Vite standard)
+  const apiKey = (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) || 
+                 (import.meta as any).env?.VITE_GEMINI_API_KEY || 
+                 '';
+                 
   if (apiKey) {
     ai = new GoogleGenAI({ apiKey });
+  } else {
+    console.warn("GEMINI_API_KEY not found in environment variables.");
   }
 } catch (e) {
   console.error("Failed to initialize GoogleGenAI:", e);
@@ -271,10 +277,12 @@ export default function App() {
           >
             Astrologer Panel
           </button>
-          <div className="hidden sm:flex items-center gap-2 bg-saffron/10 px-3 py-1.5 rounded-full border border-saffron/20">
-            <Wallet size={16} className="text-saffron" />
-            <span className="text-sm font-bold text-saffron">₹{user?.wallet_balance || 0}</span>
-          </div>
+          {isUserAuthenticated && (
+            <div className="hidden sm:flex items-center gap-2 bg-saffron/10 px-3 py-1.5 rounded-full border border-saffron/20">
+              <Wallet size={16} className="text-saffron" />
+              <span className="text-sm font-bold text-saffron">₹{user?.wallet_balance || 0}</span>
+            </div>
+          )}
           <button 
             onClick={() => setActiveTab('admin')}
             className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-600"
@@ -631,14 +639,10 @@ function Horoscope() {
         });
         setPrediction(response.text || 'Unable to fetch prediction.');
       } else {
-        // Fallback to mock data if AI is not available
-        setTimeout(() => {
-          setPrediction(MOCK_HOROSCOPES[sign] || 'The stars are silent today.');
-          setLoading(false);
-        }, 1000);
-        return;
+        setPrediction(MOCK_HOROSCOPES[sign] || 'The stars are silent today.');
       }
     } catch (error) {
+      console.error("Horoscope AI Error:", error);
       setPrediction(MOCK_HOROSCOPES[sign] || 'Error connecting to the stars.');
     }
     setLoading(false);
@@ -743,46 +747,80 @@ function Kundli({ user, onViewPackages }: { user: UserType | null, onViewPackage
     setReport(null);
 
     const prompt = activeTab === 'making' 
-      ? `Generate a detailed Vedic Kundli report for:
+      ? `Generate a comprehensive and highly detailed Vedic Kundli report for:
          Name: ${formData.name}
          Gender: ${formData.gender}
          DOB: ${formData.dob}
          TOB: ${formData.tob}
          POB: ${formData.pob}
          Style: ${chartStyle === 'north' ? 'North Indian' : 'South Indian'}
-         Include: Ascendant, Moon Sign, Nakshatra, and basic planetary positions with a brief interpretation for each.`
-      : `Generate a detailed Vedic Match Making (Ashta Koota) report for:
+         
+         Please provide a full analysis including:
+         1. Panchang Details (Tithi, Vara, Nakshatra, Yoga, Karana)
+         2. Planetary Positions (Graha, Rashi, Degree, Nakshatra, Pada, Lord)
+         3. Lagna Chart Analysis (Detailed interpretation of the 1st house and its lord)
+         4. Moon Sign (Rashi) and Sun Sign Analysis
+         5. Major Planetary Aspects and Conjunctions
+         6. General Characteristics and Personality Traits
+         7. Career and Wealth Prospects
+         8. Health and Relationship Outlook
+         9. Important Remedies (Mantra, Gemstone recommendations)
+         
+         Format the report with clear headings and professional tone.`
+      : `Generate a comprehensive and highly detailed Vedic Match Making (Ashta Koota) report for:
          Person 1: ${formData.name}, DOB: ${formData.dob}, TOB: ${formData.tob}, POB: ${formData.pob}
          Person 2: ${formData.partnerName}, DOB: ${formData.partnerDob}, TOB: ${formData.partnerTob}, POB: ${formData.partnerPob}
          Style: ${chartStyle === 'north' ? 'North Indian' : 'South Indian'}
-         Include: Guna Milan score (out of 36), Manglik Dosha analysis, and a final compatibility verdict.`;
+         
+         Please provide a full analysis including:
+         1. Birth Details of both individuals
+         2. Ashta Koota Matching (Varna, Vashya, Tara, Yoni, Maitri, Gana, Bhakoot, Nadi) with individual scores
+         3. Total Guna Milan Score (out of 36)
+         4. Manglik Dosha Analysis for both and its cancellation if any
+         5. Detailed Compatibility Verdict (Emotional, Physical, Spiritual, Financial)
+         6. Potential Challenges and Remedies
+         
+         Format the report with clear headings and professional tone.`;
 
     try {
+      let generatedReport = '';
       if (ai) {
         const response = await ai.models.generateContent({
           model: "gemini-3-flash-preview",
           contents: prompt,
         });
-        setReport(response.text || 'Unable to generate report.');
+        generatedReport = response.text || 'Unable to generate report.';
       } else {
         // Fallback to mock data if AI is not available
-        setTimeout(() => {
-          const mockReport = activeTab === 'making' 
-            ? `Vedic Kundli Analysis for ${formData.name}:
-               - Ascendant: Leo (Simha) - You possess a natural leadership quality and a warm heart.
-               - Moon Sign: Taurus (Vrishabha) - You are emotionally stable and value security.
-               - Nakshatra: Rohini - You are charming, creative, and have a love for the arts.
-               - Planetary Positions: Sun in 10th house indicates career success. Jupiter in 9th house brings good fortune and spiritual growth.`
-            : `Compatibility Analysis for ${formData.name} and ${formData.partnerName}:
-               - Guna Milan Score: 28/36 (Excellent Compatibility)
-               - Manglik Dosha: Both are Non-Manglik, ensuring a smooth marital life.
-               - Verdict: This is a highly compatible match with strong emotional and spiritual bonding.`;
-          setReport(mockReport);
-          setLoading(false);
-        }, 1500);
-        return;
+        generatedReport = activeTab === 'making' 
+          ? `Vedic Kundli Analysis for ${formData.name}:
+             - Ascendant: Leo (Simha) - You possess a natural leadership quality and a warm heart.
+             - Moon Sign: Taurus (Vrishabha) - You are emotionally stable and value security.
+             - Nakshatra: Rohini - You are charming, creative, and have a love for the arts.
+             - Planetary Positions: Sun in 10th house indicates career success. Jupiter in 9th house brings good fortune and spiritual growth.`
+          : `Compatibility Analysis for ${formData.name} and ${formData.partnerName}:
+             - Guna Milan Score: 28/36 (Excellent Compatibility)
+             - Manglik Dosha: Both are Non-Manglik, ensuring a smooth marital life.
+             - Verdict: This is a highly compatible match with strong emotional and spiritual bonding.`;
+      }
+
+      setReport(generatedReport);
+      
+      // Save report to database if user is logged in
+      if (user?.email) {
+        await localFetch('/api/user/save-report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: user.email,
+            type: activeTab === 'making' ? 'kundli' : 'matchmaking',
+            data: formData,
+            report: generatedReport
+          })
+        });
       }
     } catch (error) {
+      console.error(error);
       setReport('Error connecting to the celestial servers.');
     }
     setLoading(false);
@@ -1136,6 +1174,24 @@ function Chat({ astrologers, user, onRecharge }: { astrologers: Astrologer[], us
   const [activeCall, setActiveCall] = useState<{ callId: number, astrologer: Astrologer, rate_per_min: number, discount_percent: number } | null>(null);
   const [viewingAstro, setViewingAstro] = useState<Astrologer | null>(null);
   const [isCalling, setIsCalling] = useState(false);
+  const [isChatConnecting, setIsChatConnecting] = useState(false);
+  const ringingRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (isCalling) {
+      if (!ringingRef.current) {
+        ringingRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3');
+        ringingRef.current.loop = true;
+      }
+      ringingRef.current.play().catch(() => {});
+    } else {
+      ringingRef.current?.pause();
+      if (ringingRef.current) ringingRef.current.currentTime = 0;
+    }
+    return () => {
+      ringingRef.current?.pause();
+    };
+  }, [isCalling]);
 
   const handleRecharge = async () => {
     await localFetch('/api/user/recharge', {
@@ -1156,14 +1212,17 @@ function Chat({ astrologers, user, onRecharge }: { astrologers: Astrologer[], us
       });
       if (res.ok) {
         const { requestId } = await res.json();
+        setIsChatConnecting(true);
         const poll = setInterval(async () => {
           const statusRes = await localFetch(`/api/chat/status/${requestId}`);
           const { status, sessionId } = await statusRes.json();
           if (status === 'accepted') {
             clearInterval(poll);
+            setIsChatConnecting(false);
             setActiveChat({ sessionId, astrologer: astro });
           } else if (status === 'rejected') {
             clearInterval(poll);
+            setIsChatConnecting(false);
             alert("Astrologer rejected the request.");
           }
         }, 3000);
@@ -1270,6 +1329,23 @@ function Chat({ astrologers, user, onRecharge }: { astrologers: Astrologer[], us
 
   return (
     <div className="space-y-8">
+      {isChatConnecting && (
+        <div className="fixed inset-0 bg-deep-blue/90 backdrop-blur-md z-[200] flex flex-col items-center justify-center p-8 text-white">
+          <motion.div 
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+            className="w-16 h-16 border-4 border-saffron border-t-transparent rounded-full mb-6"
+          />
+          <h3 className="text-2xl font-serif font-bold mb-2">Connecting to Expert...</h3>
+          <p className="text-slate-400 animate-pulse">Please wait while we establish a secure chat session</p>
+          <button 
+            onClick={() => setIsChatConnecting(false)}
+            className="mt-12 px-8 py-3 bg-red-500 rounded-xl font-bold"
+          >
+            Cancel Request
+          </button>
+        </div>
+      )}
       {isCalling && (
         <div className="fixed inset-0 bg-deep-blue/90 backdrop-blur-md z-[200] flex flex-col items-center justify-center p-8 text-white">
           <motion.div 
@@ -1406,18 +1482,28 @@ function Chat({ astrologers, user, onRecharge }: { astrologers: Astrologer[], us
                 </button>
                 {astro.is_chat_active !== false && (
                   <button 
-                    onClick={() => startChat(astro)}
-                    disabled={(user?.wallet_balance || 0) < astro.price_per_min * 5}
-                    className="p-3 bg-saffron/10 text-saffron rounded-xl hover:bg-saffron hover:text-white transition-all disabled:opacity-50"
+                    onClick={() => {
+                      if ((user?.wallet_balance || 0) < astro.price_per_min * 5) {
+                        setShowRecharge(true);
+                      } else {
+                        startChat(astro);
+                      }
+                    }}
+                    className="p-3 bg-saffron/10 text-saffron rounded-xl hover:bg-saffron hover:text-white transition-all"
                   >
                     <MessageSquare size={20} />
                   </button>
                 )}
                 {astro.is_call_active !== false && (
                   <button 
-                    onClick={() => startCall(astro)}
-                    disabled={(user?.wallet_balance || 0) < astro.price_per_min * 5}
-                    className="p-3 bg-green-500/10 text-green-600 rounded-xl hover:bg-green-500 hover:text-white transition-all disabled:opacity-50"
+                    onClick={() => {
+                      if ((user?.wallet_balance || 0) < astro.price_per_min * 5) {
+                        setShowRecharge(true);
+                      } else {
+                        startCall(astro);
+                      }
+                    }}
+                    className="p-3 bg-green-500/10 text-green-600 rounded-xl hover:bg-green-500 hover:text-white transition-all"
                   >
                     <Phone size={20} />
                   </button>
@@ -1693,6 +1779,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
   const [pendingAstrologers, setPendingAstrologers] = useState<any[]>([]);
   const [pendingUsers, setPendingUsers] = useState<any[]>([]);
   const [packages, setPackages] = useState<Package[]>([]);
+  const [purchasedPackages, setPurchasedPackages] = useState<any[]>([]);
   const [puja, setPuja] = useState<any[]>([]);
   const [chatHistory, setChatHistory] = useState<any[]>([]);
   const [callHistory, setCallHistory] = useState<any[]>([]);
@@ -1704,7 +1791,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
 
   const fetchData = async () => {
     try {
-      const [astroRes, userRes, catRes, venRes, prodRes, transRes, revRes, pRevRes, pendingVenRes, pendingProdRes, pendingAstroRes, pendingUserRes, pkgRes, pujaRes, testRes, callRes] = await Promise.all([
+      const [astroRes, userRes, catRes, venRes, prodRes, transRes, revRes, pRevRes, pendingVenRes, pendingProdRes, pendingAstroRes, pendingUserRes, pkgRes, purchasedPkgRes, pujaRes, testRes, callRes] = await Promise.all([
         localFetch('/api/admin/astrologers'),
         localFetch('/api/admin/users'),
         localFetch('/api/categories'),
@@ -1718,6 +1805,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
         localFetch('/api/admin/pending-astrologers'),
         localFetch('/api/admin/pending-users'),
         localFetch('/api/packages'),
+        localFetch('/api/admin/purchased-packages'),
         localFetch('/api/admin/puja'),
         localFetch('/api/admin/testimonials'),
         localFetch('/api/admin/calls')
@@ -1737,6 +1825,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
         pendingAstroRes.ok ? pendingAstroRes.json() : Promise.resolve([]),
         pendingUserRes.ok ? pendingUserRes.json() : Promise.resolve([]),
         pkgRes.ok ? pkgRes.json() : Promise.resolve([]),
+        purchasedPkgRes.ok ? purchasedPkgRes.json() : Promise.resolve([]),
         pujaRes.ok ? pujaRes.json() : Promise.resolve([]),
         testRes.ok ? testRes.json() : Promise.resolve([]),
         callRes.ok ? callRes.json() : Promise.resolve([])
@@ -1746,7 +1835,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
       setUsers(results[1]);
       setCategories(results[2]);
       setVendors(results[3]);
-      setProducts(results[4]);
+      if (Array.isArray(results[4])) setProducts(results[4]);
       setTransactions(results[5]);
       setReviews(results[6]);
       setProductReviews(results[7]);
@@ -1755,9 +1844,10 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
       setPendingAstrologers(results[10]);
       setPendingUsers(results[11]);
       setPackages(results[12]);
-      setPuja(results[13]);
-      setTestimonials(results[14]);
-      setCallHistory(results[15]);
+      setPurchasedPackages(results[13]);
+      setPuja(results[14]);
+      setTestimonials(results[15]);
+      setCallHistory(results[16]);
     } catch (error) {
       console.error("Error fetching admin data:", error);
     }
@@ -2043,7 +2133,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-2 border-b border-slate-200 pb-4 overflow-x-auto no-scrollbar">
-        {['Astrologers', 'Users', 'Vendors', 'Categories', 'Products', 'Packages', 'Puja', 'Testimonials', 'Transactions', 'Sessions', 'Calls', 'Astro Reviews', 'Product Reviews', 'Approvals'].map(tab => (
+        {['Astrologers', 'Users', 'Vendors', 'Categories', 'Products', 'Packages', 'Purchased Packages', 'Puja', 'Testimonials', 'Transactions', 'Sessions', 'Calls', 'Astro Reviews', 'Product Reviews', 'Approvals'].map(tab => (
           <button 
             key={tab}
             onClick={() => setAdminTab(tab.toLowerCase().replace(' ', '-'))}
@@ -2602,7 +2692,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
             <button onClick={() => setShowModal('product')} className="bg-saffron text-white px-4 py-2 rounded-xl text-sm font-bold">Add Product</button>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {products.map(prod => (
+            {Array.isArray(products) && products.map(prod => (
               <div key={prod.id} className="glass rounded-2xl overflow-hidden">
                 <img src={prod.image_url} className="w-full h-32 object-cover" referrerPolicy="no-referrer" />
                 <div className="p-4">
@@ -3072,6 +3162,49 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {adminTab === 'purchased-packages' && (
+        <div className="space-y-6">
+          <h3 className="text-2xl font-serif font-bold text-deep-blue">Purchased Packages</h3>
+          <div className="glass rounded-3xl overflow-hidden overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-100">
+                  <th className="p-4 text-xs font-bold text-slate-500 uppercase">User</th>
+                  <th className="p-4 text-xs font-bold text-slate-500 uppercase">Package</th>
+                  <th className="p-4 text-xs font-bold text-slate-500 uppercase">Amount</th>
+                  <th className="p-4 text-xs font-bold text-slate-500 uppercase">Discount</th>
+                  <th className="p-4 text-xs font-bold text-slate-500 uppercase">Contact</th>
+                  <th className="p-4 text-xs font-bold text-slate-500 uppercase">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {purchasedPackages.map((up: any) => (
+                  <tr key={up.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                    <td className="p-4">
+                      <div className="font-bold text-sm">{up.userName}</div>
+                      <div className="text-[10px] text-slate-400">{up.userEmail}</div>
+                    </td>
+                    <td className="p-4">
+                      <div className="text-sm font-medium">{up.packageName}</div>
+                      <div className="text-[10px] text-saffron uppercase">{up.service_required}</div>
+                    </td>
+                    <td className="p-4 text-sm font-bold">₹{up.amount}</td>
+                    <td className="p-4 text-sm text-green-600 font-bold">₹{up.discount}</td>
+                    <td className="p-4 text-sm">{up.contact_number}</td>
+                    <td className="p-4 text-xs text-slate-400">{new Date(up.purchase_date).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+                {purchasedPackages.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="p-12 text-center text-slate-400 italic">No packages purchased yet.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
@@ -3671,6 +3804,14 @@ function AstrologerPanel({ profile, onUpdate, onLogout }: { profile: any, onUpda
 
   useEffect(() => {
     if (!profile?.id) return;
+    const refreshProfile = setInterval(() => {
+      onUpdate();
+    }, 10000);
+    return () => clearInterval(refreshProfile);
+  }, [profile?.id, onUpdate]);
+
+  useEffect(() => {
+    if (!profile?.id) return;
     const interval = setInterval(async () => {
       const chatRes = await localFetch(`/api/astrologer/${profile.id}/requests`);
       const chatData = await chatRes.json();
@@ -4015,7 +4156,9 @@ function Shop({ user, onPurchase, onLogin }: { user: UserType | null, onPurchase
   useEffect(() => {
     localFetch('/api/products?status=approved')
       .then(res => res.json())
-      .then(setProducts);
+      .then(data => {
+        if (Array.isArray(data)) setProducts(data);
+      });
   }, []);
 
   const fetchReviews = (productId: number) => {
@@ -4353,7 +4496,7 @@ function Shop({ user, onPurchase, onLogin }: { user: UserType | null, onPurchase
         </div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        {products.map(product => (
+        {Array.isArray(products) && products.map(product => (
           <div key={product.id} className="glass rounded-3xl overflow-hidden group">
             <div className="aspect-square overflow-hidden cursor-pointer" onClick={() => {
               setSelectedProduct(product);
@@ -4711,7 +4854,13 @@ function VendorPanel({ user }: { user: UserType | null }) {
         .then(res => res.json())
         .then(v => {
           setVendor(v);
-          if (v?.id) localFetch(`/api/vendor/${v.id}/products`).then(r => r.json()).then(setProducts);
+          if (v?.id) {
+            localFetch(`/api/vendor/${v.id}/products`)
+              .then(r => r.json())
+              .then(data => {
+                if (Array.isArray(data)) setProducts(data);
+              });
+          }
         });
     }
   }, [user?.id]);
@@ -4758,7 +4907,7 @@ function VendorPanel({ user }: { user: UserType | null }) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {products.map(p => (
+            {Array.isArray(products) && products.map(p => (
               <div key={p.id} className="glass rounded-3xl overflow-hidden group">
                 <div className="relative h-48">
                   <img src={p.image_url} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -4828,16 +4977,35 @@ function AIAstrologer() {
     setLoading(true);
 
     try {
+      if (!ai) {
+        setMessages(prev => [...prev, { role: 'ai', text: 'Cosmic connection not established. Please ensure the GEMINI_API_KEY is set in your environment variables and the app is rebuilt.' }]);
+        setLoading(false);
+        return;
+      }
+      
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: userMsg,
         config: {
-          systemInstruction: "You are a wise Vedic Astrologer named AstroGuru. Provide spiritual, accurate, and helpful advice based on Indian astrology principles. Keep responses concise and encouraging.",
+          systemInstruction: "You are a wise Vedic Astrologer named AstroGuru. Provide spiritual, accurate, and helpful advice based on Indian astrology principles. Keep responses concise and encouraging. If you don't know something, say the stars are unclear on that matter.",
         }
       });
-      setMessages(prev => [...prev, { role: 'ai', text: response.text || 'I am sensing a disturbance in the cosmic connection. Please try again.' }]);
-    } catch (error) {
-      setMessages(prev => [...prev, { role: 'ai', text: 'The stars are currently obscured. Please try again later.' }]);
+      
+      const text = response.text;
+      if (text) {
+        setMessages(prev => [...prev, { role: 'ai', text }]);
+      } else {
+        throw new Error("Empty response from AI");
+      }
+    } catch (error: any) {
+      console.error("AI Chat Error:", error);
+      let errorMessage = 'The stars are currently obscured. Please try again later.';
+      if (error.message?.includes('API_KEY_INVALID')) {
+        errorMessage = 'Invalid API Key. Please check your GEMINI_API_KEY configuration.';
+      } else if (error.message?.includes('quota')) {
+        errorMessage = 'The cosmic energy is depleted for now (Quota exceeded). Please try again in a while.';
+      }
+      setMessages(prev => [...prev, { role: 'ai', text: errorMessage }]);
     }
     setLoading(false);
   };
@@ -4906,6 +5074,8 @@ function AIAstrologer() {
 function AstroPackages({ user, onPurchase }: { user: UserType | null, onPurchase: () => void }) {
   const [packages, setPackages] = useState<Package[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPkg, setSelectedPkg] = useState<Package | null>(null);
+  const [contactNumber, setContactNumber] = useState('');
 
   useEffect(() => {
     localFetch('/api/packages')
@@ -4916,20 +5086,33 @@ function AstroPackages({ user, onPurchase }: { user: UserType | null, onPurchase
       });
   }, []);
 
-  const handlePurchase = async (pkgId: number) => {
+  const handlePurchase = async () => {
     if (!user) {
       alert("Please login to purchase packages.");
+      return;
+    }
+
+    if (!contactNumber) {
+      alert("Please enter your contact number.");
       return;
     }
 
     const res = await localFetch('/api/user/purchase-package', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: user.email, packageId: pkgId })
+      body: JSON.stringify({ 
+        email: user.email, 
+        packageId: selectedPkg?.id,
+        contactNumber: contactNumber,
+        amount: selectedPkg?.price,
+        discount: 0 // Could implement coupon logic later
+      })
     });
 
     if (res.ok) {
       alert("Package purchased successfully!");
+      setSelectedPkg(null);
+      setContactNumber('');
       onPurchase();
     } else {
       const data = await res.json();
@@ -4993,7 +5176,7 @@ function AstroPackages({ user, onPurchase }: { user: UserType | null, onPurchase
                 </div>
               </div>
               <button 
-                onClick={() => handlePurchase(pkg.id)}
+                onClick={() => setSelectedPkg(pkg)}
                 className="w-full bg-deep-blue text-white py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-lg flex items-center justify-center gap-2"
               >
                 <ShoppingBag size={20} /> Purchase Package
@@ -5002,6 +5185,64 @@ function AstroPackages({ user, onPurchase }: { user: UserType | null, onPurchase
           </motion.div>
         ))}
       </div>
+
+      {selectedPkg && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-[2.5rem] p-8 max-w-md w-full shadow-2xl space-y-6"
+          >
+            <div className="text-center space-y-2">
+              <h3 className="text-2xl font-serif font-bold text-deep-blue">Complete Purchase</h3>
+              <p className="text-slate-500 text-sm">Please provide your contact details for the {selectedPkg.name}</p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Contact Number</label>
+                <input 
+                  type="tel" 
+                  value={contactNumber}
+                  onChange={(e) => setContactNumber(e.target.value)}
+                  placeholder="+91 98765 43210"
+                  className="w-full bg-stone-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-saffron"
+                />
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-2xl space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500">Package Amount</span>
+                  <span className="font-bold">₹{selectedPkg.price}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500">Discount</span>
+                  <span className="text-green-600 font-bold">- ₹0</span>
+                </div>
+                <div className="pt-2 border-t flex justify-between font-bold text-deep-blue">
+                  <span>Total Payable</span>
+                  <span>₹{selectedPkg.price}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setSelectedPkg(null)}
+                className="flex-1 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handlePurchase}
+                className="flex-1 bg-saffron text-white py-3 rounded-xl font-bold shadow-lg hover:bg-orange-600 transition-all"
+              >
+                Confirm & Pay
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Trust Badges */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-12 border-t border-slate-100">
@@ -5028,18 +5269,31 @@ function UserProfile({ user, onUpdate, onLogout }: { user: UserType | null, onUp
   const [purchasedPackages, setPurchasedPackages] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [callHistory, setCallHistory] = useState<any[]>([]);
+  const [orderHistory, setOrderHistory] = useState<any[]>([]);
+  const [chatHistory, setChatHistory] = useState<any[]>([]);
+  const [generatedReports, setGeneratedReports] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<{ astrologerReviews: any[], productReviews: any[] }>({ astrologerReviews: [], productReviews: [] });
   const [loading, setLoading] = useState(true);
+  const [activeHistoryTab, setActiveHistoryTab] = useState<'orders' | 'chats' | 'calls' | 'packages' | 'reports' | 'reviews'>('orders');
 
   useEffect(() => {
     if (user) {
       Promise.all([
         localFetch(`/api/user/${user.email}/packages`).then(res => res.json()),
         localFetch(`/api/user/${user.email}/transactions`).then(res => res.json()),
-        localFetch(`/api/user/${user.email}/calls`).then(res => res.json())
-      ]).then(([pkgs, trans, calls]) => {
+        localFetch(`/api/user/${user.email}/calls`).then(res => res.json()),
+        localFetch(`/api/user/${user.email}/orders`).then(res => res.json()),
+        localFetch(`/api/user/${user.email}/chats`).then(res => res.json()),
+        localFetch(`/api/user/${user.email}/reports`).then(res => res.json()),
+        localFetch(`/api/user/${user.email}/reviews`).then(res => res.json())
+      ]).then(([pkgs, trans, calls, orders, chats, reports, revs]) => {
         setPurchasedPackages(Array.isArray(pkgs) ? pkgs : []);
         setTransactions(Array.isArray(trans) ? trans : []);
         setCallHistory(Array.isArray(calls) ? calls : []);
+        setOrderHistory(Array.isArray(orders) ? orders : []);
+        setChatHistory(Array.isArray(chats) ? chats : []);
+        setGeneratedReports(Array.isArray(reports) ? reports : []);
+        setReviews(revs || { astrologerReviews: [], productReviews: [] });
         setLoading(false);
       });
     }
@@ -5057,35 +5311,53 @@ function UserProfile({ user, onUpdate, onLogout }: { user: UserType | null, onUp
     );
   }
 
-  return (
-    <div className="max-w-4xl mx-auto space-y-12">
-      <div className="glass p-8 rounded-[2rem] flex flex-col md:flex-row items-center gap-8 border border-white/20">
-        <div className="w-24 h-24 bg-saffron/10 text-saffron rounded-full flex items-center justify-center">
-          <User size={48} />
-        </div>
-        <div className="flex-1 text-center md:text-left space-y-2">
-          <div className="flex items-center justify-between">
-            <h2 className="text-3xl font-serif font-bold text-deep-blue">{user.name}</h2>
-            <button 
-              onClick={onLogout}
-              className="text-xs font-bold text-red-500 hover:underline"
-            >
-              Logout
-            </button>
+  const renderHistoryContent = () => {
+    switch (activeHistoryTab) {
+      case 'orders':
+        return (
+          <div className="space-y-4">
+            {orderHistory.length > 0 ? orderHistory.map((order, i) => (
+              <div key={i} className="glass p-4 rounded-2xl border border-slate-100 flex gap-4">
+                <img src={order.product_image} className="w-16 h-16 rounded-xl object-cover" referrerPolicy="no-referrer" />
+                <div className="flex-1">
+                  <div className="flex justify-between">
+                    <h4 className="font-bold text-deep-blue">{order.product_name}</h4>
+                    <span className="text-xs font-bold text-saffron">₹{order.amount}</span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">{new Date(order.timestamp).toLocaleString()}</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-[10px] bg-green-100 text-green-600 px-2 py-0.5 rounded-full font-bold uppercase">Delivered</span>
+                    <button className="text-[10px] text-saffron font-bold hover:underline">Track Order</button>
+                  </div>
+                </div>
+              </div>
+            )) : (
+              <p className="text-center py-12 text-slate-400 italic">No orders found.</p>
+            )}
           </div>
-          <p className="text-slate-500">{user.email}</p>
-          <div className="inline-flex items-center gap-2 bg-saffron/10 px-4 py-1.5 rounded-full border border-saffron/20">
-            <Wallet size={16} className="text-saffron" />
-            <span className="text-sm font-bold text-saffron">Wallet Balance: ₹{user.wallet_balance}</span>
+        );
+      case 'chats':
+        return (
+          <div className="space-y-4">
+            {chatHistory.length > 0 ? chatHistory.map((chat, i) => (
+              <div key={i} className="glass p-4 rounded-2xl border border-slate-100 flex gap-4">
+                <img src={chat.astrologer_image} className="w-12 h-12 rounded-xl object-cover" referrerPolicy="no-referrer" />
+                <div className="flex-1">
+                  <div className="flex justify-between">
+                    <h4 className="font-bold text-deep-blue">{chat.astrologer_name}</h4>
+                    <span className="text-xs font-bold text-saffron">₹{Math.abs(chat.amount)}</span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">{new Date(chat.timestamp).toLocaleString()}</p>
+                  <button className="text-[10px] text-saffron font-bold hover:underline mt-2">View Chat Transcript</button>
+                </div>
+              </div>
+            )) : (
+              <p className="text-center py-12 text-slate-400 italic">No chat history found.</p>
+            )}
           </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="space-y-6">
-          <h3 className="text-2xl font-serif font-bold text-deep-blue flex items-center gap-2">
-            <Phone className="text-saffron" size={24} /> Call History
-          </h3>
+        );
+      case 'calls':
+        return (
           <div className="space-y-4">
             {callHistory.length > 0 ? callHistory.map((call, i) => {
               const start = new Date(call.start_time);
@@ -5111,19 +5383,14 @@ function UserProfile({ user, onUpdate, onLogout }: { user: UserType | null, onUp
                 </div>
               );
             }) : (
-              <div className="text-center py-10 bg-stone-50 rounded-2xl border border-dashed border-slate-200">
-                <p className="text-slate-400 text-sm italic">No calls made yet.</p>
-              </div>
+              <p className="text-center py-12 text-slate-400 italic">No call history found.</p>
             )}
           </div>
-        </div>
-
-        <div className="space-y-6">
-          <h3 className="text-2xl font-serif font-bold text-deep-blue flex items-center gap-2">
-            <Sparkles className="text-saffron" size={24} /> My Packages
-          </h3>
+        );
+      case 'packages':
+        return (
           <div className="space-y-4">
-            {purchasedPackages.map((pkg, i) => (
+            {purchasedPackages.length > 0 ? purchasedPackages.map((pkg, i) => (
               <div key={i} className="glass p-4 rounded-2xl border border-slate-100 flex gap-4">
                 <img src={pkg.image_url} className="w-16 h-16 rounded-xl object-cover" referrerPolicy="no-referrer" />
                 <div className="flex-1">
@@ -5131,36 +5398,175 @@ function UserProfile({ user, onUpdate, onLogout }: { user: UserType | null, onUp
                   <p className="text-xs text-slate-500 line-clamp-1">{pkg.description}</p>
                   <div className="flex items-center justify-between mt-2">
                     <span className="text-[10px] bg-green-100 text-green-600 px-2 py-0.5 rounded-full font-bold uppercase">Active</span>
-                    <button className="text-[10px] text-saffron font-bold hover:underline">Download PDF</button>
+                    <button className="text-[10px] text-saffron font-bold hover:underline">View Details</button>
                   </div>
                 </div>
               </div>
-            ))}
-            {purchasedPackages.length === 0 && (
+            )) : (
               <p className="text-center py-12 text-slate-400 italic">No packages purchased yet.</p>
             )}
           </div>
+        );
+      case 'reports':
+        return (
+          <div className="space-y-4">
+            {generatedReports.length > 0 ? generatedReports.map((report, i) => (
+              <div key={i} className="glass p-4 rounded-2xl border border-slate-100">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-bold text-deep-blue capitalize">{report.type} Report</h4>
+                    <p className="text-[10px] text-slate-400">{new Date(report.timestamp).toLocaleString()}</p>
+                    <p className="text-xs text-slate-500 mt-1">For: {report.data.name}</p>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      const doc = new jsPDF();
+                      doc.setFontSize(22);
+                      doc.setTextColor(242, 125, 38);
+                      doc.text(`${report.type.toUpperCase()} Report`, 105, 20, { align: 'center' });
+                      doc.setFontSize(10);
+                      doc.setTextColor(20, 20, 20);
+                      const splitText = doc.splitTextToSize(report.report, 170);
+                      doc.text(splitText, 20, 40);
+                      doc.save(`${report.data.name}_${report.type}_Report.pdf`);
+                    }}
+                    className="text-[10px] bg-saffron/10 text-saffron px-3 py-1 rounded-full font-bold hover:bg-saffron/20"
+                  >
+                    Download PDF
+                  </button>
+                </div>
+              </div>
+            )) : (
+              <p className="text-center py-12 text-slate-400 italic">No reports generated yet.</p>
+            )}
+          </div>
+        );
+      case 'reviews':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h4 className="text-sm font-bold text-deep-blue mb-4">Astrologer Reviews</h4>
+              <div className="space-y-4">
+                {reviews.astrologerReviews.length > 0 ? reviews.astrologerReviews.map((rev, i) => (
+                  <div key={i} className="glass p-4 rounded-2xl border border-slate-100">
+                    <div className="flex justify-between">
+                      <h5 className="font-bold text-deep-blue">{rev.astrologer_name}</h5>
+                      <div className="flex text-saffron">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} size={12} fill={i < rev.rating ? "currentColor" : "none"} />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1 italic">"{rev.comment}"</p>
+                    <p className="text-[10px] text-slate-400 mt-2">{new Date(rev.timestamp).toLocaleDateString()}</p>
+                  </div>
+                )) : (
+                  <p className="text-xs text-slate-400 italic">No astrologer reviews given yet.</p>
+                )}
+              </div>
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-deep-blue mb-4">Product Reviews</h4>
+              <div className="space-y-4">
+                {reviews.productReviews.length > 0 ? reviews.productReviews.map((rev, i) => (
+                  <div key={i} className="glass p-4 rounded-2xl border border-slate-100">
+                    <div className="flex justify-between">
+                      <h5 className="font-bold text-deep-blue">{rev.product_name}</h5>
+                      <div className="flex text-saffron">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} size={12} fill={i < rev.rating ? "currentColor" : "none"} />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1 italic">"{rev.comment}"</p>
+                    <p className="text-[10px] text-slate-400 mt-2">{new Date(rev.timestamp).toLocaleDateString()}</p>
+                  </div>
+                )) : (
+                  <p className="text-xs text-slate-400 italic">No product reviews given yet.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto space-y-12">
+      <div className="glass p-8 rounded-[2rem] flex flex-col md:flex-row items-center gap-8 border border-white/20">
+        <div className="w-24 h-24 bg-saffron/10 text-saffron rounded-full flex items-center justify-center">
+          <User size={48} />
+        </div>
+        <div className="flex-1 text-center md:text-left space-y-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-3xl font-serif font-bold text-deep-blue">{user.name}</h2>
+            <button 
+              onClick={onLogout}
+              className="text-xs font-bold text-red-500 hover:underline"
+            >
+              Logout
+            </button>
+          </div>
+          <p className="text-slate-500">{user.email}</p>
+          <div className="inline-flex items-center gap-2 bg-saffron/10 px-4 py-1.5 rounded-full border border-saffron/20">
+            <Wallet size={16} className="text-saffron" />
+            <span className="text-sm font-bold text-saffron">Wallet Balance: ₹{user.wallet_balance}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-1 space-y-4">
+          <div className="glass p-4 rounded-3xl border border-white/20 space-y-2">
+            {[
+              { id: 'orders', label: 'Order History', icon: ShoppingBag },
+              { id: 'chats', label: 'Chat History', icon: MessageSquare },
+              { id: 'calls', label: 'Call History', icon: Phone },
+              { id: 'packages', label: 'Purchased Packages', icon: Sparkles },
+              { id: 'reports', label: 'Generated Reports', icon: BookOpen },
+              { id: 'reviews', label: 'Ratings Given', icon: Star },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveHistoryTab(tab.id as any)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold text-sm ${
+                  activeHistoryTab === tab.id 
+                    ? 'bg-saffron text-white shadow-lg' 
+                    : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <tab.icon size={18} />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="glass p-6 rounded-3xl border border-white/20">
+            <h4 className="font-bold text-deep-blue mb-4 flex items-center gap-2">
+              <History size={18} className="text-saffron" /> Recent Wallet Activity
+            </h4>
+            <div className="space-y-4">
+              {transactions.slice(0, 5).map((t, i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-bold text-deep-blue capitalize">{t.type.replace('_', ' ')}</p>
+                    <p className="text-[10px] text-slate-400">{new Date(t.timestamp).toLocaleDateString()}</p>
+                  </div>
+                  <span className={`text-xs font-bold ${t.amount < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                    {t.amount < 0 ? '-' : '+'}₹{Math.abs(t.amount)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-6">
-          <h3 className="text-2xl font-serif font-bold text-deep-blue flex items-center gap-2">
-            <ShoppingBag className="text-saffron" size={24} /> Recent Transactions
-          </h3>
-          <div className="space-y-4">
-            {transactions.slice(0, 5).map((t, i) => (
-              <div key={i} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100">
-                <div>
-                  <p className="text-sm font-bold text-deep-blue capitalize">{t.type.replace('_', ' ')}</p>
-                  <p className="text-[10px] text-slate-400">{new Date(t.timestamp).toLocaleString()}</p>
-                </div>
-                <span className={`font-bold ${t.amount < 0 ? 'text-red-500' : 'text-green-500'}`}>
-                  {t.amount < 0 ? '-' : '+'}₹{Math.abs(t.amount)}
-                </span>
-              </div>
-            ))}
-            {transactions.length === 0 && (
-              <p className="text-center py-12 text-slate-400 italic">No transactions found.</p>
-            )}
+        <div className="lg:col-span-2">
+          <div className="glass p-8 rounded-[2rem] border border-white/20 min-h-[500px]">
+            <h3 className="text-2xl font-serif font-bold text-deep-blue mb-8 capitalize">
+              {activeHistoryTab.replace('_', ' ')}
+            </h3>
+            {renderHistoryContent()}
           </div>
         </div>
       </div>

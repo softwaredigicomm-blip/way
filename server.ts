@@ -172,6 +172,27 @@ try {
     FOREIGN KEY(user_id) REFERENCES users(id),
     FOREIGN KEY(product_id) REFERENCES products(id)
   );
+
+  CREATE TABLE IF NOT EXISTS generated_reports (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    type TEXT, -- 'kundli', 'matchmaking'
+    data TEXT, -- JSON string of input
+    report TEXT, -- The generated content
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS orders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    product_id INTEGER,
+    amount REAL,
+    status TEXT DEFAULT 'completed',
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id),
+    FOREIGN KEY(product_id) REFERENCES products(id)
+  );
   `);
   console.log("Database tables initialized.");
 } catch (err) {
@@ -883,6 +904,102 @@ async function startServer() {
     }
   });
 
+  app.get("/api/user/:email/orders", (req, res) => {
+    try {
+      const user = db.prepare("SELECT id FROM users WHERE email = ?").get(req.params.email) as any;
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      const orders = db.prepare(`
+        SELECT o.*, p.name as product_name, p.image_url as product_image
+        FROM orders o
+        JOIN products p ON o.product_id = p.id
+        WHERE o.user_id = ?
+        ORDER BY o.timestamp DESC
+      `).all(user.id);
+      res.json(orders);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch user orders" });
+    }
+  });
+
+  app.get("/api/user/:email/chats", (req, res) => {
+    try {
+      const user = db.prepare("SELECT id FROM users WHERE email = ?").get(req.params.email) as any;
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      const chats = db.prepare(`
+        SELECT t.*, a.name as astrologer_name, a.image_url as astrologer_image
+        FROM transactions t
+        JOIN astrologers a ON t.astrologer_id = a.id
+        WHERE t.user_id = ? AND t.type = 'chat'
+        ORDER BY t.timestamp DESC
+      `).all(user.id);
+      res.json(chats);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch user chat history" });
+    }
+  });
+
+  app.get("/api/user/:email/reports", (req, res) => {
+    try {
+      const user = db.prepare("SELECT id FROM users WHERE email = ?").get(req.params.email) as any;
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      const reports = db.prepare(`
+        SELECT gr.*
+        FROM generated_reports gr
+        WHERE gr.user_id = ?
+        ORDER BY gr.timestamp DESC
+      `).all(user.id);
+      res.json(reports.map((r: any) => ({ ...r, data: JSON.parse(r.data) })));
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch user reports" });
+    }
+  });
+
+  app.get("/api/user/:email/reviews", (req, res) => {
+    try {
+      const user = db.prepare("SELECT id FROM users WHERE email = ?").get(req.params.email) as any;
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      const reviews = db.prepare(`
+        SELECT r.*, a.name as astrologer_name
+        FROM reviews r
+        JOIN astrologers a ON r.astrologer_id = a.id
+        WHERE r.user_id = ?
+        ORDER BY r.timestamp DESC
+      `).all(user.id);
+
+      const productReviews = db.prepare(`
+        SELECT pr.*, p.name as product_name
+        FROM product_reviews pr
+        JOIN products p ON pr.product_id = p.id
+        WHERE pr.user_id = ?
+        ORDER BY pr.timestamp DESC
+      `).all(user.id);
+
+      res.json({ astrologerReviews: reviews, productReviews });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch user reviews" });
+    }
+  });
+
+  app.post("/api/user/save-report", (req, res) => {
+    try {
+      const { email, type, data, report } = req.body;
+      const user = db.prepare("SELECT id FROM users WHERE email = ?").get(email) as any;
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      db.prepare("INSERT INTO generated_reports (user_id, type, data, report) VALUES (?, ?, ?, ?)")
+        .run(user.id, type, JSON.stringify(data), report);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Failed to save report" });
+    }
+  });
+
   app.post("/api/admin/products", (req, res) => {
     const { name, price, vendor_id, image_url, description, how_to_use } = req.body;
     const info = db.prepare("INSERT INTO products (name, price, vendor_id, image_url, description, how_to_use, status) VALUES (?, ?, ?, ?, ?, ?, 'approved')").run(name, price, vendor_id, image_url, description, how_to_use);
@@ -1224,8 +1341,11 @@ async function startServer() {
       if (!product || !user) return res.status(404).json({ error: "Product or User not found" });
       if (user.wallet_balance < product.price) return res.status(400).json({ error: "Insufficient balance" });
 
-      db.prepare("UPDATE users SET wallet_balance = wallet_balance - ? WHERE id = ?").run(product.price, user.id);
-      db.prepare("INSERT INTO transactions (user_id, amount, type) VALUES (?, ?, 'purchase')").run(user.id, -product.price);
+      db.transaction(() => {
+        db.prepare("UPDATE users SET wallet_balance = wallet_balance - ? WHERE id = ?").run(product.price, user.id);
+        db.prepare("INSERT INTO transactions (user_id, amount, type) VALUES (?, ?, 'purchase')").run(user.id, -product.price);
+        db.prepare("INSERT INTO orders (user_id, product_id, amount) VALUES (?, ?, ?)").run(user.id, productId, product.price);
+      })();
       
       res.json({ success: true, newBalance: user.wallet_balance - product.price });
     } catch (error) {

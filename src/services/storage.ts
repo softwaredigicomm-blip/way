@@ -39,6 +39,8 @@ const SEED_DATA = {
       specialty: "Vedic Astrology",
       price_per_min: 15,
       is_online: true,
+      is_chat_active: true,
+      is_call_active: true,
       image_url: "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?auto=format&fit=crop&q=80&w=200&h=200",
       wallet_balance: 500,
       experience: 15,
@@ -54,6 +56,8 @@ const SEED_DATA = {
       specialty: "Numerology",
       price_per_min: 20,
       is_online: true,
+      is_chat_active: true,
+      is_call_active: true,
       image_url: "https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?auto=format&fit=crop&q=80&w=200&h=200",
       wallet_balance: 0,
       experience: 10,
@@ -170,7 +174,42 @@ export const storageApi = {
   // Astrologers
   getAstrologers: async (activeOnly = true) => {
     const astros = get(STORAGE_KEYS.ASTROLOGERS);
-    return activeOnly ? astros.filter((a: any) => a.is_active) : astros;
+    const mapped = astros.map((a: any) => ({
+      is_chat_active: true,
+      is_call_active: true,
+      ...a
+    }));
+    return activeOnly ? mapped.filter((a: any) => a.is_active) : mapped;
+  },
+  updateAstrologerAvailability: async (id: number, data: any) => {
+    const astros = get(STORAGE_KEYS.ASTROLOGERS);
+    const index = astros.findIndex((a: any) => a.id === id);
+    if (index !== -1) {
+      astros[index] = { ...astros[index], ...data };
+      save(STORAGE_KEYS.ASTROLOGERS, astros);
+    }
+    return astros[index];
+  },
+  updateAstrologerProfile: async (id: number, data: any) => {
+    const astros = get(STORAGE_KEYS.ASTROLOGERS);
+    const index = astros.findIndex((a: any) => a.id === id);
+    if (index !== -1) {
+      astros[index] = { ...astros[index], ...data };
+      save(STORAGE_KEYS.ASTROLOGERS, astros);
+    }
+    return astros[index];
+  },
+  getAstrologerProfile: async (id: number) => {
+    const astros = get(STORAGE_KEYS.ASTROLOGERS);
+    const astro = astros.find((a: any) => a.id === id);
+    if (astro) {
+      return {
+        is_chat_active: true,
+        is_call_active: true,
+        ...astro
+      };
+    }
+    return null;
   },
   registerAstrologer: async (data: any) => {
     const astros = get(STORAGE_KEYS.ASTROLOGERS);
@@ -398,6 +437,48 @@ export const storageApi = {
   },
 
   // User Profile
+  purchasePackage: async (data: { email: string, packageId: number, contactNumber?: string, amount?: number, discount?: number }) => {
+    const users = get(STORAGE_KEYS.USERS);
+    const user = users.find((u: any) => u.email === data.email);
+    if (!user) throw new Error("User not found");
+
+    const pkgs = get(STORAGE_KEYS.PACKAGES);
+    const pkg = pkgs.find((p: any) => p.id === data.packageId);
+    if (!pkg) throw new Error("Package not found");
+
+    const userPkgs = get(STORAGE_KEYS.USER_PACKAGES);
+    const newPurchase = {
+      id: Date.now(),
+      user_id: user.id,
+      package_id: data.packageId,
+      purchase_date: new Date().toISOString(),
+      amount: data.amount || pkg.price,
+      discount: data.discount || 0,
+      contact_number: data.contactNumber || user.phone || '',
+      email: data.email,
+      service_required: pkg.name,
+      status: 'active'
+    };
+    userPkgs.push(newPurchase);
+    save(STORAGE_KEYS.USER_PACKAGES, userPkgs);
+    return { success: true };
+  },
+  getPurchasedPackages: async () => {
+    const userPkgs = get(STORAGE_KEYS.USER_PACKAGES);
+    const users = get(STORAGE_KEYS.USERS);
+    const pkgs = get(STORAGE_KEYS.PACKAGES);
+    return userPkgs.map((up: any) => {
+      const user = users.find((u: any) => u.id === up.user_id);
+      const pkg = pkgs.find((p: any) => p.id === up.package_id);
+      return {
+        ...up,
+        userName: user?.name || 'Unknown',
+        userEmail: user?.email || up.email || 'Unknown',
+        packageName: pkg?.name || 'Unknown',
+        packagePrice: pkg?.price || 0
+      };
+    });
+  },
   getUserPackages: async (email: string) => {
     const user = await storageApi.getUser(email);
     if (!user) return [];
@@ -431,7 +512,7 @@ export const storageApi = {
 };
 
 export const apiFetch = async (url: string, init?: any): Promise<any> => {
-  const path = url.replace('/api/', '');
+  const path = url.replace('/api/', '').split('?')[0];
   const method = init?.method || 'GET';
   const body = init?.body ? JSON.parse(init.body) : null;
 
@@ -450,7 +531,7 @@ export const apiFetch = async (url: string, init?: any): Promise<any> => {
       if (path === 'user/recharge') return storageApi.rechargeWallet(body.email, body.amount);
       if (path === 'user/register') return storageApi.registerUser(body);
       if (path === 'user/purchase') return { success: true }; // Simplified
-      if (path === 'user/purchase-package') return { success: true }; // Simplified
+      if (path === 'user/purchase-package') return storageApi.purchasePackage(body);
       if (path === 'user/review') return storageApi.submitReview(body);
     }
   }
@@ -462,13 +543,13 @@ export const apiFetch = async (url: string, init?: any): Promise<any> => {
     const id = parseInt(parts[1]);
     if (path.includes('/reviews')) return storageApi.getReviews(id);
     if (path.includes('/calls')) return []; // Mock
-    if (path.includes('/requests')) return []; // Mock
-    if (path.includes('/profile')) return storageApi.getAstrologers(false).then(list => list.find((a: any) => a.id === id));
+    if (path.includes('/requests') && method === 'GET') return storageApi.getChatRequests(id);
+    if (path.includes('/profile')) return storageApi.getAstrologerProfile(id);
     if (path === 'astrologer/register') return storageApi.registerAstrologer(body);
     if (path === 'astrologer/login') return storageApi.loginAstrologer(body.email, body.password);
     if (path.includes('/withdraw')) return { success: true };
-    if (path.includes('/availability')) return { success: true };
-    if (path.includes('/update')) return { success: true };
+    if (path.includes('/availability')) return storageApi.updateAstrologerAvailability(id, body);
+    if (path.includes('/update')) return storageApi.updateAstrologerProfile(id, body);
   }
 
   // Other routes
@@ -563,6 +644,7 @@ export const apiFetch = async (url: string, init?: any): Promise<any> => {
     if (path === 'admin/categories') return storageApi.getCategories();
     if (path === 'admin/products') return storageApi.getProducts();
     if (path === 'admin/packages') return storageApi.getPackages();
+    if (path === 'admin/purchased-packages') return storageApi.getPurchasedPackages();
     
     if (path === 'admin/astrologer/approve') {
       const { astroId, action } = body;
