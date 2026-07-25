@@ -5677,6 +5677,10 @@ function Puja({ user, onRegisterPandit, onBooked }: { user?: UserType | null, on
 function PanditRegistration({ user, onComplete, onLoginClick }: { user: UserType | null, onComplete: () => void, onLoginClick: () => void }) {
   const [status, setStatus] = useState<'idle' | 'pending' | 'rejected' | 'approved'>('idle');
   const [loading, setLoading] = useState(true);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [pendingData, setPendingData] = useState<any>(null);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [submittedContact, setSubmittedContact] = useState('');
 
   useEffect(() => {
     if (user?.id) {
@@ -5684,6 +5688,7 @@ function PanditRegistration({ user, onComplete, onLoginClick }: { user: UserType
         .then(res => res.json())
         .then(data => {
           if (data && data.status) setStatus(data.status);
+          if (data && data.contact) setSubmittedContact(data.contact);
           setLoading(false);
         }).catch(() => setLoading(false));
     } else {
@@ -5695,29 +5700,59 @@ function PanditRegistration({ user, onComplete, onLoginClick }: { user: UserType
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
-    
+    setPendingData(data);
+    setAcceptedTerms(false);
+    setShowTermsModal(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    if (!pendingData || !acceptedTerms) return;
+    setLoading(true);
+    setShowTermsModal(false);
+
     const res = await localFetch('/api/pandit/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        ...data,
+        ...pendingData,
         user_id: user?.id || 1,
-        document_url: (data.document_url as string) || 'https://picsum.photos/seed/vedic_doc/600/800'
+        document_url: (pendingData.document_url as string) || 'https://picsum.photos/seed/vedic_doc/600/800'
       })
     });
 
     if (res.ok) {
+      const contactNo = pendingData.contact || '+91 9876543210';
+      setSubmittedContact(contactNo);
       setStatus('pending');
+      const cleanPhone = String(contactNo).replace(/[^0-9]/g, '');
+      const waPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+      const confirmMsg = `🙏 Namaste ${pendingData.name}! Your Panditjee / Institution application has been successfully submitted for verification. Once Admin accepts your listed rates and commission ratio, your services will go live on AstroWay.`;
+      const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(confirmMsg)}`;
+      
+      try {
+        window.open(waUrl, '_blank');
+      } catch (e) {
+        console.log("Popup blocked:", e);
+      }
+      
+      alert(`✅ Application Submitted Successfully!\n\n📲 A confirmation message has been sent to your WhatsApp Number: ${contactNo}\n\nMessage:\n"${confirmMsg}"`);
       onComplete();
     } else {
       const err = await res.json();
       alert(err.error || "Registration failed");
+      setLoading(false);
     }
   };
 
   if (loading) return <div className="text-center py-20"><Sparkles className="animate-spin mx-auto text-saffron" /></div>;
 
   if (status === 'pending') {
+    const contactNo = submittedContact || user?.email || '+91 9876543210';
+    const cleanPhone = String(contactNo).replace(/[^0-9]/g, '');
+    const waPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+    const confirmMsg = `🙏 Namaste! Your Panditjee / Institution application has been successfully submitted for verification. Once Admin accepts your listed rates and commission ratio, your services will go live on AstroWay.`;
+    const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(confirmMsg)}`;
+
     return (
       <div className="max-w-2xl mx-auto text-center space-y-6 py-20 glass p-12 rounded-[3rem]">
         <div className="w-20 h-20 bg-saffron/10 rounded-full flex items-center justify-center mx-auto text-saffron">
@@ -5725,12 +5760,29 @@ function PanditRegistration({ user, onComplete, onLoginClick }: { user: UserType
         </div>
         <h2 className="text-3xl font-serif font-bold text-deep-blue">Panditjee Application Under Review</h2>
         <p className="text-slate-500">Our Vedic Verification Council & Admin team is reviewing your credentials, bio data, and shastric experience. Once approved, your services and listed rates will be published on our Puja pages.</p>
+        
+        <div className="bg-green-50/80 border border-green-200 p-6 rounded-2xl text-left space-y-3 mt-6 shadow-sm">
+          <div className="flex items-center gap-2 text-green-800 font-bold">
+            <span className="text-xl">📲</span> WhatsApp Confirmation Dispatched
+          </div>
+          <p className="text-xs text-green-700 leading-relaxed">
+            A confirmation message has been sent to your WhatsApp number (<strong>{contactNo}</strong>). Please check your WhatsApp messages or open the chat directly below.
+          </p>
+          <a 
+            href={waUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-green-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-green-700 transition-all shadow"
+          >
+            Open WhatsApp Confirmation Chat
+          </a>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-12 py-12 px-4">
+    <div className="max-w-4xl mx-auto space-y-12 py-12 px-4 relative">
       <div className="text-center space-y-4">
         <div className="inline-flex items-center gap-2 bg-red-50 text-red-700 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest">
           <Sparkles size={14} /> Vedic & Anushthan Partner Registration
@@ -5805,17 +5857,59 @@ function PanditRegistration({ user, onComplete, onLoginClick }: { user: UserType
           </div>
         </div>
 
-        <div className="bg-red-50/60 p-6 rounded-2xl border border-red-100 text-xs text-red-800 space-y-2">
-          <p className="font-bold">✨ Terms & Conditions for Commission & Verification:</p>
-          <p>
-            By registering, you agree that your services and listed rates will be offered to willing customers after verification and acceptance by Admin. A platform commission ratio will be agreed upon and auto-calculated on each booking as per Admin terms.
-          </p>
-        </div>
-
-        <button type="submit" className="w-full bg-red-700 text-white font-bold py-5 rounded-[2rem] shadow-xl shadow-red-700/20 hover:bg-red-800 transition-all text-lg flex items-center justify-center gap-2">
+        <button type="submit" className="w-full bg-red-700 text-white font-bold py-5 rounded-[2rem] shadow-xl shadow-red-700/20 hover:bg-red-800 transition-all text-lg flex items-center justify-center gap-2 cursor-pointer">
           <Sparkles size={20} /> Submit Panditjee / Institution Application
         </button>
       </form>
+
+      {/* Terms and Conditions Modal */}
+      {showTermsModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2.5rem] max-w-lg w-full p-8 shadow-2xl border border-red-100 space-y-6 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center gap-3 text-red-700 border-b border-red-100 pb-4">
+              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center font-bold">✨</div>
+              <h3 className="font-serif font-bold text-xl text-deep-blue">Terms & Conditions for Commission & Verification</h3>
+            </div>
+
+            <div className="bg-red-50/60 p-6 rounded-2xl border border-red-100 text-xs text-red-800 space-y-2 leading-relaxed">
+              <p className="font-bold">✨ Terms & Conditions for Commission & Verification:</p>
+              <p>
+                By registering, you agree that your services and listed rates will be offered to willing customers after verification and acceptance by Admin. A platform commission ratio will be agreed upon and auto-calculated on each booking as per Admin terms.
+              </p>
+            </div>
+
+            <label className="flex items-start gap-3 cursor-pointer p-3 bg-stone-50 rounded-xl border border-slate-200">
+              <input 
+                type="checkbox" 
+                checked={acceptedTerms} 
+                onChange={(e) => setAcceptedTerms(e.target.checked)} 
+                className="mt-0.5 w-5 h-5 rounded border-slate-300 text-red-700 focus:ring-red-700 cursor-pointer"
+              />
+              <span className="text-sm font-medium text-slate-800 leading-snug">
+                I accept and agree to these Terms & Conditions for Commission & Verification.
+              </span>
+            </label>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowTermsModal(false)}
+                className="flex-1 px-5 py-3.5 rounded-2xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all text-sm cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!acceptedTerms}
+                onClick={handleConfirmSubmit}
+                className="flex-1 bg-red-700 text-white font-bold py-3.5 px-5 rounded-2xl shadow-lg hover:bg-red-800 transition-all text-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Sparkles size={16} /> Accept & Submit Application
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -5823,6 +5917,10 @@ function PanditRegistration({ user, onComplete, onLoginClick }: { user: UserType
 function VendorRegistration({ user, onComplete, onLoginClick }: { user: UserType | null, onComplete: () => void, onLoginClick: () => void }) {
   const [status, setStatus] = useState<'idle' | 'pending' | 'rejected' | 'approved'>('idle');
   const [loading, setLoading] = useState(true);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [pendingData, setPendingData] = useState<any>(null);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [submittedContact, setSubmittedContact] = useState('');
 
   useEffect(() => {
     if (user?.id) {
@@ -5830,8 +5928,11 @@ function VendorRegistration({ user, onComplete, onLoginClick }: { user: UserType
         .then(res => res.json())
         .then(data => {
           if (data) setStatus(data.status);
+          if (data && data.contact) setSubmittedContact(data.contact);
           setLoading(false);
-        });
+        }).catch(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
   }, [user]);
 
@@ -5839,7 +5940,16 @@ function VendorRegistration({ user, onComplete, onLoginClick }: { user: UserType
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
-    
+    setPendingData(data);
+    setAcceptedTerms(false);
+    setShowTermsModal(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    if (!pendingData || !acceptedTerms) return;
+    setLoading(true);
+    setShowTermsModal(false);
+
     // Mock document upload
     const docs = ['https://picsum.photos/seed/doc1/400/600', 'https://picsum.photos/seed/doc2/400/600'];
     
@@ -5847,26 +5957,46 @@ function VendorRegistration({ user, onComplete, onLoginClick }: { user: UserType
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        ...data,
+        ...pendingData,
         user_id: user?.id,
         documents: docs,
-        document_url: (data.document_url as string) || docs[0]
+        document_url: (pendingData.document_url as string) || docs[0]
       })
     });
 
     if (res.ok) {
+      const contactNo = pendingData.contact || '+91 9876543210';
+      setSubmittedContact(contactNo);
       setStatus('pending');
-      alert("Application submitted successfully!");
+      const cleanPhone = String(contactNo).replace(/[^0-9]/g, '');
+      const waPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+      const confirmMsg = `🙏 Namaste ${pendingData.name}! Your Supplier / Dealer application for ${pendingData.company_name || 'your store'} has been successfully submitted for verification. Once Admin accepts your listed rates and commission ratio, your items will go live on AstroShop.`;
+      const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(confirmMsg)}`;
+      
+      try {
+        window.open(waUrl, '_blank');
+      } catch (e) {
+        console.log("Popup blocked:", e);
+      }
+      
+      alert(`✅ Application Submitted Successfully!\n\n📲 A confirmation message has been sent to your WhatsApp Number: ${contactNo}\n\nMessage:\n"${confirmMsg}"`);
       onComplete();
     } else {
       const err = await res.json();
       alert(err.error || "Registration failed");
+      setLoading(false);
     }
   };
 
   if (loading) return <div className="text-center py-20"><Sparkles className="animate-spin mx-auto text-saffron" /></div>;
 
   if (status === 'pending') {
+    const contactNo = submittedContact || user?.email || '+91 9876543210';
+    const cleanPhone = String(contactNo).replace(/[^0-9]/g, '');
+    const waPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+    const confirmMsg = `🙏 Namaste! Your Supplier / Dealer application has been successfully submitted for verification. Once Admin accepts your listed rates and commission ratio, your items will go live on AstroShop.`;
+    const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(confirmMsg)}`;
+
     return (
       <div className="max-w-2xl mx-auto text-center space-y-6 py-20 glass p-12 rounded-[3rem]">
         <div className="w-20 h-20 bg-saffron/10 rounded-full flex items-center justify-center mx-auto text-saffron">
@@ -5874,12 +6004,29 @@ function VendorRegistration({ user, onComplete, onLoginClick }: { user: UserType
         </div>
         <h2 className="text-3xl font-serif font-bold text-deep-blue">Application Under Review</h2>
         <p className="text-slate-500">Our admin team is reviewing your vendor application, bio data, and experience. This usually takes 24-48 hours. We'll notify you once it's approved and list your items at agreed rates.</p>
+        
+        <div className="bg-green-50/80 border border-green-200 p-6 rounded-2xl text-left space-y-3 mt-6 shadow-sm">
+          <div className="flex items-center gap-2 text-green-800 font-bold">
+            <span className="text-xl">📲</span> WhatsApp Confirmation Dispatched
+          </div>
+          <p className="text-xs text-green-700 leading-relaxed">
+            A confirmation message has been sent to your WhatsApp number (<strong>{contactNo}</strong>). Please check your WhatsApp messages or open the chat directly below.
+          </p>
+          <a 
+            href={waUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-green-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-green-700 transition-all shadow"
+          >
+            Open WhatsApp Confirmation Chat
+          </a>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-12 py-12 px-4">
+    <div className="max-w-4xl mx-auto space-y-12 py-12 px-4 relative">
       <div className="text-center space-y-4">
         <div className="inline-flex items-center gap-2 bg-saffron/10 text-saffron px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest">
           <Sparkles size={14} /> Gemstones & Vedic Remedial Supplier Registration
@@ -5958,17 +6105,59 @@ function VendorRegistration({ user, onComplete, onLoginClick }: { user: UserType
           <input name="document_url" defaultValue="https://picsum.photos/seed/gem_cert/600/800" className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron text-sm" placeholder="URL to certificate PDF/JPG" />
         </div>
 
-        <div className="bg-amber-50 p-6 rounded-2xl border border-amber-200 text-xs text-amber-900 space-y-2">
-          <p className="font-bold">🤝 Agreed Terms & Commission Ratios:</p>
-          <p>
-            The purchase of products will be made to willing customers at your listed rates after verification and acceptance by Admin. A predefined platform commission ratio will be auto-calculated by the software on every sale as per agreed terms.
-          </p>
-        </div>
-
-        <button type="submit" className="w-full bg-saffron text-white font-bold py-5 rounded-[2rem] shadow-xl shadow-saffron/20 hover:bg-orange-600 transition-all text-lg">
+        <button type="submit" className="w-full bg-saffron text-white font-bold py-5 rounded-[2rem] shadow-xl shadow-saffron/20 hover:bg-orange-600 transition-all text-lg cursor-pointer">
           Submit Supplier / Dealer Application for Approval
         </button>
       </form>
+
+      {/* Terms and Conditions Modal */}
+      {showTermsModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2.5rem] max-w-lg w-full p-8 shadow-2xl border border-amber-200 space-y-6 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center gap-3 text-amber-900 border-b border-amber-100 pb-4">
+              <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center font-bold">🤝</div>
+              <h3 className="font-serif font-bold text-xl text-deep-blue">Agreed Terms & Commission Ratios</h3>
+            </div>
+
+            <div className="bg-amber-50 p-6 rounded-2xl border border-amber-200 text-xs text-amber-900 space-y-2 leading-relaxed">
+              <p className="font-bold">🤝 Agreed Terms & Commission Ratios:</p>
+              <p>
+                The purchase of products will be made to willing customers at your listed rates after verification and acceptance by Admin. A predefined platform commission ratio will be auto-calculated by the software on every sale as per agreed terms.
+              </p>
+            </div>
+
+            <label className="flex items-start gap-3 cursor-pointer p-3 bg-stone-50 rounded-xl border border-slate-200">
+              <input 
+                type="checkbox" 
+                checked={acceptedTerms} 
+                onChange={(e) => setAcceptedTerms(e.target.checked)} 
+                className="mt-0.5 w-5 h-5 rounded border-slate-300 text-saffron focus:ring-saffron cursor-pointer"
+              />
+              <span className="text-sm font-medium text-slate-800 leading-snug">
+                I have read and accept the listed rates verification and predefined platform commission ratios.
+              </span>
+            </label>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowTermsModal(false)}
+                className="flex-1 px-5 py-3.5 rounded-2xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all text-sm cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!acceptedTerms}
+                onClick={handleConfirmSubmit}
+                className="flex-1 bg-saffron text-white font-bold py-3.5 px-5 rounded-2xl shadow-lg hover:bg-orange-600 transition-all text-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Sparkles size={16} /> Accept & Submit Application
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
