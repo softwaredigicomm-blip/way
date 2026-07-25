@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Sparkles, HelpCircle, CheckCircle2, AlertCircle, FileText, 
   Send, ArrowRight, X, Shield, Clock, Award, User, Mail,
-  Briefcase, Heart, Gem, DollarSign, Activity, BookOpen, Home, Compass
+  Briefcase, Heart, Gem, DollarSign, Activity, BookOpen, Home, Compass, Calendar, MapPin
 } from 'lucide-react';
 import { PaymentGatewayModal, PaymentReceipt } from './PaymentGatewayModal';
 import { User as UserType } from '../types';
@@ -37,6 +37,10 @@ export const Express3QuestionModal: React.FC<Express3QuestionModalProps> = ({
 }) => {
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
+  const [dob, setDob] = useState((user as any)?.dob || '');
+  const [timeOfBirth, setTimeOfBirth] = useState((user as any)?.time_of_birth || '');
+  const [placeOfBirth, setPlaceOfBirth] = useState((user as any)?.place_of_birth || '');
+  const [backgroundContext, setBackgroundContext] = useState('');
   const [selectedArea, setSelectedArea] = useState<string>('career');
   
   const [q1, setQ1] = useState('');
@@ -80,6 +84,10 @@ export const Express3QuestionModal: React.FC<Express3QuestionModalProps> = ({
       setError('Please provide a valid email address.');
       return;
     }
+    if (!dob.trim() || !timeOfBirth.trim() || !placeOfBirth.trim()) {
+      setError('Before asking questions, please enter your complete birth details (Date, Time, and Birth Place).');
+      return;
+    }
     if (!q1.trim() || !q2.trim() || !q3.trim()) {
       setError('Please frame all 3 questions in the boxes provided below.');
       return;
@@ -110,6 +118,10 @@ export const Express3QuestionModal: React.FC<Express3QuestionModalProps> = ({
           questions: [q1.trim(), q2.trim(), q3.trim()],
           amount: 50,
           receiptId: receipt.id,
+          dob: dob.trim(),
+          timeOfBirth: timeOfBirth.trim(),
+          placeOfBirth: placeOfBirth.trim(),
+          backgroundContext: backgroundContext.trim()
         })
       });
 
@@ -122,9 +134,9 @@ export const Express3QuestionModal: React.FC<Express3QuestionModalProps> = ({
       // If backend didn't return answers (e.g., offline fallback), generate high quality ones
       if (!generatedAnswers || generatedAnswers.length !== 3) {
         generatedAnswers = [
-          `Planetary Alignment Analysis for Question 1: Jupiter's current transit brings significant clarity and growth potential to your enquiry. While minor friction due to Saturn's aspect may require patience over the next 4 to 6 weeks, the long-term planetary yoga is highly auspicious. Stay persistent and disciplined.`,
-          `Vedic Dasha Insight for Question 2: Your birth chart planetary cycle indicates a transformative phase regarding this matter. Venus and Mercury form a supportive combination, suggesting favorable resolutions and positive news. Trust your intuition and take decisive actions on auspicious days like Tuesday or Friday.`,
-          `Cosmic Remedy & Guidance for Question 3: The position of the Sun and Moon highlights strong inner resilience. To overcome lingering obstacles and accelerate favorable results, chant the Gayatri Mantra 108 times daily at sunrise and offer fresh water to Surya Dev. Auspicious progress is foreseen within 45 days.`
+          `Planetary Alignment Analysis for Question 1 (Born: ${dob} in ${placeOfBirth}): Based on your birth coordinates, Jupiter's current transit in your fortune sector brings significant clarity and growth potential to your enquiry regarding ${areaLabel}. While minor friction due to Saturn's aspect may require patience over the next 4 to 6 weeks, the long-term planetary yoga is highly auspicious. Stay persistent and disciplined.`,
+          `Vedic Dasha Insight for Question 2: Examining your birth time (${timeOfBirth}), your planetary dasha cycle indicates a transformative phase regarding "${areaLabel}". Venus and Mercury form a supportive combination, suggesting favorable resolutions and positive progress. Trust your intuition and take decisive actions on auspicious days like Tuesday or Friday.`,
+          `Cosmic Remedy & Guidance for Question 3: The position of the Sun and Moon in your Kundli highlights strong inner resilience and karmic blessings. To overcome lingering obstacles and accelerate favorable results, chant the Gayatri Mantra 108 times daily at sunrise and offer fresh water to Surya Dev. Auspicious progress is foreseen within 45 days.`
         ];
       }
 
@@ -135,9 +147,9 @@ export const Express3QuestionModal: React.FC<Express3QuestionModalProps> = ({
       console.error('Error generating answers:', err);
       // Fallback
       setAnswers([
-        `Planetary Alignment Analysis for Question 1: Jupiter's current transit brings significant clarity and growth potential to your enquiry. While minor friction due to Saturn's aspect may require patience over the next 4 to 6 weeks, the long-term planetary yoga is highly auspicious. Stay persistent and disciplined.`,
-        `Vedic Dasha Insight for Question 2: Your birth chart planetary cycle indicates a transformative phase regarding this matter. Venus and Mercury form a supportive combination, suggesting favorable resolutions and positive news. Trust your intuition and take decisive actions on auspicious days like Tuesday or Friday.`,
-        `Cosmic Remedy & Guidance for Question 3: The position of the Sun and Moon highlights strong inner resilience. To overcome lingering obstacles and accelerate favorable results, chant the Gayatri Mantra 108 times daily at sunrise and offer fresh water to Surya Dev. Auspicious progress is foreseen within 45 days.`
+        `Planetary Alignment Analysis for Question 1 (Born: ${dob} in ${placeOfBirth}): Based on your birth coordinates, Jupiter's current transit in your fortune sector brings significant clarity and growth potential to your enquiry. While minor friction due to Saturn's aspect may require patience over the next 4 to 6 weeks, the long-term planetary yoga is highly auspicious. Stay persistent and disciplined.`,
+        `Vedic Dasha Insight for Question 2: Examining your birth time (${timeOfBirth}), your planetary dasha cycle indicates a transformative phase regarding this matter. Venus and Mercury form a supportive combination, suggesting favorable resolutions and positive progress. Trust your intuition and take decisive actions on auspicious days like Tuesday or Friday.`,
+        `Cosmic Remedy & Guidance for Question 3: The position of the Sun and Moon in your Kundli highlights strong inner resilience and karmic blessings. To overcome lingering obstacles and accelerate favorable results, chant the Gayatri Mantra 108 times daily at sunrise and offer fresh water to Surya Dev. Auspicious progress is foreseen within 45 days.`
       ]);
       setReportDate(new Date().toLocaleString());
       onSuccess();
@@ -156,17 +168,28 @@ export const Express3QuestionModal: React.FC<Express3QuestionModalProps> = ({
     doc.setTextColor(242, 125, 38);
     doc.text('ASTROWAY EXPRESS CONSULTATION REPORT', 105, 20, { align: 'center' });
     
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setTextColor(100, 100, 100);
-    doc.text(`Consultation Date: ${reportDate}`, 20, 32);
-    doc.text(`Client Name: ${name} (${email})`, 20, 38);
-    doc.text(`Selected Area of Interest: ${selectedAreaObj?.label || 'Vedic Astrology'}`, 20, 44);
+    doc.text(`Consultation Date: ${reportDate}`, 20, 30);
+    doc.text(`Client Name: ${name} (${email})`, 20, 36);
+    doc.text(`Birth Details: ${dob} at ${timeOfBirth}, ${placeOfBirth}`, 20, 42);
+    doc.text(`Selected Area of Interest: ${selectedAreaObj?.label || 'Vedic Astrology'}`, 20, 48);
+    
+    let yPos = 54;
+    if (backgroundContext.trim()) {
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Background Context:`, 20, yPos);
+      doc.setFont('helvetica', 'italic');
+      const bgLines = doc.splitTextToSize(`"${backgroundContext.trim()}"`, 170);
+      doc.text(bgLines, 20, yPos + 5);
+      yPos += 5 + (bgLines.length * 4) + 4;
+    }
     
     doc.setLineWidth(0.5);
     doc.setDrawColor(220, 220, 220);
-    doc.line(20, 48, 190, 48);
+    doc.line(20, yPos, 190, yPos);
+    yPos += 10;
     
-    let yPos = 58;
     const questions = [q1, q2, q3];
     
     questions.forEach((q, idx) => {
@@ -254,7 +277,7 @@ export const Express3QuestionModal: React.FC<Express3QuestionModalProps> = ({
               </div>
             ) : answers ? (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-                <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-6 text-center space-y-2">
+                <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-6 text-center space-y-3">
                   <div className="inline-flex items-center gap-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
                     <CheckCircle2 size={14} /> Instant Consultation Complete
                   </div>
@@ -264,6 +287,17 @@ export const Express3QuestionModal: React.FC<Express3QuestionModalProps> = ({
                   <p className="text-xs text-slate-500">
                     Prepared for <strong>{name}</strong> • Area: <strong>{AREAS_OF_INTEREST.find(a => a.id === selectedArea)?.label}</strong>
                   </p>
+                  <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-xs text-slate-600 dark:text-slate-300 border-t border-green-500/10">
+                    <span className="bg-white/80 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">DOB: <strong>{dob}</strong></span>
+                    <span className="bg-white/80 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">Time: <strong>{timeOfBirth}</strong></span>
+                    <span className="bg-white/80 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">Place: <strong>{placeOfBirth}</strong></span>
+                  </div>
+                  {backgroundContext && (
+                    <div className="text-xs bg-white/60 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200/60 text-left max-w-xl mx-auto mt-2">
+                      <span className="font-bold text-slate-700 dark:text-slate-300 block mb-0.5">Background Context Provided:</span>
+                      <p className="text-slate-600 dark:text-slate-400 italic">"{backgroundContext}"</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-6">
@@ -357,10 +391,82 @@ export const Express3QuestionModal: React.FC<Express3QuestionModalProps> = ({
                   </div>
                 </div>
 
-                {/* Section 2: Select Area of Interest */}
+                {/* Section 2: Birth Details & Background Context */}
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-5">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-bold text-deep-blue dark:text-white uppercase tracking-wider flex items-center gap-2">
+                      <Compass size={16} className="text-saffron" /> Step 2: Birth Details & Background (Required Before Asking Questions)
+                    </h4>
+                    <span className="text-[10px] bg-green-500/10 text-green-600 px-2.5 py-1 rounded-full font-bold">
+                      Vedic Ephemeris Accuracy
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="space-y-1.5">
+                      <label htmlFor="express-dob" className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                        <Calendar size={13} className="text-saffron" /> Birth Date *
+                      </label>
+                      <input
+                        id="express-dob"
+                        type="date"
+                        value={dob}
+                        onChange={(e) => setDob(e.target.value)}
+                        required
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-medium focus:ring-2 focus:ring-saffron outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label htmlFor="express-tob" className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                        <Clock size={13} className="text-saffron" /> Birth Time *
+                      </label>
+                      <input
+                        id="express-tob"
+                        type="time"
+                        value={timeOfBirth}
+                        onChange={(e) => setTimeOfBirth(e.target.value)}
+                        required
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-medium focus:ring-2 focus:ring-saffron outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label htmlFor="express-pob" className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                        <MapPin size={13} className="text-saffron" /> Birth Place *
+                      </label>
+                      <input
+                        id="express-pob"
+                        type="text"
+                        placeholder="City, State, Country"
+                        value={placeOfBirth}
+                        onChange={(e) => setPlaceOfBirth(e.target.value)}
+                        required
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-medium focus:ring-2 focus:ring-saffron outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+                    <div className="flex items-center justify-between">
+                      <label htmlFor="express-bg" className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Background Context / Situation (Optional)
+                      </label>
+                      <span className="text-[10px] text-slate-400">Helps AI tailor astrological remedies</span>
+                    </div>
+                    <textarea
+                      id="express-bg"
+                      rows={2}
+                      placeholder="e.g., Currently working in IT for 5 years and seeking a job switch, or facing delays in marriage proposals..."
+                      value={backgroundContext}
+                      onChange={(e) => setBackgroundContext(e.target.value)}
+                      className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-saffron outline-none resize-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Section 3: Select Area of Interest */}
                 <div className="space-y-4">
                   <h4 className="text-sm font-bold text-deep-blue dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <Award size={16} className="text-saffron" /> Step 2: Select ONE Area of Interest *
+                    <Award size={16} className="text-saffron" /> Step 3: Select ONE Area of Interest *
                   </h4>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {AREAS_OF_INTEREST.map((area) => {
@@ -388,11 +494,11 @@ export const Express3QuestionModal: React.FC<Express3QuestionModalProps> = ({
                   </div>
                 </div>
 
-                {/* Section 3: Frame 3 Questions (50 words limitation each) */}
+                {/* Section 4: Frame 3 Questions (50 words limitation each) */}
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h4 className="text-sm font-bold text-deep-blue dark:text-white uppercase tracking-wider flex items-center gap-2">
-                      <HelpCircle size={16} className="text-saffron" /> Step 3: Frame Your 3 Questions *
+                      <HelpCircle size={16} className="text-saffron" /> Step 4: Frame Your 3 Questions *
                     </h4>
                     <span className="text-xs font-bold text-saffron bg-saffron/10 px-3 py-1 rounded-full border border-saffron/20">
                       Strict Limitation: Max 50 Words Per Box

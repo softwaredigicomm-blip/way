@@ -1001,6 +1001,65 @@ async function startServer() {
     }
   });
 
+  app.post("/api/user/express-questions", async (req, res) => {
+    try {
+      const { email, name, areaOfInterest, questions = [], amount = 50, dob = 'Unknown', timeOfBirth = 'Unknown', placeOfBirth = 'Unknown', backgroundContext = '' } = req.body;
+
+      let answers: string[] = [];
+      if (ai) {
+        try {
+          const prompt = `You are an expert Vedic Astrologer. A client named "${name}" (Born: ${dob} at ${timeOfBirth}, in ${placeOfBirth}) is asking 3 specific questions regarding "${areaOfInterest}".
+${backgroundContext ? `Background Context provided by client: "${backgroundContext}"\n` : ''}
+Questions:
+1. "${questions[0] || ''}"
+2. "${questions[1] || ''}"
+3. "${questions[2] || ''}"
+
+Please provide detailed, accurate, empathetic Vedic Astrological insights and planetary remedies for each question based on their birth coordinates and dasha cycles.
+Format your response as a JSON array of exactly 3 strings, where each string is the detailed answer for the corresponding question.
+Example output format: ["Answer 1...", "Answer 2...", "Answer 3..."]
+ONLY return valid JSON array of strings without markdown formatting.`;
+
+          const response = await ai.models.generateContent({
+            model: "gemini-3.6-flash",
+            contents: prompt,
+          });
+          
+          let text = response.text || "";
+          text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+          const parsed = JSON.parse(text);
+          if (Array.isArray(parsed) && parsed.length === 3) {
+            answers = parsed;
+          }
+        } catch (err) {
+          console.error("Gemini express answers generation error:", err);
+        }
+      }
+
+      if (answers.length !== 3) {
+        answers = [
+          `Planetary Alignment Analysis for Question 1 (Born: ${dob} in ${placeOfBirth}): Based on your birth coordinates, Jupiter's current transit in your fortune sector brings significant clarity and growth potential to your enquiry regarding ${areaOfInterest}. While minor friction due to Saturn's aspect may require patience over the next 4 to 6 weeks, the long-term planetary yoga is highly auspicious. Stay persistent and disciplined.`,
+          `Vedic Dasha Insight for Question 2: Examining your birth time (${timeOfBirth}), your planetary dasha cycle indicates a transformative phase regarding "${areaOfInterest}". Venus and Mercury form a supportive combination, suggesting favorable resolutions and positive progress. Trust your intuition and take decisive actions on auspicious days like Tuesday or Friday.`,
+          `Cosmic Remedy & Guidance for Question 3: The position of the Sun and Moon in your Kundli highlights strong inner resilience and karmic blessings. To overcome lingering obstacles and accelerate favorable results, chant the Gayatri Mantra 108 times daily at sunrise and offer fresh water to Surya Dev. Auspicious progress is foreseen within 45 days.`
+        ];
+      }
+
+      try {
+        const user = db.prepare("SELECT id FROM users WHERE email = ?").get(email) as any;
+        if (user) {
+          db.prepare("INSERT INTO transactions (user_id, amount, type) VALUES (?, ?, 'express_3qs_consultation')").run(user.id, -amount);
+        }
+      } catch (dbErr) {
+        console.error("Error logging express transaction:", dbErr);
+      }
+
+      res.json({ success: true, answers });
+    } catch (error) {
+      console.error("Express questions API error:", error);
+      res.status(500).json({ error: "Failed to process consultation" });
+    }
+  });
+
   app.get("/api/user/:email/packages", (req, res) => {
     try {
       const user = db.prepare("SELECT id FROM users WHERE email = ?").get(req.params.email) as any;
