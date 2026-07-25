@@ -5,7 +5,7 @@ import {
   Wallet, User, ShoppingBag, BookOpen, LayoutDashboard,
   Sparkles, Compass, Heart, Calendar, Menu, X, Send,
   Download, CheckCircle2, AlertCircle, FileText,
-  ChevronLeft, ChevronRight, History, RefreshCw, Award, Shield, Lock, CreditCard, Smartphone, Building2
+  ChevronLeft, ChevronRight, History, RefreshCw, Award, Shield, Lock, CreditCard, Smartphone, Building2, Languages, Globe
 } from 'lucide-react';
 import { jsPDF } from "jspdf";
 import { Astrologer, User as UserType, ZODIAC_SIGNS, Category, Vendor, Product, Package, Banner, PanditRegistration as PanditType, PujaBooking as PujaBookingType } from './types';
@@ -13,6 +13,7 @@ import { storageApi, initStorage, apiFetch } from './services/storage';
 import { AIAstrologerPortal } from './components/AIAstrologerPortal';
 import { PaymentGatewayModal, PaymentReceipt } from './components/PaymentGatewayModal';
 import { Express3QuestionModal } from './components/Express3QuestionModal';
+import { LanguageSwitcherModal, SUPPORTED_LANGUAGES, LanguageOption, initGoogleTranslate, triggerGoogleTranslate } from './components/LanguageSwitcherModal';
 
 // Initialize local storage with seed data
 initStorage();
@@ -50,6 +51,24 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [showExpressQuestions, setShowExpressQuestions] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [currentLang, setCurrentLang] = useState<LanguageOption>(() => {
+    try {
+      const savedCode = localStorage.getItem('astroway_lang') || 'en';
+      return SUPPORTED_LANGUAGES.find(l => l.code === savedCode) || SUPPORTED_LANGUAGES[0];
+    } catch (e) {
+      return SUPPORTED_LANGUAGES[0];
+    }
+  });
+  const [showLangModal, setShowLangModal] = useState(false);
+
+  useEffect(() => {
+    initGoogleTranslate();
+  }, []);
+
+  const handleSelectLanguage = (lang: LanguageOption) => {
+    setCurrentLang(lang);
+    triggerGoogleTranslate(lang.code);
+  };
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
     try {
       const saved = localStorage.getItem('astroway_admin_auth');
@@ -200,6 +219,31 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col mandala-bg">
+      {/* Auto Translation Active Banner */}
+      {currentLang.code !== 'en' && (
+        <div className="bg-gradient-to-r from-red-950 via-amber-950 to-red-950 text-white px-4 py-2 border-b border-amber-500/30 flex flex-wrap items-center justify-between gap-2 text-xs shadow-inner z-50">
+          <div className="flex items-center gap-2 font-medium">
+            <span className="text-base animate-bounce">{currentLang.flag}</span>
+            <span className="font-extrabold text-amber-300">Auto Translation Active:</span>
+            <span>Displaying content in <strong>{currentLang.nativeName} ({currentLang.name})</strong> • Powered by Vedic AI Translator</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowLangModal(true)}
+              className="text-amber-300 hover:text-white underline font-bold cursor-pointer"
+            >
+              Change Language
+            </button>
+            <button
+              onClick={() => handleSelectLanguage(SUPPORTED_LANGUAGES[0])}
+              className="bg-white/10 hover:bg-white/20 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wider uppercase border border-white/20 transition-all cursor-pointer"
+            >
+              Reset to English
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Navigation */}
       <nav className="sticky top-0 z-50 glass px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('home')}>
@@ -245,6 +289,16 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-3 sm:gap-4">
+          <button
+            onClick={() => setShowLangModal(true)}
+            className="flex items-center gap-1.5 bg-gradient-to-r from-red-950 to-slate-900 hover:from-saffron hover:to-amber-600 text-white px-3 py-1.5 rounded-full text-xs font-bold transition-all border border-amber-500/40 shadow-sm cursor-pointer"
+            title="Auto Translation • North & South Indian Languages"
+          >
+            <Languages size={14} className="text-amber-400 shrink-0" />
+            <span className="text-sm">{currentLang.flag}</span>
+            <span className="hidden sm:inline font-sans">{currentLang.nativeName}</span>
+            <span className="sm:hidden font-sans">{currentLang.code.toUpperCase()}</span>
+          </button>
           {isUserAuthenticated && (
             <button
               onClick={() => setActiveTab('profile')}
@@ -305,6 +359,16 @@ export default function App() {
             exit={{ opacity: 0, y: -20 }}
             className="md:hidden glass absolute top-16 left-0 right-0 p-4 z-40 flex flex-col gap-4"
           >
+            <button
+              onClick={() => {
+                setShowLangModal(true);
+                setIsMenuOpen(false);
+              }}
+              className="text-left py-2.5 text-base font-bold text-red-700 flex items-center gap-2 border-b border-slate-100"
+            >
+              <Languages size={18} className="text-saffron" />
+              <span>🌐 Auto Translation ({currentLang.nativeName})</span>
+            </button>
             {['Home', 'Horoscope', 'Kundli', 'Chat', 'Puja', 'Shop', 'Packages', 'AI'].map((tab) => (
               <button
                 key={tab}
@@ -348,7 +412,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="bg-deep-blue text-white py-12 px-4 mt-12">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-8">
           <div>
             <h3 className="text-2xl font-serif font-bold mb-4 flex items-center gap-2">
               <Sparkles className="text-gold" /> AstroWay
@@ -356,6 +420,31 @@ export default function App() {
             <p className="text-slate-400 text-sm leading-relaxed">
               Your spiritual guide to the cosmos. Combining ancient Vedic wisdom with modern technology.
             </p>
+          </div>
+          <div>
+            <h4 className="font-bold mb-4 text-gold flex items-center gap-1.5">
+              <Languages size={16} /> Auto Translation
+            </h4>
+            <p className="text-xs text-slate-400 leading-relaxed mb-3">
+              Vedic astrology in regional North & South Indian languages:
+            </p>
+            <div className="flex flex-wrap gap-1.5 text-[11px]">
+              {SUPPORTED_LANGUAGES.slice(1, 9).map(l => (
+                <button
+                  key={l.code}
+                  onClick={() => handleSelectLanguage(l)}
+                  className="bg-white/10 hover:bg-saffron text-slate-300 hover:text-white px-2 py-1 rounded transition-all cursor-pointer"
+                >
+                  {l.nativeName}
+                </button>
+              ))}
+              <button
+                onClick={() => setShowLangModal(true)}
+                className="bg-gold text-deep-blue font-bold px-2 py-1 rounded hover:bg-yellow-400 transition-all cursor-pointer"
+              >
+                +6 More
+              </button>
+            </div>
           </div>
           <div>
             <h4 className="font-bold mb-4 text-gold">Quick Links</h4>
@@ -466,9 +555,9 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli 
                 <motion.div 
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-gold/20 via-saffron/30 to-gold/20 border border-gold/50 backdrop-blur-md text-gold font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg"
+                  className="inline-flex items-center gap-2 px-4.5 py-2 rounded-full bg-red-950/50 border border-red-500/50 backdrop-blur-md text-red-400 font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-red-900/30"
                 >
-                  <Sparkles size={16} className="text-saffron animate-pulse shrink-0" /> Highlighting AI Generated Astrological Consultancy Through Software
+                  <Sparkles size={16} className="text-red-500 animate-pulse shrink-0" /> AI-Powered Astrological Consultancy • Precision Guidance Through Advanced Software
                 </motion.div>
                 <motion.h1 
                   initial={{ opacity: 0, x: -50 }}
@@ -537,11 +626,11 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli 
       >
         <div className="absolute top-0 right-0 w-80 h-80 bg-saffron/15 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16" />
         <div className="space-y-3 z-10 text-center md:text-left flex-1">
-          <div className="inline-flex items-center gap-2 bg-gold/20 text-gold px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-gold/40 shadow">
-            <Sparkles size={14} className="text-saffron animate-spin" /> Next-Gen Astrological Technology
+          <div className="inline-flex items-center gap-2 bg-red-950/60 text-red-400 px-3.5 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider border border-red-500/40 shadow">
+            <Sparkles size={14} className="text-red-500 animate-spin" /> Next-Gen Astrological Technology
           </div>
-          <h2 className="text-2xl md:text-3xl font-serif font-black text-white tracking-wide leading-tight">
-            Highlighting AI Generated Astrological Consultancy Through Software
+          <h2 className="text-2xl md:text-3xl font-serif font-black text-red-500 tracking-wide leading-tight drop-shadow-md">
+            AI-Powered Astrological Consultancy • Precision Guidance Through Advanced Software
           </h2>
           <p className="text-sm text-slate-300 max-w-2xl leading-relaxed">
             Experience unparalleled precision with our advanced software algorithms. Generate comprehensive Kundli charts, check planetary alignments, and receive instant, personalized Vedic consultancy 24/7.
@@ -688,8 +777,8 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli 
           </div>
         </div>
         <div className="w-full md:w-1/2 p-12 space-y-6 flex flex-col justify-center">
-          <div className="inline-block bg-saffron/10 text-saffron px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest">
-            Highlighting AI Generated Astrological Consultancy Through Software
+          <div className="inline-block bg-red-50 text-red-600 px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-widest border border-red-200 shadow-sm">
+            AI-Powered Astrological Consultancy • Precision Guidance Through Advanced Software
           </div>
           <h2 className="text-4xl font-serif font-bold text-deep-blue leading-tight">
             Get Instant Remedies from <span className="text-saffron">Pandit Astro</span>
@@ -7147,6 +7236,13 @@ function UserProfile({ user, onUpdate, onLogout, onOpenExpress, localFetch }: { 
         userWalletBalance={user?.wallet_balance || 0}
         allowWalletPayment={false}
         onSuccess={handleRechargeSuccess}
+      />
+
+      <LanguageSwitcherModal
+        isOpen={showLangModal}
+        onClose={() => setShowLangModal(false)}
+        currentLangCode={currentLang.code}
+        onSelectLang={handleSelectLanguage}
       />
     </div>
   );
