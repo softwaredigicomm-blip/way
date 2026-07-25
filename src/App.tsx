@@ -520,6 +520,21 @@ const ZODIAC_ICONS: Record<string, string> = {
   Pisces: "https://img.icons8.com/ios-filled/100/D4AF37/pisces.png",
 };
 
+const ZODIAC_DATES: Record<string, string> = {
+  Aries: "Mar 21 - Apr 19",
+  Taurus: "Apr 20 - May 20",
+  Gemini: "May 21 - Jun 20",
+  Cancer: "Jun 21 - Jul 22",
+  Leo: "Jul 23 - Aug 22",
+  Virgo: "Aug 23 - Sep 22",
+  Libra: "Sep 23 - Oct 22",
+  Scorpio: "Oct 23 - Nov 21",
+  Sagittarius: "Nov 22 - Dec 21",
+  Capricorn: "Dec 22 - Jan 19",
+  Aquarius: "Jan 20 - Feb 18",
+  Pisces: "Feb 19 - Mar 20",
+};
+
 function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli }: { astrologers: Astrologer[], testimonials: any[], banners: Banner[], onOpenExpress?: () => void, onOpenKundli?: () => void }) {
   const [currentBanner, setCurrentBanner] = useState(0);
 
@@ -541,9 +556,21 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli 
   }];
 
   return (
-    <div className="space-y-16">
+    <div className="space-y-16 lg:space-y-24 pb-12">
+      {/* Top Trust Strip */}
+      <div className="bg-gradient-to-r from-purple-900 via-deep-blue to-purple-900 text-white py-2.5 px-4 rounded-2xl shadow-md border border-purple-400/30 flex flex-wrap items-center justify-center gap-4 text-xs sm:text-sm font-medium tracking-wide">
+        <span className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+          <strong className="text-amber-300 font-bold">100% Verified Presence:</strong> All Astrologers & Scholars Legally Bound by Pre-Presence Declaration
+        </span>
+        <span className="hidden md:inline text-purple-400">•</span>
+        <span className="text-slate-200">⚡ 100,000+ Consultations Completed</span>
+        <span className="hidden md:inline text-purple-400">•</span>
+        <span className="text-amber-300 font-semibold">🔒 Encrypted 24/7 Counseling</span>
+      </div>
+
       {/* Dynamic Hero Carousel */}
-      <section className="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl bg-deep-blue">
+      <section className="relative min-h-[520px] lg:h-[580px] rounded-[2.5rem] overflow-hidden shadow-2xl bg-deep-blue border border-slate-800">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentBanner}
@@ -558,38 +585,38 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli 
               className="absolute inset-0 w-full h-full object-cover"
               referrerPolicy="no-referrer"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-deep-blue/90 via-deep-blue/60 to-transparent flex items-center px-12">
-              <div className="max-w-2xl space-y-6">
+            <div className="absolute inset-0 bg-gradient-to-r from-deep-blue/95 via-deep-blue/75 to-transparent flex items-center px-6 sm:px-12 lg:px-16">
+              <div className="max-w-2xl space-y-6 sm:space-y-8">
                 <motion.div 
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="inline-flex items-center gap-2 px-4.5 py-2 rounded-full bg-red-950/50 border border-red-500/50 backdrop-blur-md text-red-400 font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-red-900/30"
+                  className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-400/40 backdrop-blur-md text-amber-300 font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg"
                 >
-                  <Sparkles size={16} className="text-red-500 animate-pulse shrink-0" /> AI-Powered Astrological Consultancy • Precision Guidance Through Advanced Software
+                  <Sparkles size={16} className="text-amber-400 animate-pulse shrink-0" /> AI-Powered Astrological Consultancy • Precision Guidance Through Advanced Software
                 </motion.div>
                 <motion.h1 
                   initial={{ opacity: 0, x: -50 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="text-5xl md:text-6xl font-serif font-bold text-white leading-tight"
+                  className="text-4xl sm:text-5xl lg:text-6xl font-serif font-black text-white leading-[1.15] tracking-tight drop-shadow-md"
                 >
                   {activeBanners[currentBanner].title.includes(' ') ? (
                     <>
-                      {activeBanners[currentBanner].title.split(' ').slice(0, -2).join(' ')} <span className="text-gold">{activeBanners[currentBanner].title.split(' ').slice(-2).join(' ')}</span>
+                      {activeBanners[currentBanner].title.split(' ').slice(0, -2).join(' ')} <span className="text-amber-400">{activeBanners[currentBanner].title.split(' ').slice(-2).join(' ')}</span>
                     </>
                   ) : activeBanners[currentBanner].title}
                 </motion.h1>
-                <p className="text-slate-200 text-lg">
+                <p className="text-slate-200 text-base sm:text-lg lg:text-xl leading-relaxed font-normal max-w-xl">
                   {activeBanners[currentBanner].id === 0 
                     ? "Consult India's top astrologers, get personalized Kundli insights, and navigate your life's journey with clarity."
                     : (activeBanners[currentBanner] as any).description || "Your destiny is written in the stars. Explore your path with our expert guidance and personalized insights."}
                 </p>
-                <div className="flex flex-wrap gap-4 pt-4">
-                  <button onClick={() => onOpenExpress && onOpenExpress()} className="bg-saffron text-white px-6 py-3 rounded-full font-bold shadow-lg hover:bg-orange-600 transition-all transform hover:scale-105 text-sm md:text-base flex items-center gap-2">
-                    <Sparkles size={16} /> Ask 3 Questions (₹50)
+                <div className="flex flex-wrap items-center gap-4 pt-2">
+                  <button onClick={() => onOpenExpress && onOpenExpress()} className="bg-gradient-to-r from-amber-500 via-saffron to-amber-600 text-white px-7 py-3.5 rounded-2xl font-black shadow-xl hover:brightness-110 transition-all transform hover:-translate-y-0.5 text-sm sm:text-base flex items-center gap-2.5 cursor-pointer border border-amber-300/40">
+                    <Sparkles size={18} /> Ask 3 Questions (₹50)
                   </button>
                   <button 
                     onClick={() => onOpenKundli && onOpenKundli()}
-                    className="bg-white/20 backdrop-blur-md text-white border border-white/30 px-6 py-3 rounded-full font-bold hover:bg-white/30 transition-all text-sm md:text-base cursor-pointer shadow-md"
+                    className="bg-white/15 backdrop-blur-md text-white border border-white/40 px-7 py-3.5 rounded-2xl font-bold hover:bg-white/25 transition-all text-sm sm:text-base cursor-pointer shadow-lg hover:border-white"
                   >
                     Get Free Kundli
                   </button>
@@ -603,22 +630,22 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli 
           <>
             <button 
               onClick={() => setCurrentBanner(p => (p - 1 + activeBanners.length) % activeBanners.length)}
-              className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 backdrop-blur-md text-white rounded-full hover:bg-white/20 transition-all z-10"
+              className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 backdrop-blur-md text-white rounded-full hover:bg-white/25 transition-all z-10 border border-white/20 cursor-pointer"
             >
               <ChevronLeft size={24} />
             </button>
             <button 
               onClick={() => setCurrentBanner(p => (p + 1) % activeBanners.length)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 backdrop-blur-md text-white rounded-full hover:bg-white/20 transition-all z-10"
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 backdrop-blur-md text-white rounded-full hover:bg-white/25 transition-all z-10 border border-white/20 cursor-pointer"
             >
               <ChevronRight size={24} />
             </button>
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2.5 z-10">
               {activeBanners.map((_, i) => (
                 <button 
                   key={i} 
                   onClick={() => setCurrentBanner(i)}
-                  className={`w-2 h-2 rounded-full transition-all ${currentBanner === i ? 'bg-saffron w-8' : 'bg-white/50 hover:bg-white'}`}
+                  className={`h-2.5 rounded-full transition-all cursor-pointer ${currentBanner === i ? 'bg-amber-400 w-8 shadow-md' : 'bg-white/50 hover:bg-white w-2.5'}`}
                 />
               ))}
             </div>
@@ -626,30 +653,31 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli 
         )}
       </section>
 
-      {/* AI Generated Astrological Consultancy Highlight Banner */}
+      {/* AI Generated Astrological Consultancy Highlight Banner - Changed to Green Theme as per Image 2 */}
       <motion.div 
         initial={{ opacity: 0, y: 15 }}
         whileInView={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-deep-blue via-slate-900 to-deep-blue rounded-[2.5rem] p-8 text-white border border-gold/30 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden"
+        style={{ backgroundColor: '#008000' }}
+        className="bg-[#008000] bg-gradient-to-r from-[#005a00] via-[#008000] to-[#005a00] rounded-[2.5rem] p-8 sm:p-12 text-white border-2 border-amber-400/60 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden group"
       >
-        <div className="absolute top-0 right-0 w-80 h-80 bg-saffron/15 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16" />
-        <div className="space-y-3 z-10 text-center md:text-left flex-1">
-          <div className="inline-flex items-center gap-2 bg-red-950/60 text-red-400 px-3.5 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider border border-red-500/40 shadow">
-            <Sparkles size={14} className="text-red-500 animate-spin" /> Next-Gen Astrological Technology
+        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-400/15 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-700" />
+        <div className="space-y-4 z-10 text-center lg:text-left flex-1">
+          <div className="inline-flex items-center gap-2 bg-emerald-950/90 text-amber-300 px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-widest border border-amber-400/50 shadow-lg backdrop-blur-md">
+            <Sparkles size={14} className="text-amber-300 animate-spin" /> Next-Gen Astrological Technology
           </div>
-          <h2 className="text-2xl md:text-3xl font-serif font-black text-red-500 tracking-wide leading-tight drop-shadow-md">
-            AI-Powered Astrological Consultancy • Precision Guidance Through Advanced Software
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-black text-white tracking-tight leading-snug drop-shadow-md">
+            AI-Powered Astrological Consultancy • <span className="text-amber-300">Precision Guidance</span> Through Advanced Software
           </h2>
-          <p className="text-sm text-slate-300 max-w-2xl leading-relaxed">
+          <p className="text-sm sm:text-base text-emerald-100 max-w-2xl leading-relaxed font-medium">
             Experience unparalleled precision with our advanced software algorithms. Generate comprehensive Kundli charts, check planetary alignments, and receive instant, personalized Vedic consultancy 24/7.
           </p>
         </div>
-        <div className="z-10 shrink-0 flex flex-col sm:flex-row items-center gap-3">
+        <div className="z-10 shrink-0 flex flex-col sm:flex-row items-center gap-4">
           <button
             onClick={() => onOpenKundli && onOpenKundli()}
-            className="bg-gradient-to-r from-saffron to-amber-600 text-white font-bold px-6 py-4 rounded-2xl shadow-xl hover:from-amber-600 hover:to-saffron transition-all transform hover:scale-105 text-sm flex items-center gap-2 cursor-pointer shrink-0"
+            className="bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-green-950 font-black px-8 py-4 rounded-2xl shadow-2xl hover:brightness-110 transition-all transform hover:-translate-y-1 text-sm sm:text-base flex items-center gap-2.5 cursor-pointer shrink-0 border border-yellow-200"
           >
-            <Sparkles size={16} /> Get Free Kundli Now
+            <Sparkles size={18} className="text-green-950" /> Get Free Kundli Now
           </button>
         </div>
       </motion.div>
@@ -657,54 +685,98 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli 
       {/* Express ₹50 / 3-Question Special Offer Banner */}
       <motion.div 
         whileHover={{ y: -4 }}
-        className="bg-gradient-to-r from-saffron via-amber-600 to-saffron rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden border border-white/20 flex flex-col md:flex-row items-center justify-between gap-6"
+        className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 rounded-[2.5rem] p-8 sm:p-10 text-white shadow-2xl relative overflow-hidden border border-amber-300/40 flex flex-col lg:flex-row items-center justify-between gap-8"
       >
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
-        <div className="space-y-3 z-10 text-center md:text-left">
-          <div className="inline-flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+        <div className="space-y-3 z-10 text-center lg:text-left flex-1">
+          <div className="inline-flex items-center gap-2 bg-white/20 px-3.5 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-widest border border-white/30">
             <Sparkles size={14} /> Most Popular Express Consultation
           </div>
-          <h3 className="text-3xl font-serif font-black">Ask 3 Questions for Just ₹50</h3>
-          <p className="text-sm text-white/90 max-w-xl leading-relaxed">
+          <h3 className="text-3xl sm:text-4xl font-serif font-black tracking-tight leading-tight">Ask 3 Questions for Just ₹50</h3>
+          <p className="text-sm sm:text-base text-white/90 max-w-xl leading-relaxed font-medium">
             Have burning questions about your Career, Love Life, Marriage, Wealth, or Health? Frame any 3 questions (50 words each) and get instant Vedic Astrological insights!
           </p>
         </div>
-        <div className="z-10 shrink-0 flex flex-col sm:flex-row items-center gap-4">
-          <div className="text-center md:text-right">
-            <span className="text-xs text-white/80 block">Special Offer</span>
-            <span className="text-4xl font-black">₹50</span>
+        <div className="z-10 shrink-0 flex flex-col sm:flex-row items-center gap-6">
+          <div className="text-center lg:text-right bg-black/15 px-5 py-2.5 rounded-2xl border border-white/15">
+            <span className="text-xs text-amber-200 font-bold block uppercase tracking-wider">Special Offer</span>
+            <span className="text-4xl font-black tracking-tight">₹50</span>
           </div>
           <button
             onClick={() => onOpenExpress && onOpenExpress()}
-            className="bg-white text-deep-blue hover:bg-slate-100 font-black px-8 py-4 rounded-2xl shadow-xl transition-all text-base flex items-center gap-2 shrink-0"
+            className="bg-white text-deep-blue hover:bg-slate-50 font-black px-8 py-4 rounded-2xl shadow-xl transition-all text-base flex items-center gap-2.5 shrink-0 cursor-pointer border border-amber-100"
           >
             <Sparkles size={18} className="text-saffron" /> Ask 3 Questions Now
           </button>
         </div>
       </motion.div>
 
-      {/* Zodiac Grid */}
+      {/* 4 Pillars of Vedic Authenticity & Trust (New Sophisticated Section) */}
       <section className="space-y-8">
-        <div className="text-center space-y-2">
-          <h2 className="text-3xl font-serif font-bold text-deep-blue">Daily Horoscope</h2>
-          <p className="text-slate-500">Select your sign to see what the stars have in store for you today</p>
+        <div className="text-center space-y-2 max-w-2xl mx-auto">
+          <h2 className="text-3xl sm:text-4xl font-serif font-black text-deep-blue tracking-tight">Why AstroWay is India's Most Trusted Platform</h2>
+          <p className="text-slate-500 text-sm sm:text-base leading-relaxed">Built on uncompromised Vedic sanctity, regulatory compliance, and cutting-edge computational astronomy.</p>
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="glass p-6 rounded-3xl border border-slate-200/80 hover:border-amber-400/60 transition-all shadow-sm hover:shadow-xl space-y-3 group">
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xl group-hover:scale-110 transition-transform">
+              <Shield size={24} className="text-amber-600" />
+            </div>
+            <h3 className="font-bold text-lg text-deep-blue">Mandatory Verification</h3>
+            <p className="text-xs text-slate-500 leading-relaxed">Every consulting Astrologer, Pandit, and Vendor executes a legally binding Pre-Presence Declaration verifying authentic credentials.</p>
+          </div>
+
+          <div className="glass p-6 rounded-3xl border border-slate-200/80 hover:border-amber-400/60 transition-all shadow-sm hover:shadow-xl space-y-3 group">
+            <div className="w-12 h-12 rounded-2xl bg-green-50 text-green-600 flex items-center justify-center font-bold text-xl group-hover:scale-110 transition-transform">
+              <Award size={24} className="text-green-600" />
+            </div>
+            <h3 className="font-bold text-lg text-deep-blue">100% Certified Samagri</h3>
+            <p className="text-xs text-slate-500 leading-relaxed">Gemstones and ritual items listed in our Astro Shop are 100% natural, lab-certified, and energized by authentic Vedic mantras.</p>
+          </div>
+
+          <div className="glass p-6 rounded-3xl border border-slate-200/80 hover:border-amber-400/60 transition-all shadow-sm hover:shadow-xl space-y-3 group">
+            <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-xl group-hover:scale-110 transition-transform">
+              <Lock size={24} className="text-purple-600" />
+            </div>
+            <h3 className="font-bold text-lg text-deep-blue">Encrypted & Confidential</h3>
+            <p className="text-xs text-slate-500 leading-relaxed">Your birth details, questions, audio calls, video consultations, and live chat logs are 100% private and securely encrypted.</p>
+          </div>
+
+          <div className="glass p-6 rounded-3xl border border-slate-200/80 hover:border-amber-400/60 transition-all shadow-sm hover:shadow-xl space-y-3 group">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xl group-hover:scale-110 transition-transform">
+              <Sparkles size={24} className="text-blue-600" />
+            </div>
+            <h3 className="font-bold text-lg text-deep-blue">AI-Precision Algorithms</h3>
+            <p className="text-xs text-slate-500 leading-relaxed">Experience Swiss-Ephemeris precision for Kundli generation, planetary transits, and compatibility matching 24/7.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Daily Horoscope Celestial Wheel */}
+      <section className="space-y-8">
+        <div className="text-center space-y-2 max-w-2xl mx-auto">
+          <h2 className="text-3xl sm:text-4xl font-serif font-black text-deep-blue tracking-tight">Daily Horoscope</h2>
+          <p className="text-slate-500 text-sm sm:text-base leading-relaxed">Select your sun sign to reveal what planetary alignments have in store for your career, wealth, and relationships today.</p>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {ZODIAC_SIGNS.map((sign) => (
             <motion.div
               key={sign}
               whileHover={{ y: -5 }}
-              className="glass p-4 rounded-2xl flex flex-col items-center gap-2 cursor-pointer hover:border-saffron/50 transition-all"
+              className="bg-white/90 hover:bg-gradient-to-b hover:from-amber-50/90 hover:to-white p-5 rounded-3xl border border-slate-200 hover:border-amber-400/60 flex flex-col items-center gap-3 cursor-pointer transition-all shadow-sm hover:shadow-xl group"
             >
-              <div className="w-12 h-12 bg-stone-50 rounded-full flex items-center justify-center p-2">
+              <div className="w-14 h-14 bg-amber-500/10 group-hover:bg-amber-500/20 rounded-2xl flex items-center justify-center p-2.5 transition-colors border border-amber-200/50">
                 <img 
                   src={ZODIAC_ICONS[sign]} 
                   alt={sign} 
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain group-hover:scale-110 transition-transform"
                   referrerPolicy="no-referrer"
                 />
               </div>
-              <span className="text-sm font-bold">{sign}</span>
+              <div className="text-center">
+                <span className="text-base font-black text-deep-blue block group-hover:text-amber-800 transition-colors">{sign}</span>
+                <span className="text-[10px] font-bold text-slate-400 block mt-0.5 tracking-wider uppercase group-hover:text-amber-600">{ZODIAC_DATES[sign]}</span>
+              </div>
             </motion.div>
           ))}
         </div>
@@ -712,28 +784,49 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli 
 
       {/* Featured Astrologers */}
       <section className="space-y-8">
-        <div className="flex items-center justify-between">
-          <h2 className="text-3xl font-serif font-bold text-deep-blue">Top Astrologers</h2>
-          <button className="text-saffron font-bold text-sm hover:underline">View All</button>
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div className="space-y-1">
+            <h2 className="text-3xl sm:text-4xl font-serif font-black text-deep-blue tracking-tight">Top Verified Astrologers</h2>
+            <p className="text-slate-500 text-sm">Online and ready for instant consultations with transparent pricing.</p>
+          </div>
+          <button className="text-amber-700 font-bold text-sm hover:underline flex items-center gap-1 self-start sm:self-auto">
+            View All Astrologers <ChevronRight size={16} />
+          </button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {astrologers.map((astro) => (
-            <div key={astro.id} className="glass p-6 rounded-3xl flex gap-4 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">
-                ONLINE
-              </div>
-              <img src={astro.image_url} className="w-24 h-24 rounded-2xl object-cover shadow-md" referrerPolicy="no-referrer" />
-              <div className="flex-1 space-y-2">
-                <h3 className="font-bold text-lg">{astro.name}</h3>
-                <p className="text-xs text-slate-500">{astro.specialty}</p>
-                <div className="flex items-center gap-1 text-gold">
-                  <Star size={14} fill="currentColor" />
-                  <span className="text-sm font-bold">{astro.rating}</span>
+            <div key={astro.id} className="bg-white/95 hover:bg-white p-6 rounded-[2rem] border border-slate-200/80 hover:border-amber-400/60 shadow-md hover:shadow-2xl transition-all duration-300 flex flex-col justify-between gap-5 group">
+              <div className="flex gap-4">
+                <div className="relative shrink-0">
+                  <img src={astro.image_url} className="w-20 h-20 rounded-2xl object-cover shadow-md group-hover:scale-105 transition-transform" referrerPolicy="no-referrer" />
+                  <span className="absolute -bottom-2 -right-2 bg-emerald-500 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full border-2 border-white uppercase tracking-wider">
+                    LIVE
+                  </span>
                 </div>
-                <div className="flex items-center justify-between pt-2">
-                  <span className="text-sm font-bold text-saffron">₹{astro.price_per_min}/min</span>
-                  <button className="bg-deep-blue text-white p-2 rounded-lg hover:bg-slate-800 transition-colors">
-                    <MessageSquare size={18} />
+                <div className="flex-1 min-w-0 space-y-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="font-bold text-lg text-deep-blue truncate group-hover:text-amber-800 transition-colors">{astro.name}</h3>
+                    <div className="flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-0.5 rounded-lg text-xs font-extrabold border border-amber-200 shrink-0">
+                      <Star size={12} fill="currentColor" />
+                      <span>{astro.rating}</span>
+                    </div>
+                  </div>
+                  <p className="text-xs font-semibold text-amber-700 truncate">{astro.specialty}</p>
+                  <p className="text-[11px] text-slate-400 font-medium">Exp: {astro.experience || 10} Years • Hindi, English</p>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
+                <div>
+                  <span className="text-[10px] uppercase font-extrabold text-slate-400 block tracking-wider">Rate</span>
+                  <span className="text-base font-black text-deep-blue">₹{astro.price_per_min}<span className="text-xs font-normal text-slate-500">/min</span></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-1.5 text-xs cursor-pointer">
+                    <MessageSquare size={14} /> Chat
+                  </button>
+                  <button className="bg-deep-blue hover:bg-slate-800 text-white font-bold px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-1.5 text-xs cursor-pointer">
+                    <Phone size={14} /> Call
                   </button>
                 </div>
               </div>
@@ -743,66 +836,76 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli 
       </section>
 
       {/* Consultation Feature Section */}
-      <section className="glass rounded-3xl overflow-hidden flex flex-col md:flex-row items-stretch">
-        <div className="w-full md:w-1/2 min-h-[400px] relative bg-orange-50 flex items-center justify-center p-8">
+      <section className="bg-gradient-to-r from-slate-900 via-deep-blue to-slate-900 rounded-[2.5rem] overflow-hidden shadow-2xl border border-slate-800 flex flex-col lg:flex-row items-stretch text-white">
+        <div className="w-full lg:w-1/2 min-h-[380px] relative bg-purple-950/20 flex items-center justify-center p-8 sm:p-12">
           <img 
             src="https://picsum.photos/seed/guru-meditation/800/800" 
             alt="Consultation with Pandit Astro" 
-            className="absolute inset-0 w-full h-full object-cover opacity-20"
+            className="absolute inset-0 w-full h-full object-cover opacity-15"
             referrerPolicy="no-referrer"
           />
-          <div className="relative z-10 w-full space-y-4">
-            {/* Chat UI Mockup matching the 2nd image */}
+          <div className="relative z-10 w-full max-w-md space-y-4">
+            {/* Chat UI Mockup matching Vedic counseling */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              className="bg-white p-4 rounded-2xl shadow-lg border border-slate-100 max-w-[80%]"
+              className="bg-white/95 text-slate-800 p-4 rounded-2xl shadow-xl border border-white/20 max-w-[85%] space-y-1.5"
             >
-              <p className="text-sm font-medium text-slate-700">Is there any remedy for me? 🙏</p>
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                <span className="text-xs font-bold text-slate-500">User Consultation Query</span>
+                <span className="text-[10px] text-slate-400">10:42 AM</span>
+              </div>
+              <p className="text-sm font-medium text-slate-800">Is there any immediate Vedic remedy for my career hurdles? 🙏</p>
             </motion.div>
+
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-saffron p-4 rounded-2xl shadow-lg self-end ml-auto max-w-[80%] text-white"
+              className="bg-gradient-to-r from-amber-600 to-amber-700 p-4 rounded-2xl shadow-xl self-end ml-auto max-w-[85%] text-white space-y-1.5"
             >
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-                  <Sparkles size={12} />
+              <div className="flex items-center justify-between border-b border-amber-500/40 pb-2">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
+                    <Sparkles size={11} />
+                  </div>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider">Acharya Shastri (Verified)</span>
                 </div>
-                <span className="text-[10px] font-bold uppercase">Pandit Astro</span>
+                <span className="text-[10px] text-amber-100">10:43 AM</span>
               </div>
-              <p className="text-sm font-medium">Yes, wear a yellow sapphire ring and chant the mantra daily! 🌟</p>
+              <p className="text-sm font-medium leading-snug">Yes! According to your Kundli, Jupiter transit is favorable. Wear a yellow sapphire (Pukhraj) and perform Guru Brihaspati mantra daily! 🌟</p>
             </motion.div>
+
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.4 }}
-              className="bg-white/90 backdrop-blur p-4 rounded-2xl shadow-xl border-2 border-gold text-center"
+              className="bg-emerald-950/90 backdrop-blur p-4 rounded-2xl shadow-xl border border-emerald-500/40 text-center"
             >
-              <p className="text-deep-blue font-serif font-bold italic">"According to your Kundli, a career change is coming soon!"</p>
+              <p className="text-emerald-200 font-serif font-bold italic text-sm">"Your 10th house indicates major professional promotion by next month!"</p>
             </motion.div>
           </div>
         </div>
-        <div className="w-full md:w-1/2 p-12 space-y-6 flex flex-col justify-center">
-          <div className="inline-block bg-red-50 text-red-600 px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-widest border border-red-200 shadow-sm">
-            AI-Powered Astrological Consultancy • Precision Guidance Through Advanced Software
+
+        <div className="w-full lg:w-1/2 p-8 sm:p-12 lg:p-16 space-y-6 flex flex-col justify-center">
+          <div className="inline-flex items-center gap-2 bg-amber-400/10 text-amber-300 px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-widest border border-amber-400/30 self-start">
+            <Sparkles size={14} className="text-amber-400" /> Instant Live Counseling
           </div>
-          <h2 className="text-4xl font-serif font-bold text-deep-blue leading-tight">
-            Get Instant Remedies from <span className="text-saffron">Pandit Astro</span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-black text-white leading-tight">
+            Get Personalized Guidance from <span className="text-amber-400">Vedic Scholars</span>
           </h2>
-          <p className="text-slate-600 leading-relaxed">
-            Connect with our expert astrologers for personalized guidance. Whether it's career, love, or health, the stars have the answers you seek.
+          <p className="text-slate-300 text-sm sm:text-base leading-relaxed font-normal">
+            Connect directly with India's most renowned and verified astrologers. Whether seeking clarity on career pivots, marriage compatibility, or planetary dosha remedies, our scholars provide precise answers 24/7.
           </p>
-          <div className="flex flex-wrap gap-4">
-            <button className="flex items-center gap-2 bg-saffron text-white px-6 py-3 rounded-xl font-bold hover:bg-orange-600 transition-all shadow-lg">
-              <MessageSquare size={20} /> Chat Now
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            <button className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-3.5 rounded-xl font-bold hover:brightness-110 transition-all shadow-xl text-sm cursor-pointer border border-amber-400/40">
+              <MessageSquare size={18} /> Chat Now
             </button>
-            <button className="flex items-center gap-2 bg-green-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-green-600 transition-all shadow-lg">
-              <Phone size={20} /> Audio Call
+            <button className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-3.5 rounded-xl font-bold hover:bg-emerald-500 transition-all shadow-xl text-sm cursor-pointer border border-emerald-400/40">
+              <Phone size={18} /> Audio Call
             </button>
-            <button className="flex items-center gap-2 bg-deep-blue text-white px-6 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
-              <Video size={20} /> Video Call
+            <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-6 py-3.5 rounded-xl font-bold transition-all shadow-xl text-sm cursor-pointer border border-white/20">
+              <Video size={18} /> Video Call
             </button>
           </div>
         </div>
@@ -811,33 +914,35 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli 
       {/* Testimonials Section */}
       {testimonials.length > 0 && (
         <section className="space-y-8">
-          <div className="text-center space-y-2">
-            <h2 className="text-3xl font-serif font-bold text-deep-blue">What Our Users Say</h2>
-            <p className="text-slate-500">Real stories from people who found clarity with AstroWay</p>
+          <div className="text-center space-y-2 max-w-2xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl font-serif font-black text-deep-blue tracking-tight">What Our Clients Say</h2>
+            <p className="text-slate-500 text-sm sm:text-base">Real stories from individuals who found clarity, peace, and direction with AstroWay.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
             {testimonials.map((t) => (
               <motion.div
                 key={t.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                className="glass p-8 rounded-3xl space-y-4 relative"
+                className="bg-white p-8 rounded-[2rem] border border-slate-200/80 shadow-md hover:shadow-2xl transition-all duration-300 space-y-4 relative flex flex-col justify-between group"
               >
-                <div className="flex items-center gap-4">
-                  <img src={t.image_url || `https://picsum.photos/seed/${t.id}/100/100`} className="w-12 h-12 rounded-full object-cover" referrerPolicy="no-referrer" />
+                <div className="space-y-4">
+                  <div className="flex text-amber-500 gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} size={16} fill={i < t.rating ? "currentColor" : "none"} />
+                    ))}
+                  </div>
+                  <p className="text-slate-700 italic text-sm sm:text-base leading-relaxed font-normal">"{t.content}"</p>
+                </div>
+                <div className="flex items-center gap-4 pt-4 border-t border-slate-100">
+                  <img src={t.image_url || `https://picsum.photos/seed/${t.id}/100/100`} className="w-12 h-12 rounded-2xl object-cover shadow-sm" referrerPolicy="no-referrer" />
                   <div>
-                    <h4 className="font-bold text-deep-blue">{t.name}</h4>
-                    <p className="text-xs text-slate-400">{t.role}</p>
+                    <h4 className="font-bold text-deep-blue text-sm group-hover:text-amber-800 transition-colors">{t.name}</h4>
+                    <p className="text-xs text-slate-400 font-medium">{t.role}</p>
                   </div>
                 </div>
-                <div className="flex text-gold">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={14} fill={i < t.rating ? "currentColor" : "none"} />
-                  ))}
-                </div>
-                <p className="text-slate-600 italic text-sm leading-relaxed">"{t.content}"</p>
-                <div className="absolute top-6 right-8 text-saffron/10">
-                  <Sparkles size={48} />
+                <div className="absolute top-6 right-6 text-amber-500/10 pointer-events-none">
+                  <Sparkles size={40} />
                 </div>
               </motion.div>
             ))}
