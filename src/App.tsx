@@ -5,12 +5,14 @@ import {
   Wallet, User, ShoppingBag, BookOpen, LayoutDashboard,
   Sparkles, Compass, Heart, Calendar, Menu, X, Send,
   Download, CheckCircle2, AlertCircle, FileText,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, History, RefreshCw, Award, Shield, Lock, CreditCard, Smartphone, Building2
 } from 'lucide-react';
 import { jsPDF } from "jspdf";
 import { Astrologer, User as UserType, ZODIAC_SIGNS, Category, Vendor, Product, Package, Banner, PanditRegistration as PanditType, PujaBooking as PujaBookingType } from './types';
 import { storageApi, initStorage, apiFetch } from './services/storage';
 import { AIAstrologerPortal } from './components/AIAstrologerPortal';
+import { PaymentGatewayModal, PaymentReceipt } from './components/PaymentGatewayModal';
+import { Express3QuestionModal } from './components/Express3QuestionModal';
 
 // Initialize local storage with seed data
 initStorage();
@@ -46,6 +48,7 @@ export default function App() {
   });
   const [astrologers, setAstrologers] = useState<Astrologer[]>([]);
   const [activeTab, setActiveTab] = useState('home');
+  const [showExpressQuestions, setShowExpressQuestions] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
     try {
@@ -150,7 +153,7 @@ export default function App() {
     }
 
     switch (activeTab) {
-      case 'home': return <Home astrologers={astrologers} testimonials={testimonials} banners={banners} />;
+      case 'home': return <Home astrologers={astrologers} testimonials={testimonials} banners={banners} onOpenExpress={() => setShowExpressQuestions(true)} />;
       case 'horoscope': return <Horoscope />;
       case 'kundli': return <Kundli user={user} onViewPackages={() => setActiveTab('packages')} />;
       case 'chat': return <Chat astrologers={astrologers} user={user} onRecharge={() => fetchUser(user?.email)} />;
@@ -159,8 +162,8 @@ export default function App() {
         setIsUserAuthenticated(true);
         fetchUser(email);
       }} />;
-      case 'packages': return <AstroPackages user={user} onPurchase={() => fetchUser(user?.email)} />;
-      case 'profile': return <UserProfile user={user} onUpdate={() => fetchUser(user?.email)} onLogout={handleLogout} />;
+      case 'packages': return <AstroPackages user={user} onPurchase={() => fetchUser(user?.email)} onOpenExpress={() => setShowExpressQuestions(true)} />;
+      case 'profile': return <UserProfile user={user} onUpdate={() => fetchUser(user?.email)} onLogout={handleLogout} onOpenExpress={() => setShowExpressQuestions(true)} localFetch={localFetch} />;
       case 'ai': return <AIAstrologerPortal user={user} onRecharge={() => fetchUser(user?.email)} />;
       case 'pandit-register': return <PanditRegistration user={user} onComplete={() => fetchUser(user?.email)} onLoginClick={() => setActiveTab('puja')} />;
       case 'vendor-register': return <VendorRegistration user={user} onComplete={() => fetchUser(user?.email)} onLoginClick={() => setActiveTab('vendor-panel')} />;
@@ -241,7 +244,23 @@ export default function App() {
           )}
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
+          {isUserAuthenticated && (
+            <button
+              onClick={() => setActiveTab('profile')}
+              className="flex items-center gap-1.5 bg-green-500/10 hover:bg-green-500/20 text-green-700 dark:text-green-400 px-3 py-1.5 rounded-full text-xs font-black transition-all border border-green-500/20 shadow-sm"
+              title="Click to view Instantaneous Wallet Balance & Ledger"
+            >
+              <Wallet size={14} className="text-green-600 shrink-0" />
+              <span>₹{user?.wallet_balance || 0}</span>
+            </button>
+          )}
+          <button
+            onClick={() => setShowExpressQuestions(true)}
+            className="hidden sm:flex items-center gap-1 bg-gradient-to-r from-saffron to-amber-600 hover:from-amber-600 hover:to-saffron text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-md hover:shadow-lg transition-all"
+          >
+            <Sparkles size={13} /> Ask 3 Qs (₹50)
+          </button>
           {!isUserAuthenticated && (
             <button 
               onClick={() => setActiveTab('chat')} 
@@ -252,7 +271,7 @@ export default function App() {
           )}
           <button 
             onClick={() => setActiveTab('astrologer')} 
-            className="text-sm font-bold text-deep-blue hover:underline"
+            className="text-sm font-bold text-deep-blue hover:underline hidden lg:block"
           >
             Astrologer Panel
           </button>
@@ -265,9 +284,11 @@ export default function App() {
           </button>
           <button 
             onClick={() => setActiveTab('profile')}
-            className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+            className="p-2 hover:bg-slate-100 rounded-full transition-colors relative"
+            title="User Profile & Ledger"
           >
             <User size={20} className="text-slate-600" />
+            {isUserAuthenticated && <span className="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full" />}
           </button>
           <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
             {isMenuOpen ? <X /> : <Menu />}
@@ -373,6 +394,16 @@ export default function App() {
           © 2026 AstroWay. All spiritual rights reserved.
         </div>
       </footer>
+
+      <Express3QuestionModal
+        isOpen={showExpressQuestions}
+        onClose={() => setShowExpressQuestions(false)}
+        user={user}
+        onSuccess={() => {
+          fetchUser(user?.email);
+        }}
+        localFetch={localFetch}
+      />
     </div>
   );
 }
@@ -392,7 +423,7 @@ const ZODIAC_ICONS: Record<string, string> = {
   Pisces: "https://img.icons8.com/ios-filled/100/D4AF37/pisces.png",
 };
 
-function Home({ astrologers, testimonials, banners }: { astrologers: Astrologer[], testimonials: any[], banners: Banner[] }) {
+function Home({ astrologers, testimonials, banners, onOpenExpress }: { astrologers: Astrologer[], testimonials: any[], banners: Banner[], onOpenExpress?: () => void }) {
   const [currentBanner, setCurrentBanner] = useState(0);
 
   useEffect(() => {
@@ -449,8 +480,8 @@ function Home({ astrologers, testimonials, banners }: { astrologers: Astrologer[
                     : (activeBanners[currentBanner] as any).description || "Your destiny is written in the stars. Explore your path with our expert guidance and personalized insights."}
                 </p>
                 <div className="flex flex-wrap gap-4 pt-4">
-                  <button className="bg-saffron text-white px-6 py-3 rounded-full font-bold shadow-lg hover:bg-orange-600 transition-all transform hover:scale-105 text-sm md:text-base">
-                    Talk to Astrologer
+                  <button onClick={() => onOpenExpress && onOpenExpress()} className="bg-saffron text-white px-6 py-3 rounded-full font-bold shadow-lg hover:bg-orange-600 transition-all transform hover:scale-105 text-sm md:text-base flex items-center gap-2">
+                    <Sparkles size={16} /> Ask 3 Questions (₹50)
                   </button>
                   <button className="bg-white/20 backdrop-blur-md text-white border border-white/30 px-6 py-3 rounded-full font-bold hover:bg-white/30 transition-all text-sm md:text-base">
                     Get Free Kundli
@@ -487,6 +518,35 @@ function Home({ astrologers, testimonials, banners }: { astrologers: Astrologer[
           </>
         )}
       </section>
+
+      {/* Express ₹50 / 3-Question Special Offer Banner */}
+      <motion.div 
+        whileHover={{ y: -4 }}
+        className="bg-gradient-to-r from-saffron via-amber-600 to-saffron rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden border border-white/20 flex flex-col md:flex-row items-center justify-between gap-6"
+      >
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
+        <div className="space-y-3 z-10 text-center md:text-left">
+          <div className="inline-flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+            <Sparkles size={14} /> Most Popular Express Consultation
+          </div>
+          <h3 className="text-3xl font-serif font-black">Ask 3 Questions for Just ₹50</h3>
+          <p className="text-sm text-white/90 max-w-xl leading-relaxed">
+            Have burning questions about your Career, Love Life, Marriage, Wealth, or Health? Frame any 3 questions (50 words each) and get instant Vedic Astrological insights!
+          </p>
+        </div>
+        <div className="z-10 shrink-0 flex flex-col sm:flex-row items-center gap-4">
+          <div className="text-center md:text-right">
+            <span className="text-xs text-white/80 block">Special Offer</span>
+            <span className="text-4xl font-black">₹50</span>
+          </div>
+          <button
+            onClick={() => onOpenExpress && onOpenExpress()}
+            className="bg-white text-deep-blue hover:bg-slate-100 font-black px-8 py-4 rounded-2xl shadow-xl transition-all text-base flex items-center gap-2 shrink-0"
+          >
+            <Sparkles size={18} className="text-saffron" /> Ask 3 Questions Now
+          </button>
+        </div>
+      </motion.div>
 
       {/* Zodiac Grid */}
       <section className="space-y-8">
@@ -5719,11 +5779,12 @@ function AIAstrologer() {
   );
 }
 
-function AstroPackages({ user, onPurchase }: { user: UserType | null, onPurchase: () => void }) {
+function AstroPackages({ user, onPurchase, onOpenExpress }: { user: UserType | null, onPurchase: () => void, onOpenExpress?: () => void }) {
   const [packages, setPackages] = useState<Package[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPkg, setSelectedPkg] = useState<Package | null>(null);
   const [contactNumber, setContactNumber] = useState('');
+  const [showGateway, setShowGateway] = useState(false);
 
   useEffect(() => {
     localFetch('/api/packages')
@@ -5734,31 +5795,37 @@ function AstroPackages({ user, onPurchase }: { user: UserType | null, onPurchase
       });
   }, []);
 
-  const handlePurchase = async () => {
+  const handlePurchaseClick = () => {
     if (!user) {
       alert("Please login to purchase packages.");
       return;
     }
-
     if (!contactNumber) {
       alert("Please enter your contact number.");
       return;
     }
+    setShowGateway(true);
+  };
+
+  const handlePaymentSuccess = async (receipt: PaymentReceipt) => {
+    setShowGateway(false);
+    if (!user || !selectedPkg) return;
 
     const res = await localFetch('/api/user/purchase-package', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         email: user.email, 
-        packageId: selectedPkg?.id,
+        packageId: selectedPkg.id,
         contactNumber: contactNumber,
-        amount: selectedPkg?.price,
-        discount: 0 // Could implement coupon logic later
+        amount: selectedPkg.price,
+        discount: 0,
+        receiptId: receipt.id
       })
     });
 
     if (res.ok) {
-      alert("Package purchased successfully!");
+      alert(`🎉 Package purchased successfully via Payment Gateway! Receipt ID: ${receipt.id}`);
       setSelectedPkg(null);
       setContactNumber('');
       onPurchase();
@@ -5786,6 +5853,35 @@ function AstroPackages({ user, onPurchase }: { user: UserType | null, onPurchase
           Choose from our carefully curated spiritual packages designed to provide deep insights into your life's journey.
         </p>
       </div>
+
+      {/* Featured Express ₹50 / 3-Question Banner */}
+      <motion.div 
+        whileHover={{ y: -4 }}
+        className="bg-gradient-to-r from-saffron via-amber-600 to-saffron rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden border border-white/20 flex flex-col md:flex-row items-center justify-between gap-6"
+      >
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
+        <div className="space-y-3 z-10 text-center md:text-left">
+          <div className="inline-flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+            <Sparkles size={14} /> Most Popular Express Consultation
+          </div>
+          <h3 className="text-3xl font-serif font-black">Ask 3 Questions for Just ₹50</h3>
+          <p className="text-sm text-white/90 max-w-xl leading-relaxed">
+            Have urgent questions? Get instant, comprehensive Vedic Astrological insights for 3 questions (50 words each) in Career, Love, Wealth, Health, or Marriage!
+          </p>
+        </div>
+        <div className="z-10 shrink-0 flex flex-col sm:flex-row items-center gap-4">
+          <div className="text-center md:text-right">
+            <span className="text-xs text-white/80 block">Special Express Rate</span>
+            <span className="text-4xl font-black">₹50</span>
+          </div>
+          <button
+            onClick={() => onOpenExpress && onOpenExpress()}
+            className="bg-white text-deep-blue hover:bg-slate-100 font-black px-8 py-4 rounded-2xl shadow-xl transition-all text-base flex items-center gap-2 shrink-0"
+          >
+            <Sparkles size={18} className="text-saffron" /> Ask 3 Questions Now
+          </button>
+        </div>
+      </motion.div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
         {packages.map((pkg) => (
@@ -5882,7 +5978,7 @@ function AstroPackages({ user, onPurchase }: { user: UserType | null, onPurchase
                 Cancel
               </button>
               <button 
-                onClick={handlePurchase}
+                onClick={handlePurchaseClick}
                 className="flex-1 bg-saffron text-white py-3 rounded-xl font-bold shadow-lg hover:bg-orange-600 transition-all"
               >
                 Confirm & Pay
@@ -5891,6 +5987,20 @@ function AstroPackages({ user, onPurchase }: { user: UserType | null, onPurchase
           </motion.div>
         </div>
       )}
+
+      {/* Payment Gateway Modal for Astro Packages */}
+      <PaymentGatewayModal
+        isOpen={showGateway}
+        onClose={() => setShowGateway(false)}
+        amount={selectedPkg?.price || 0}
+        title={selectedPkg?.name || "Astro Package"}
+        description={selectedPkg?.description || "Spiritual Astrology Package"}
+        userEmail={user?.email}
+        userName={user?.name}
+        userWalletBalance={user?.wallet_balance || 0}
+        allowWalletPayment={true}
+        onSuccess={handlePaymentSuccess}
+      />
 
       {/* Trust Badges */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-12 border-t border-slate-100">
@@ -5913,7 +6023,7 @@ function AstroPackages({ user, onPurchase }: { user: UserType | null, onPurchase
   );
 }
 
-function UserProfile({ user, onUpdate, onLogout }: { user: UserType | null, onUpdate: () => void, onLogout: () => void }) {
+function UserProfile({ user, onUpdate, onLogout, onOpenExpress, localFetch }: { user: UserType | null, onUpdate: () => void, onLogout: () => void, onOpenExpress?: () => void, localFetch?: any }) {
   const [purchasedPackages, setPurchasedPackages] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [callHistory, setCallHistory] = useState<any[]>([]);
@@ -5922,19 +6032,41 @@ function UserProfile({ user, onUpdate, onLogout }: { user: UserType | null, onUp
   const [generatedReports, setGeneratedReports] = useState<any[]>([]);
   const [reviews, setReviews] = useState<{ astrologerReviews: any[], productReviews: any[] }>({ astrologerReviews: [], productReviews: [] });
   const [loading, setLoading] = useState(true);
-  const [activeHistoryTab, setActiveHistoryTab] = useState<'orders' | 'chats' | 'calls' | 'packages' | 'reports' | 'reviews'>('orders');
+  const [activeHistoryTab, setActiveHistoryTab] = useState<'ledger' | 'orders' | 'chats' | 'calls' | 'packages' | 'reports' | 'reviews'>('ledger');
+  const [showRechargeModal, setShowRechargeModal] = useState(false);
+  const [rechargeAmount, setRechargeAmount] = useState(500);
+  const [showGateway, setShowGateway] = useState(false);
+
+  const handleRechargeSuccess = async (receipt: PaymentReceipt) => {
+    setShowGateway(false);
+    setShowRechargeModal(false);
+    if (!user || !localFetch) return;
+
+    const res = await localFetch('/api/user/recharge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: user.email, amount: rechargeAmount })
+    });
+
+    if (res.ok) {
+      alert(`🎉 Wallet recharged instantaneously with ₹${rechargeAmount}! Receipt ID: ${receipt.id}`);
+      onUpdate();
+    } else {
+      alert("Recharge logging failed");
+    }
+  };
 
   useEffect(() => {
     if (user) {
       setLoading(true);
       Promise.all([
-        localFetch(`/api/user/${user.email}/packages`).then(res => res.ok ? res.json() : []).catch(() => []),
-        localFetch(`/api/user/${user.email}/transactions`).then(res => res.ok ? res.json() : []).catch(() => []),
-        localFetch(`/api/user/${user.email}/calls`).then(res => res.ok ? res.json() : []).catch(() => []),
-        localFetch(`/api/user/${user.email}/orders`).then(res => res.ok ? res.json() : []).catch(() => []),
-        localFetch(`/api/user/${user.email}/chats`).then(res => res.ok ? res.json() : []).catch(() => []),
-        localFetch(`/api/user/${user.email}/reports`).then(res => res.ok ? res.json() : []).catch(() => []),
-        localFetch(`/api/user/${user.email}/reviews`).then(res => res.ok ? res.json() : { astrologerReviews: [], productReviews: [] }).catch(() => ({ astrologerReviews: [], productReviews: [] }))
+        localFetch(`/api/user/${user.email}/packages`).then((res: any) => res.ok ? res.json() : []).catch(() => []),
+        localFetch(`/api/user/${user.email}/transactions`).then((res: any) => res.ok ? res.json() : []).catch(() => []),
+        localFetch(`/api/user/${user.email}/calls`).then((res: any) => res.ok ? res.json() : []).catch(() => []),
+        localFetch(`/api/user/${user.email}/orders`).then((res: any) => res.ok ? res.json() : []).catch(() => []),
+        localFetch(`/api/user/${user.email}/chats`).then((res: any) => res.ok ? res.json() : []).catch(() => []),
+        localFetch(`/api/user/${user.email}/reports`).then((res: any) => res.ok ? res.json() : []).catch(() => []),
+        localFetch(`/api/user/${user.email}/reviews`).then((res: any) => res.ok ? res.json() : { astrologerReviews: [], productReviews: [] }).catch(() => ({ astrologerReviews: [], productReviews: [] }))
       ]).then(([pkgs, trans, calls, orders, chats, reports, revs]) => {
         setPurchasedPackages(Array.isArray(pkgs) ? pkgs : []);
         setTransactions(Array.isArray(trans) ? trans : []);
@@ -5967,6 +6099,117 @@ function UserProfile({ user, onUpdate, onLogout }: { user: UserType | null, onUp
 
   const renderHistoryContent = () => {
     switch (activeHistoryTab) {
+      case 'ledger':
+        return (
+          <div className="space-y-6">
+            {/* Instantaneous Wallet Banner */}
+            <div className="bg-gradient-to-r from-deep-blue via-slate-900 to-deep-blue p-6 rounded-3xl text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl border border-white/10">
+              <div className="space-y-1 text-center sm:text-left">
+                <span className="text-xs font-bold text-saffron uppercase tracking-widest flex items-center justify-center sm:justify-start gap-1">
+                  <Wallet size={14} /> AstroWay Cosmic Wallet
+                </span>
+                <h4 className="text-4xl font-serif font-black text-white">₹{user.wallet_balance}</h4>
+                <p className="text-xs text-slate-400">Available Credits • Instantaneous Ledger Sync Active</p>
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <button
+                  onClick={() => setShowRechargeModal(true)}
+                  className="bg-gradient-to-r from-saffron to-amber-600 hover:from-amber-600 hover:to-saffron text-white px-5 py-3 rounded-2xl font-black text-sm shadow-lg transition-all flex items-center gap-2"
+                >
+                  <Wallet size={16} /> Add Money / Recharge
+                </button>
+                <button
+                  onClick={() => onOpenExpress && onOpenExpress()}
+                  className="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-5 py-3 rounded-2xl font-bold text-sm transition-all flex items-center gap-2"
+                >
+                  <Sparkles size={16} className="text-saffron" /> Buy ₹50 Express Plan
+                </button>
+              </div>
+            </div>
+
+            {/* Ledger Statistics */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <span className="text-[11px] font-bold text-slate-400 uppercase">Total Transactions</span>
+                <p className="text-2xl font-black text-deep-blue mt-1">{transactions.length}</p>
+              </div>
+              <div className="bg-green-50 p-4 rounded-2xl border border-green-200">
+                <span className="text-[11px] font-bold text-green-600 uppercase">Total Recharged</span>
+                <p className="text-2xl font-black text-green-700 mt-1">
+                  ₹{transactions.filter(t => (t?.amount || 0) > 0).reduce((acc, t) => acc + (t?.amount || 0), 0)}
+                </p>
+              </div>
+              <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200">
+                <span className="text-[11px] font-bold text-amber-600 uppercase">Total Spent</span>
+                <p className="text-2xl font-black text-amber-700 mt-1">
+                  ₹{Math.abs(transactions.filter(t => (t?.amount || 0) < 0).reduce((acc, t) => acc + (t?.amount || 0), 0))}
+                </p>
+              </div>
+            </div>
+
+            {/* Ledger Table */}
+            <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+              <div className="p-4 px-6 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                <h5 className="font-bold text-deep-blue text-sm flex items-center gap-2">
+                  <History size={16} className="text-saffron" /> Detailed Transaction Ledger
+                </h5>
+                <button
+                  onClick={() => onUpdate()}
+                  className="text-xs text-saffron font-bold hover:underline flex items-center gap-1"
+                >
+                  <RefreshCw size={12} /> Sync Now
+                </button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase bg-slate-50/50">
+                      <th className="p-4">Receipt / Date</th>
+                      <th className="p-4">Transaction Type</th>
+                      <th className="p-4">Description</th>
+                      <th className="p-4 text-right">Amount</th>
+                      <th className="p-4 text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-xs">
+                    {transactions.length > 0 ? (
+                      transactions.map((t, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="p-4">
+                            <span className="font-mono font-bold text-deep-blue block">{t?.id || `AW-${idx}`}</span>
+                            <span className="text-[10px] text-slate-400">
+                              {t?.timestamp ? new Date(t.timestamp).toLocaleString() : 'Just now'}
+                            </span>
+                          </td>
+                          <td className="p-4 font-bold capitalize text-slate-700">
+                            {(t?.type || 'transaction').replace(/_/g, ' ')}
+                          </td>
+                          <td className="p-4 text-slate-500">
+                            {t?.description || `${(t?.type || 'Transaction').replace(/_/g, ' ')} processing`}
+                          </td>
+                          <td className={`p-4 text-right font-black text-sm ${(t?.amount || 0) < 0 ? 'text-red-500' : 'text-green-600'}`}>
+                            {(t?.amount || 0) < 0 ? '-' : '+'}₹{Math.abs(t?.amount || 0)}
+                          </td>
+                          <td className="p-4 text-center">
+                            <span className="bg-green-500/10 text-green-600 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1">
+                              <CheckCircle2 size={10} /> Instant
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="p-8 text-center text-slate-400 italic">
+                          No transactions recorded in ledger yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
       case 'orders':
         return (
           <div className="space-y-4">
@@ -6173,6 +6416,7 @@ function UserProfile({ user, onUpdate, onLogout }: { user: UserType | null, onUp
         <div className="lg:col-span-1 space-y-4">
           <div className="glass p-4 rounded-3xl border border-white/20 space-y-2">
             {[
+              { id: 'ledger', label: 'Wallet & Ledger', icon: Wallet },
               { id: 'orders', label: 'Order History', icon: ShoppingBag },
               { id: 'chats', label: 'Chat History', icon: MessageSquare },
               { id: 'calls', label: 'Call History', icon: Phone },
@@ -6196,9 +6440,14 @@ function UserProfile({ user, onUpdate, onLogout }: { user: UserType | null, onUp
           </div>
 
           <div className="glass p-6 rounded-3xl border border-white/20">
-            <h4 className="font-bold text-deep-blue mb-4 flex items-center gap-2">
-              <History size={18} className="text-saffron" /> Recent Wallet Activity
-            </h4>
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="font-bold text-deep-blue text-sm flex items-center gap-2">
+                <History size={16} className="text-saffron" /> Recent Activity
+              </h4>
+              <button onClick={() => setActiveHistoryTab('ledger')} className="text-[10px] text-saffron font-bold hover:underline">
+                View All
+              </button>
+            </div>
             <div className="space-y-4">
               {transactions.slice(0, 5).map((t, i) => (
                 <div key={i} className="flex items-center justify-between">
@@ -6218,12 +6467,84 @@ function UserProfile({ user, onUpdate, onLogout }: { user: UserType | null, onUp
         <div className="lg:col-span-2">
           <div className="glass p-8 rounded-[2rem] border border-white/20 min-h-[500px]">
             <h3 className="text-2xl font-serif font-bold text-deep-blue mb-8 capitalize">
-              {activeHistoryTab.replace('_', ' ')}
+              {activeHistoryTab === 'ledger' ? 'Instantaneous Wallet & Ledger' : activeHistoryTab.replace('_', ' ')}
             </h3>
             {renderHistoryContent()}
           </div>
         </div>
       </div>
+
+      {/* Wallet Recharge Modal */}
+      {showRechargeModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-[2.5rem] p-8 max-w-md w-full shadow-2xl space-y-6"
+          >
+            <div className="text-center space-y-2">
+              <h3 className="text-2xl font-serif font-bold text-deep-blue">Recharge Cosmic Wallet</h3>
+              <p className="text-slate-500 text-sm">Select an amount to recharge instantly via Payment Gateway</p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              {[100, 500, 1000, 2000, 5000, 10000].map((amt) => (
+                <button
+                  key={amt}
+                  onClick={() => setRechargeAmount(amt)}
+                  className={`py-3 rounded-2xl font-bold text-sm transition-all border ${
+                    rechargeAmount === amt 
+                      ? 'bg-saffron text-white border-saffron shadow-md' 
+                      : 'bg-stone-50 text-slate-700 border-slate-200 hover:border-saffron'
+                  }`}
+                >
+                  ₹{amt}
+                </button>
+              ))}
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Or Enter Custom Amount (₹)</label>
+              <input 
+                type="number" 
+                value={rechargeAmount}
+                onChange={(e) => setRechargeAmount(Number(e.target.value))}
+                min="50"
+                className="w-full bg-stone-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-lg focus:outline-none focus:border-saffron"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setShowRechargeModal(false)}
+                className="flex-1 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => setShowGateway(true)}
+                className="flex-1 bg-gradient-to-r from-saffron to-amber-600 text-white py-3 rounded-xl font-bold shadow-lg hover:from-amber-600 hover:to-saffron transition-all"
+              >
+                Proceed to Pay
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Payment Gateway Modal for Recharge */}
+      <PaymentGatewayModal
+        isOpen={showGateway}
+        onClose={() => setShowGateway(false)}
+        amount={rechargeAmount}
+        title="Cosmic Wallet Recharge"
+        description={`Instant recharge of ₹${rechargeAmount} credits`}
+        userEmail={user?.email}
+        userName={user?.name}
+        userWalletBalance={user?.wallet_balance || 0}
+        allowWalletPayment={false}
+        onSuccess={handleRechargeSuccess}
+      />
     </div>
   );
 }
