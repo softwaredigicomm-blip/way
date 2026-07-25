@@ -23,7 +23,21 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 console.log("Initializing database...");
-const db = new Database("astroway.db");
+let db: any;
+try {
+  db = new Database("astroway.db");
+  db.prepare("SELECT 1").get();
+} catch (err: any) {
+  console.error("Database initialization failed (possibly malformed/corrupt). Recreating fresh database...", err?.message);
+  try {
+    if (fs.existsSync("astroway.db")) fs.unlinkSync("astroway.db");
+    if (fs.existsSync("astroway.db-wal")) fs.unlinkSync("astroway.db-wal");
+    if (fs.existsSync("astroway.db-shm")) fs.unlinkSync("astroway.db-shm");
+  } catch (unlinkErr) {
+    console.error("Error unlinking corrupt db:", unlinkErr);
+  }
+  db = new Database("astroway.db");
+}
 
 // Ensure uploads directory exists
 const uploadDir = path.join(__dirname, "uploads");
@@ -261,6 +275,12 @@ try { db.exec("ALTER TABLE orders ADD COLUMN vendor_id INTEGER"); } catch (e) {}
 try { db.exec("ALTER TABLE orders ADD COLUMN commission_ratio REAL DEFAULT 10"); } catch (e) {}
 try { db.exec("ALTER TABLE orders ADD COLUMN admin_commission REAL DEFAULT 0"); } catch (e) {}
 try { db.exec("ALTER TABLE orders ADD COLUMN vendor_earning REAL DEFAULT 0"); } catch (e) {}
+try { db.exec("ALTER TABLE orders ADD COLUMN quantity INTEGER DEFAULT 1"); } catch (e) {}
+try { db.exec("ALTER TABLE orders ADD COLUMN item_details TEXT"); } catch (e) {}
+try { db.exec("ALTER TABLE orders ADD COLUMN billed_amount REAL"); } catch (e) {}
+try { db.exec("ALTER TABLE puja_bookings ADD COLUMN quantity INTEGER DEFAULT 1"); } catch (e) {}
+try { db.exec("ALTER TABLE puja_bookings ADD COLUMN service_details TEXT"); } catch (e) {}
+try { db.exec("ALTER TABLE puja_bookings ADD COLUMN billed_amount REAL"); } catch (e) {}
 try { db.exec("ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'approved'"); } catch (e) {}
 try { db.exec("ALTER TABLE users ADD COLUMN registration_data TEXT"); } catch (e) {}
 try { db.exec("ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1"); } catch (e) {}
@@ -1324,32 +1344,39 @@ ONLY return valid JSON array of strings without markdown formatting.`;
 
   app.post("/api/puja/book", (req, res) => {
     try {
-      const { user_email, user_name, pandit_id, puja_name, booking_date, booking_time, sankalp_details, amount } = req.body;
+      const { user_email, user_name, pandit_id, puja_name, booking_date, booking_time, sankalp_details, amount, quantity = 1, service_details, billed_amount } = req.body;
       const pandit = db.prepare("SELECT * FROM pandit_registrations WHERE id = ?").get(pandit_id) as any;
       if (!pandit) return res.status(404).json({ error: "Registered Panditjee/Purohit not found" });
 
-      const finalAmount = amount || pandit.listed_rate || 2100;
+      const unitRate = amount || pandit.listed_rate || 2100;
+      const qty = Number(quantity) || 1;
+      const finalAmount = billed_amount || (unitRate * qty);
       const ratio = pandit.commission_ratio || 15;
       const adminCommission = Number((finalAmount * (ratio / 100)).toFixed(2));
       const panditEarning = Number((finalAmount - adminCommission).toFixed(2));
+      const srvDetails = service_details || (typeof sankalp_details === 'string' ? sankalp_details : JSON.stringify(sankalp_details || {}));
 
       const user = db.prepare("SELECT * FROM users WHERE email = ?").get(user_email) as any;
       if (user && user.wallet_balance < finalAmount) {
         return res.status(400).json({ error: `Insufficient wallet balance (₹${user.wallet_balance}). Please recharge ₹${finalAmount - user.wallet_balance} more to book this Puja.` });
       }
 
+      let bookingId = 0;
       db.transaction(() => {
         if (user) {
           db.prepare("UPDATE users SET wallet_balance = wallet_balance - ? WHERE id = ?").run(finalAmount, user.id);
           db.prepare("INSERT INTO transactions (user_id, amount, type) VALUES (?, ?, 'puja_booking')").run(user.id, -finalAmount);
         }
-        db.prepare(`
-          INSERT INTO puja_bookings (user_email, user_name, pandit_id, puja_name, booking_date, booking_time, sankalp_details, amount, commission_ratio, admin_commission, pandit_earning, status)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed')
-        `).run(user_email, user_name || (user ? user.name : 'Devotee'), pandit_id, puja_name, booking_date, booking_time, typeof sankalp_details === 'string' ? sankalp_details : JSON.stringify(sankalp_details || {}), finalAmount, ratio, adminCommission, panditEarning);
+        const info = db.prepare(`
+          INSERT INTO puja_bookings (user_email, user_name, pandit_id, puja_name, booking_date, booking_time, sankalp_details, amount, commission_ratio, admin_commission, pandit_earning, status, quantity, service_details, billed_amount)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', ?, ?, ?)
+        `).run(user_email, user_name || (user ? user.name : 'Devotee'), pandit_id, puja_name, booking_date, booking_time, typeof sankalp_details === 'string' ? sankalp_details : JSON.stringify(sankalp_details || {}), finalAmount, ratio, adminCommission, panditEarning, qty, srvDetails, finalAmount);
+        bookingId = Number(info.lastInsertRowid);
       })();
 
-      res.json({ success: true, adminCommission, panditEarning, newBalance: user ? user.wallet_balance - finalAmount : 0 });
+      const bookingRecord = db.prepare("SELECT pb.*, pr.name as pandit_name FROM puja_bookings pb LEFT JOIN pandit_registrations pr ON pb.pandit_id = pr.id WHERE pb.id = ?").get(bookingId);
+
+      res.json({ success: true, booking: bookingRecord, adminCommission, panditEarning, newBalance: user ? user.wallet_balance - finalAmount : 0 });
     } catch (error: any) {
       console.error("Puja booking error:", error);
       res.status(500).json({ error: "Puja booking failed", details: error.message });
@@ -2151,24 +2178,32 @@ ONLY return valid JSON array of strings without markdown formatting.`;
 
   app.post("/api/user/purchase", (req, res) => {
     try {
-      const { email, productId } = req.body;
+      const { email, productId, quantity = 1, item_details, billed_amount } = req.body;
       const product = db.prepare("SELECT p.*, v.id as v_id, v.commission_ratio as v_ratio FROM products p LEFT JOIN vendors v ON p.vendor_id = v.id WHERE p.id = ?").get(productId) as any;
       const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email) as any;
 
       if (!product || !user) return res.status(404).json({ error: "Product or User not found" });
-      if (user.wallet_balance < product.price) return res.status(400).json({ error: "Insufficient balance" });
+      
+      const qty = Number(quantity) || 1;
+      const totalAmount = billed_amount || (product.price * qty);
+      if (user.wallet_balance < totalAmount) return res.status(400).json({ error: `Insufficient balance (₹${user.wallet_balance}). Required: ₹${totalAmount}.` });
 
       const ratio = product.v_ratio || 10;
-      const adminCommission = Number((product.price * (ratio / 100)).toFixed(2));
-      const vendorEarning = Number((product.price - adminCommission).toFixed(2));
+      const adminCommission = Number((totalAmount * (ratio / 100)).toFixed(2));
+      const vendorEarning = Number((totalAmount - adminCommission).toFixed(2));
+      const details = item_details || (product.name + (product.description ? ` (${product.description})` : ''));
 
+      let orderId = 0;
       db.transaction(() => {
-        db.prepare("UPDATE users SET wallet_balance = wallet_balance - ? WHERE id = ?").run(product.price, user.id);
-        db.prepare("INSERT INTO transactions (user_id, amount, type) VALUES (?, ?, 'purchase')").run(user.id, -product.price);
-        db.prepare("INSERT INTO orders (user_id, product_id, amount, vendor_id, commission_ratio, admin_commission, vendor_earning) VALUES (?, ?, ?, ?, ?, ?, ?)").run(user.id, productId, product.price, product.v_id || null, ratio, adminCommission, vendorEarning);
+        db.prepare("UPDATE users SET wallet_balance = wallet_balance - ? WHERE id = ?").run(totalAmount, user.id);
+        db.prepare("INSERT INTO transactions (user_id, amount, type) VALUES (?, ?, 'purchase')").run(user.id, -totalAmount);
+        const info = db.prepare("INSERT INTO orders (user_id, product_id, amount, vendor_id, commission_ratio, admin_commission, vendor_earning, quantity, item_details, billed_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run(user.id, productId, totalAmount, product.v_id || null, ratio, adminCommission, vendorEarning, qty, details, totalAmount);
+        orderId = Number(info.lastInsertRowid);
       })();
       
-      res.json({ success: true, newBalance: user.wallet_balance - product.price, adminCommission, vendorEarning });
+      const orderRecord = db.prepare("SELECT o.*, p.name as product_name, v.company_name as vendor_company FROM orders o LEFT JOIN products p ON o.product_id = p.id LEFT JOIN vendors v ON o.vendor_id = v.id WHERE o.id = ?").get(orderId);
+
+      res.json({ success: true, order: orderRecord, newBalance: user.wallet_balance - totalAmount, adminCommission, vendorEarning });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Purchase failed" });
@@ -2178,7 +2213,7 @@ ONLY return valid JSON array of strings without markdown formatting.`;
   app.get("/api/admin/orders-commission", (req, res) => {
     try {
       const orders = db.prepare(`
-        SELECT o.*, p.name as product_name, v.name as vendor_name, v.company_name as vendor_company, v.vendor_type, u.name as buyer_name, u.email as buyer_email
+        SELECT o.*, p.name as product_name, p.description as product_desc, v.name as vendor_name, v.company_name as vendor_company, v.vendor_type, u.name as buyer_name, u.email as buyer_email
         FROM orders o
         LEFT JOIN products p ON o.product_id = p.id
         LEFT JOIN vendors v ON o.vendor_id = v.id OR p.vendor_id = v.id
@@ -2188,6 +2223,153 @@ ONLY return valid JSON array of strings without markdown formatting.`;
       res.json(orders);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch orders commission audit" });
+    }
+  });
+
+  app.get("/api/admin/client-order-ledger", (req, res) => {
+    try {
+      // 1. Puja Bookings
+      const pujaOrders = db.prepare(`
+        SELECT pb.*, pr.name as pandit_name, pr.type as pandit_type
+        FROM puja_bookings pb
+        LEFT JOIN pandit_registrations pr ON pb.pandit_id = pr.id
+        ORDER BY pb.created_at DESC
+      `).all() as any[];
+
+      const formattedPuja = pujaOrders.map(pb => {
+        const billed = Number(pb.billed_amount || pb.amount || 0);
+        const rate = Number(pb.commission_ratio || 15);
+        const adminShare = Number(pb.admin_commission !== undefined && pb.admin_commission !== null ? pb.admin_commission : (billed * (rate / 100)).toFixed(2));
+        const providerShare = Number(pb.pandit_earning !== undefined && pb.pandit_earning !== null ? pb.pandit_earning : (billed - adminShare).toFixed(2));
+        return {
+          id: `PUJA-${pb.id}`,
+          raw_id: pb.id,
+          order_type: 'Puja Service',
+          client_email: pb.user_email || 'devotee@astroway.com',
+          client_name: pb.user_name || 'Devotee',
+          item_service_name: pb.puja_name || 'Vedic Ceremony',
+          details: pb.service_details || pb.sankalp_details || 'Standard Vedic Ritual',
+          quantity: pb.quantity || 1,
+          billed_amount: billed,
+          commission_rate_pct: rate,
+          admin_share: adminShare,
+          provider_share: providerShare,
+          provider_name: pb.pandit_name || 'Pandit Astro',
+          timestamp: pb.created_at || pb.booking_date || new Date().toISOString(),
+          status: pb.status || 'confirmed'
+        };
+      });
+
+      // 2. Shop Orders
+      const shopOrders = db.prepare(`
+        SELECT o.*, p.name as product_name, p.description as product_desc, v.name as vendor_name, v.company_name as vendor_company, u.name as buyer_name, u.email as buyer_email
+        FROM orders o
+        LEFT JOIN products p ON o.product_id = p.id
+        LEFT JOIN vendors v ON o.vendor_id = v.id OR p.vendor_id = v.id
+        LEFT JOIN users u ON o.user_id = u.id
+        ORDER BY o.timestamp DESC
+      `).all() as any[];
+
+      const formattedShop = shopOrders.map(o => {
+        const billed = Number(o.billed_amount || o.amount || 0);
+        const rate = Number(o.commission_ratio || 10);
+        const adminShare = Number(o.admin_commission !== undefined && o.admin_commission !== null ? o.admin_commission : (billed * (rate / 100)).toFixed(2));
+        const providerShare = Number(o.vendor_earning !== undefined && o.vendor_earning !== null ? o.vendor_earning : (billed - adminShare).toFixed(2));
+        return {
+          id: `ITEM-${o.id}`,
+          raw_id: o.id,
+          order_type: 'Astrological Shop Item',
+          client_email: o.buyer_email || 'shopper@astroway.com',
+          client_name: o.buyer_name || 'AstroMall Shopper',
+          item_service_name: o.product_name || 'Astrological Item',
+          details: o.item_details || o.product_desc || 'Verified Astrological Product',
+          quantity: o.quantity || 1,
+          billed_amount: billed,
+          commission_rate_pct: rate,
+          admin_share: adminShare,
+          provider_share: providerShare,
+          provider_name: o.vendor_company || o.vendor_name || 'AstroMall Partner',
+          timestamp: o.timestamp || new Date().toISOString(),
+          status: o.status || 'completed'
+        };
+      });
+
+      // 3. Package Purchases
+      const pkgOrders = db.prepare(`
+        SELECT up.*, u.name as buyer_name, u.email as buyer_email, pk.name as pkg_name, pk.price as pkg_price, pk.type as pkg_type
+        FROM user_packages up
+        LEFT JOIN users u ON up.user_id = u.id
+        LEFT JOIN packages pk ON up.package_id = pk.id
+        ORDER BY up.purchase_date DESC
+      `).all() as any[];
+
+      const formattedPkg = pkgOrders.map(up => {
+        const billed = Number(up.pkg_price || 0);
+        const rate = 20; // 20% default admin share for package consultations
+        const adminShare = Number((billed * 0.20).toFixed(2));
+        const providerShare = Number((billed - adminShare).toFixed(2));
+        return {
+          id: `PKG-${up.id}`,
+          raw_id: up.id,
+          order_type: 'Consultation Package',
+          client_email: up.buyer_email || 'client@astroway.com',
+          client_name: up.buyer_name || up.buyer_email || 'AstroWay Client',
+          item_service_name: `${up.pkg_name || up.pkg_type || 'Astrology'} Package`,
+          details: `Prepaid consultation package: ${up.pkg_type || 'Astrology'} services`,
+          quantity: 1,
+          billed_amount: billed,
+          commission_rate_pct: rate,
+          admin_share: adminShare,
+          provider_share: providerShare,
+          provider_name: 'AstroWay Panel Astrologers',
+          timestamp: up.purchase_date || new Date().toISOString(),
+          status: up.status || 'active'
+        };
+      });
+
+      const allOrders = [...formattedPuja, ...formattedShop, ...formattedPkg].sort((a, b) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+
+      // Create client-wise ledger summary
+      const clientMap = new Map();
+      allOrders.forEach(order => {
+        const email = order.client_email;
+        if (!clientMap.has(email)) {
+          clientMap.set(email, {
+            client_email: email,
+            client_name: order.client_name,
+            total_orders: 0,
+            total_billed: 0,
+            total_admin_share: 0,
+            total_provider_share: 0,
+            orders: []
+          });
+        }
+        const client = clientMap.get(email);
+        client.total_orders += 1;
+        client.total_billed = Number((client.total_billed + order.billed_amount).toFixed(2));
+        client.total_admin_share = Number((client.total_admin_share + order.admin_share).toFixed(2));
+        client.total_provider_share = Number((client.total_provider_share + order.provider_share).toFixed(2));
+        client.orders.push(order);
+      });
+
+      const clientWise = Array.from(clientMap.values());
+
+      res.json({
+        success: true,
+        orderWise: allOrders,
+        clientWise: clientWise,
+        totals: {
+          total_orders: allOrders.length,
+          total_billed: Number(allOrders.reduce((acc, curr) => acc + curr.billed_amount, 0).toFixed(2)),
+          total_admin_share: Number(allOrders.reduce((acc, curr) => acc + curr.admin_share, 0).toFixed(2)),
+          total_provider_share: Number(allOrders.reduce((acc, curr) => acc + curr.provider_share, 0).toFixed(2))
+        }
+      });
+    } catch (error) {
+      console.error("Ledger error:", error);
+      res.status(500).json({ error: "Failed to fetch client/order ledger" });
     }
   });
 

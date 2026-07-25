@@ -1913,6 +1913,9 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
   const [selectedEnrollment, setSelectedEnrollment] = useState<any | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showModal, setShowModal] = useState<string | null>(null);
+  const [ledgerData, setLedgerData] = useState<{orderWise: any[], clientWise: any[], totals: any}>({ orderWise: [], clientWise: [], totals: {} });
+  const [ledgerViewMode, setLedgerViewMode] = useState<'order' | 'client'>('order');
+  const [selectedAdminCopy, setSelectedAdminCopy] = useState<any | null>(null);
 
   const fetchData = async () => {
     try {
@@ -1976,6 +1979,16 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
       setTestimonials(results[15]);
       setCallHistory(results[16]);
       setBanners(results[17]);
+
+      try {
+        const ledgerRes = await localFetch('/api/admin/client-order-ledger');
+        if (ledgerRes.ok) {
+          const lData = await ledgerRes.json();
+          if (lData && lData.success) setLedgerData(lData);
+        }
+      } catch (err) {
+        console.error("Ledger fetch error:", err);
+      }
     } catch (error) {
       console.error("Error fetching admin data:", error);
     }
@@ -2303,11 +2316,11 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-2 border-b border-slate-200 pb-4 overflow-x-auto no-scrollbar">
-        {['Astrologers', 'Users', 'Vendors', 'Categories', 'Products', 'Packages', 'Purchased Packages', 'Puja', 'Testimonials', 'Banners', 'Transactions', 'Sessions', 'Calls', 'Astro Reviews', 'Product Reviews', 'Approvals'].map(tab => (
+        {['Astrologers', 'Users', 'Vendors', 'Categories', 'Products', 'Packages', 'Purchased Packages', 'Puja', 'Puja Orders', 'Shop Orders', 'Client Ledger', 'Testimonials', 'Banners', 'Transactions', 'Sessions', 'Calls', 'Astro Reviews', 'Product Reviews', 'Approvals'].map(tab => (
           <button 
             key={tab}
-            onClick={() => setAdminTab(tab.toLowerCase().replace(' ', '-'))}
-            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${adminTab === tab.toLowerCase().replace(' ', '-') ? 'bg-deep-blue text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+            onClick={() => setAdminTab(tab.toLowerCase().replace(/\s+/g, '-'))}
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${adminTab === tab.toLowerCase().replace(/\s+/g, '-') ? 'bg-deep-blue text-white' : 'text-slate-500 hover:bg-slate-100'}`}
           >
             {tab}
           </button>
@@ -3526,6 +3539,323 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
           </div>
         </div>
       )}
+
+      {adminTab === 'puja-orders' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-2xl font-serif font-bold text-deep-blue">Puja Services Orders (Admin Copy)</h3>
+              <p className="text-sm text-slate-500">Comprehensive audit log of booked Vedic ceremonies with quantities, service details, and billed amounts.</p>
+            </div>
+            <span className="px-4 py-2 bg-stone-100 rounded-xl font-bold text-sm text-deep-blue">Total: {ledgerData.orderWise.filter(o => o.order_type === 'Puja Service').length} Orders</span>
+          </div>
+          <div className="glass rounded-3xl overflow-hidden border border-slate-100 shadow-sm">
+            <table className="w-full text-left">
+              <thead className="bg-stone-100 text-xs font-bold text-slate-500 uppercase">
+                <tr>
+                  <th className="p-4">Order ID</th>
+                  <th className="p-4">Client</th>
+                  <th className="p-4">Puja Ceremony & Pandit</th>
+                  <th className="p-4 text-center">Qty</th>
+                  <th className="p-4">Service Details / Sankalp</th>
+                  <th className="p-4">Billed Amount</th>
+                  <th className="p-4">Rate (%)</th>
+                  <th className="p-4">Admin Share</th>
+                  <th className="p-4">Pandit Share</th>
+                  <th className="p-4">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {ledgerData.orderWise.filter(o => o.order_type === 'Puja Service').map(o => (
+                  <tr key={o.id} className="text-sm hover:bg-stone-50/50 transition-colors">
+                    <td className="p-4 font-mono font-bold text-deep-blue">{o.id}</td>
+                    <td className="p-4">
+                      <p className="font-bold">{o.client_name}</p>
+                      <p className="text-xs text-slate-500">{o.client_email}</p>
+                    </td>
+                    <td className="p-4">
+                      <p className="font-bold text-saffron">{o.item_service_name}</p>
+                      <p className="text-xs text-slate-500">Pandit: {o.provider_name}</p>
+                    </td>
+                    <td className="p-4 text-center font-bold">{o.quantity}</td>
+                    <td className="p-4 max-w-xs truncate text-xs text-slate-600" title={o.details}>{o.details}</td>
+                    <td className="p-4 font-bold">₹{o.billed_amount}</td>
+                    <td className="p-4 font-bold text-gold">{o.commission_rate_pct}%</td>
+                    <td className="p-4 font-bold text-green-700 bg-green-50/50">₹{o.admin_share}</td>
+                    <td className="p-4 text-slate-600 font-medium">₹{o.provider_share}</td>
+                    <td className="p-4">
+                      <button onClick={() => setSelectedAdminCopy(o)} className="px-3 py-1.5 bg-deep-blue text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-colors flex items-center gap-1">
+                        <FileText size={14} /> ADMN Copy
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {adminTab === 'shop-orders' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-2xl font-serif font-bold text-deep-blue">Shop Astrological Items Orders (Admin Copy)</h3>
+              <p className="text-sm text-slate-500">Audit log of astrological shop items with quantities, item specifications, billed amounts, and Admin commission.</p>
+            </div>
+            <span className="px-4 py-2 bg-stone-100 rounded-xl font-bold text-sm text-deep-blue">Total: {ledgerData.orderWise.filter(o => o.order_type === 'Astrological Shop Item').length} Orders</span>
+          </div>
+          <div className="glass rounded-3xl overflow-hidden border border-slate-100 shadow-sm">
+            <table className="w-full text-left">
+              <thead className="bg-stone-100 text-xs font-bold text-slate-500 uppercase">
+                <tr>
+                  <th className="p-4">Order ID</th>
+                  <th className="p-4">Client</th>
+                  <th className="p-4">Item Name & Vendor</th>
+                  <th className="p-4 text-center">Qty</th>
+                  <th className="p-4">Item Details & Specs</th>
+                  <th className="p-4">Billed Amount</th>
+                  <th className="p-4">Rate (%)</th>
+                  <th className="p-4">Admin Share</th>
+                  <th className="p-4">Vendor Share</th>
+                  <th className="p-4">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {ledgerData.orderWise.filter(o => o.order_type === 'Astrological Shop Item').map(o => (
+                  <tr key={o.id} className="text-sm hover:bg-stone-50/50 transition-colors">
+                    <td className="p-4 font-mono font-bold text-deep-blue">{o.id}</td>
+                    <td className="p-4">
+                      <p className="font-bold">{o.client_name}</p>
+                      <p className="text-xs text-slate-500">{o.client_email}</p>
+                    </td>
+                    <td className="p-4">
+                      <p className="font-bold text-saffron">{o.item_service_name}</p>
+                      <p className="text-xs text-slate-500">Vendor: {o.provider_name}</p>
+                    </td>
+                    <td className="p-4 text-center font-bold">{o.quantity}</td>
+                    <td className="p-4 max-w-xs truncate text-xs text-slate-600" title={o.details}>{o.details}</td>
+                    <td className="p-4 font-bold">₹{o.billed_amount}</td>
+                    <td className="p-4 font-bold text-gold">{o.commission_rate_pct}%</td>
+                    <td className="p-4 font-bold text-green-700 bg-green-50/50">₹{o.admin_share}</td>
+                    <td className="p-4 text-slate-600 font-medium">₹{o.provider_share}</td>
+                    <td className="p-4">
+                      <button onClick={() => setSelectedAdminCopy(o)} className="px-3 py-1.5 bg-deep-blue text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-colors flex items-center gap-1">
+                        <FileText size={14} /> ADMN Copy
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {adminTab === 'client-ledger' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-2xl font-serif font-bold text-deep-blue">Client-wise & Order-wise Financial Ledger</h3>
+              <p className="text-sm text-slate-500">Transaction details with amount of share payable to ADMIN calculated at predefined percentage rates.</p>
+            </div>
+            <div className="flex bg-stone-100 p-1 rounded-2xl gap-1">
+              <button 
+                onClick={() => setLedgerViewMode('order')}
+                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${ledgerViewMode === 'order' ? 'bg-deep-blue text-white shadow' : 'text-slate-600 hover:bg-white'}`}
+              >
+                Order-wise View
+              </button>
+              <button 
+                onClick={() => setLedgerViewMode('client')}
+                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${ledgerViewMode === 'client' ? 'bg-deep-blue text-white shadow' : 'text-slate-600 hover:bg-white'}`}
+              >
+                Client-wise View
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="glass p-5 rounded-3xl border border-slate-100">
+              <span className="text-xs text-slate-500 font-bold uppercase">Total Orders</span>
+              <p className="text-2xl font-serif font-bold text-deep-blue mt-1">{ledgerData.totals?.total_orders || 0}</p>
+            </div>
+            <div className="glass p-5 rounded-3xl border border-slate-100">
+              <span className="text-xs text-slate-500 font-bold uppercase">Total Billed Revenue</span>
+              <p className="text-2xl font-serif font-bold text-saffron mt-1">₹{ledgerData.totals?.total_billed || 0}</p>
+            </div>
+            <div className="glass p-5 rounded-3xl border border-green-200 bg-green-50/30">
+              <span className="text-xs text-green-700 font-bold uppercase">Total Share Payable to ADMIN</span>
+              <p className="text-2xl font-serif font-bold text-green-700 mt-1">₹{ledgerData.totals?.total_admin_share || 0}</p>
+            </div>
+            <div className="glass p-5 rounded-3xl border border-slate-100">
+              <span className="text-xs text-slate-500 font-bold uppercase">Total Provider Share</span>
+              <p className="text-2xl font-serif font-bold text-slate-700 mt-1">₹{ledgerData.totals?.total_provider_share || 0}</p>
+            </div>
+          </div>
+
+          {ledgerViewMode === 'order' ? (
+            <div className="glass rounded-3xl overflow-hidden border border-slate-100 shadow-sm">
+              <table className="w-full text-left">
+                <thead className="bg-stone-100 text-xs font-bold text-slate-500 uppercase">
+                  <tr>
+                    <th className="p-4">Order ID & Date</th>
+                    <th className="p-4">Client</th>
+                    <th className="p-4">Order Type</th>
+                    <th className="p-4">Service / Item Details & Qty</th>
+                    <th className="p-4">Billed Amount</th>
+                    <th className="p-4">Predefined Rate</th>
+                    <th className="p-4 bg-green-50 text-green-800">Share Payable to ADMIN</th>
+                    <th className="p-4">Net Provider Share</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {ledgerData.orderWise.map(o => (
+                    <tr key={o.id} className="text-sm hover:bg-stone-50/50 transition-colors">
+                      <td className="p-4">
+                        <span className="font-mono font-bold text-deep-blue block">{o.id}</span>
+                        <span className="text-[11px] text-slate-400">{new Date(o.timestamp).toLocaleDateString()}</span>
+                      </td>
+                      <td className="p-4">
+                        <p className="font-bold">{o.client_name}</p>
+                        <p className="text-xs text-slate-500">{o.client_email}</p>
+                      </td>
+                      <td className="p-4">
+                        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-stone-100 text-slate-700">{o.order_type}</span>
+                      </td>
+                      <td className="p-4">
+                        <p className="font-bold text-saffron">{o.item_service_name} (Qty: {o.quantity})</p>
+                        <p className="text-xs text-slate-500 max-w-xs truncate" title={o.details}>{o.details}</p>
+                      </td>
+                      <td className="p-4 font-bold">₹{o.billed_amount}</td>
+                      <td className="p-4 font-bold text-gold">{o.commission_rate_pct}%</td>
+                      <td className="p-4 font-bold text-green-700 bg-green-50/50">₹{o.admin_share}</td>
+                      <td className="p-4 font-medium text-slate-600">₹{o.provider_share}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="glass rounded-3xl overflow-hidden border border-slate-100 shadow-sm">
+              <table className="w-full text-left">
+                <thead className="bg-stone-100 text-xs font-bold text-slate-500 uppercase">
+                  <tr>
+                    <th className="p-4">Client Name & Email</th>
+                    <th className="p-4 text-center">Total Orders</th>
+                    <th className="p-4">Total Billed Amount</th>
+                    <th className="p-4 bg-green-50 text-green-800">Total Share Payable to ADMIN</th>
+                    <th className="p-4">Total Net Provider Share</th>
+                    <th className="p-4">Order IDs</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {ledgerData.clientWise.map((c, idx) => (
+                    <tr key={idx} className="text-sm hover:bg-stone-50/50 transition-colors">
+                      <td className="p-4">
+                        <p className="font-bold text-deep-blue">{c.client_name}</p>
+                        <p className="text-xs text-slate-500">{c.client_email}</p>
+                      </td>
+                      <td className="p-4 text-center font-bold">{c.total_orders}</td>
+                      <td className="p-4 font-bold text-saffron">₹{c.total_billed}</td>
+                      <td className="p-4 font-bold text-green-700 bg-green-50/50">₹{c.total_admin_share}</td>
+                      <td className="p-4 font-medium text-slate-600">₹{c.total_provider_share}</td>
+                      <td className="p-4">
+                        <div className="flex flex-wrap gap-1 max-w-xs">
+                          {c.orders.map((ord: any) => (
+                            <span key={ord.id} onClick={() => setSelectedAdminCopy(ord)} className="px-2 py-0.5 bg-stone-100 hover:bg-saffron hover:text-white rounded text-[10px] font-mono font-bold cursor-pointer transition-colors">
+                              {ord.id}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {selectedAdminCopy && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-8 space-y-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+              <div>
+                <span className="px-3 py-1 bg-deep-blue text-white rounded-full text-xs font-bold uppercase tracking-wider">ADMN COPY</span>
+                <h3 className="text-2xl font-serif font-bold text-deep-blue mt-2">Order & Commission Voucher</h3>
+              </div>
+              <button onClick={() => setSelectedAdminCopy(null)} className="p-2 hover:bg-slate-100 rounded-full">
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 text-sm bg-stone-50 p-4 rounded-2xl border border-slate-100">
+              <div>
+                <span className="text-xs text-slate-500 font-bold uppercase block">Reference ID</span>
+                <span className="font-mono font-bold text-deep-blue">{selectedAdminCopy.id}</span>
+              </div>
+              <div>
+                <span className="text-xs text-slate-500 font-bold uppercase block">Transaction Date</span>
+                <span className="font-bold">{new Date(selectedAdminCopy.timestamp).toLocaleString()}</span>
+              </div>
+              <div>
+                <span className="text-xs text-slate-500 font-bold uppercase block">Client Name & Email</span>
+                <span className="font-bold text-deep-blue block">{selectedAdminCopy.client_name}</span>
+                <span className="text-xs text-slate-500">{selectedAdminCopy.client_email}</span>
+              </div>
+              <div>
+                <span className="text-xs text-slate-500 font-bold uppercase block">Provider / Vendor</span>
+                <span className="font-bold text-saffron">{selectedAdminCopy.provider_name}</span>
+                <span className="text-xs text-slate-500 block">{selectedAdminCopy.order_type}</span>
+              </div>
+            </div>
+
+            <div className="space-y-3 border border-slate-200 rounded-2xl p-5">
+              <h4 className="font-serif font-bold text-base text-deep-blue border-b border-slate-100 pb-2">Service / Item Specifications</h4>
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="font-bold text-base">{selectedAdminCopy.item_service_name}</span>
+                  <p className="text-xs text-slate-500 mt-1">{selectedAdminCopy.details}</p>
+                </div>
+                <span className="px-3 py-1 bg-stone-100 rounded-lg text-sm font-bold">Qty: {selectedAdminCopy.quantity}</span>
+              </div>
+            </div>
+
+            <div className="bg-stone-900 text-white p-6 rounded-2xl space-y-4">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-saffron border-b border-stone-800 pb-2">Financial & Ledger Share Breakdown</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-stone-400">Total Billed Amount (Qty × Unit Rate):</span>
+                  <span className="font-bold text-white">₹{selectedAdminCopy.billed_amount}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-stone-400">Predefined Percentage Rate:</span>
+                  <span className="font-bold text-gold">{selectedAdminCopy.commission_rate_pct}%</span>
+                </div>
+                <div className="border-t border-stone-800 pt-2 flex justify-between text-base font-bold text-saffron">
+                  <span>Share Payable to ADMN:</span>
+                  <span>₹{selectedAdminCopy.admin_share}</span>
+                </div>
+                <div className="flex justify-between text-xs text-stone-400 pt-1">
+                  <span>Net Share Payable to Provider/Pandit:</span>
+                  <span>₹{selectedAdminCopy.provider_share}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-4 pt-2">
+              <button onClick={() => window.print()} className="flex-1 bg-deep-blue text-white py-3 rounded-xl font-bold text-sm hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+                <FileText size={18} /> Print / Export ADMN COPY
+              </button>
+              <button onClick={() => setSelectedAdminCopy(null)} className="px-6 bg-stone-100 text-slate-700 py-3 rounded-xl font-bold text-sm hover:bg-stone-200 transition-all">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -4432,7 +4762,7 @@ function AstrologerPanel({ profile, onUpdate, onLogout }: { profile: any, onUpda
 
 function Shop({ user, onPurchase, onLogin, onRegisterVendor }: { user: UserType | null, onPurchase: () => void, onLogin: (email: string) => void, onRegisterVendor?: () => void }) {
   const [products, setProducts] = useState<Product[]>([]);
-  const [cart, setCart] = useState<{product: Product, quantity: number}[]>([]);
+  const [cart, setCart] = useState<{product: Product, quantity: number, item_details?: string}[]>([]);
   const [view, setView] = useState<'products' | 'cart' | 'product-details'>('products');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [reviews, setReviews] = useState<any[]>([]);
@@ -4462,7 +4792,7 @@ function Shop({ user, onPurchase, onLogin, onRegisterVendor }: { user: UserType 
         item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
       ));
     } else {
-      setCart([...cart, { product, quantity: 1 }]);
+      setCart([...cart, { product, quantity: 1, item_details: '' }]);
     }
     alert(`${product.name} added to cart!`);
   };
@@ -4487,25 +4817,29 @@ function Shop({ user, onPurchase, onLogin, onRegisterVendor }: { user: UserType 
       return;
     }
 
-    // Process each item in cart
+    // Process each item in cart with quantity, item_details, and billed_amount
     for (const item of cart) {
-      // In a real app, we'd send quantity too, but our current API handles one at a time
-      // Let's call it multiple times for now to match existing logic
-      for (let i = 0; i < item.quantity; i++) {
-        const res = await localFetch('/api/user/purchase', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: user.email, productId: item.product.id })
-        });
-        if (!res.ok) {
-          const data = await res.json();
-          alert(`Failed to purchase ${item.product.name}: ${data.error}`);
-          return;
-        }
+      const billedAmount = item.product.price * item.quantity;
+      const details = item.item_details || `Shipping: ${shipping.address}, ${shipping.city} (${shipping.zip})`;
+      const res = await localFetch('/api/user/purchase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: user.email, 
+          productId: item.product.id,
+          quantity: item.quantity,
+          item_details: details,
+          billed_amount: billedAmount
+        })
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(`Failed to purchase ${item.product.name}: ${data.error}`);
+        return;
       }
     }
 
-    alert("Order placed successfully!");
+    alert("🛍️ Shop order placed successfully!\n\nAn ADMIN COPY of each item order with quantity, specifications, and billed amount has been generated and dispatched to the ADMN dashboard with share payable to ADMIN.");
     setCart([]);
     setView('products');
     onPurchase();
@@ -4651,11 +4985,22 @@ function Shop({ user, onPurchase, onLogin, onRegisterVendor }: { user: UserType 
                 <div className="divide-y divide-slate-100">
                   {cart.map((item, i) => (
                     <div key={i} className="py-4 flex items-center justify-between">
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4 flex-1">
                         <img src={item.product.image_url} className="w-16 h-16 rounded-xl object-cover" referrerPolicy="no-referrer" />
-                        <div>
+                        <div className="flex-1 mr-4">
                           <p className="font-bold">{item.product.name}</p>
-                          <p className="text-saffron font-bold">₹{item.product.price}</p>
+                          <p className="text-saffron font-bold">₹{item.product.price} <span className="text-[10px] text-slate-400 font-normal">({item.product.vendor_name || 'Verified Vendor'})</span></p>
+                          <input 
+                            type="text"
+                            placeholder="Item specifications / notes (optional)"
+                            value={item.item_details || ''}
+                            onChange={(e) => {
+                              const newCart = [...cart];
+                              newCart[i].item_details = e.target.value;
+                              setCart(newCart);
+                            }}
+                            className="mt-1.5 w-full bg-stone-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-700 placeholder:text-slate-400"
+                          />
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
@@ -4881,7 +5226,9 @@ function Puja({ user, onRegisterPandit, onBooked }: { user?: UserType | null, on
     puja_name: 'Graha Shanti Puja',
     booking_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
     booking_time: '10:00 AM',
-    sankalp_details: ''
+    sankalp_details: '',
+    quantity: 1,
+    service_details: ''
   });
   const [bookingLoading, setBookingLoading] = useState(false);
 
@@ -4913,8 +5260,11 @@ function Puja({ user, onRegisterPandit, onBooked }: { user?: UserType | null, on
     }
     if (!selectedPandit) return;
 
-    if (user.wallet_balance < selectedPandit.listed_rate) {
-      alert(`Insufficient wallet balance (₹${user.wallet_balance}). Listed rate is ₹${selectedPandit.listed_rate}. Please recharge your wallet.`);
+    const qty = Number(bookingForm.quantity) || 1;
+    const totalAmount = selectedPandit.listed_rate * qty;
+
+    if (user.wallet_balance < totalAmount) {
+      alert(`Insufficient wallet balance (₹${user.wallet_balance}). Total rate for ${qty} quantity is ₹${totalAmount}. Please recharge your wallet.`);
       return;
     }
 
@@ -4931,13 +5281,16 @@ function Puja({ user, onRegisterPandit, onBooked }: { user?: UserType | null, on
           booking_date: bookingForm.booking_date,
           booking_time: bookingForm.booking_time,
           sankalp_details: bookingForm.sankalp_details,
-          amount: selectedPandit.listed_rate
+          amount: selectedPandit.listed_rate,
+          quantity: qty,
+          service_details: bookingForm.service_details || bookingForm.sankalp_details,
+          billed_amount: totalAmount
         })
       });
 
       if (res.ok) {
         const data = await res.json();
-        alert(`🙏 Puja booked successfully with ${selectedPandit.name}!\n\nBooking ID: #${data.booking.id}\nAmount Deducted: ₹${selectedPandit.listed_rate}\nStatus: Confirmed & Commission Recorded.`);
+        alert(`🙏 Puja booked successfully with ${selectedPandit.name}!\n\nBooking ID: #${data.booking?.id || 'NEW'}\nQuantity: ${qty}\nService Details: ${bookingForm.service_details || bookingForm.sankalp_details}\nTotal Billed Amount: ₹${totalAmount}\nAn ADMIN COPY has been dispatched to ADMN dashboard with share payable to ADMIN.`);
         setSelectedPandit(null);
         onBooked?.();
       } else {
@@ -5227,7 +5580,7 @@ function Puja({ user, onRegisterPandit, onBooked }: { user?: UserType | null, on
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-500 uppercase">Sankalp Details (Gotra, Rashi, Wish/Remedy Purpose)*</label>
                 <textarea 
-                  required rows={3}
+                  required rows={2}
                   value={bookingForm.sankalp_details}
                   onChange={(e) => setBookingForm({...bookingForm, sankalp_details: e.target.value})}
                   placeholder="e.g. Kashyap Gotra, Mesha Rashi. For peace of mind and planetary dosh remedy."
@@ -5235,10 +5588,33 @@ function Puja({ user, onRegisterPandit, onBooked }: { user?: UserType | null, on
                 />
               </div>
 
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-500 uppercase">Quantity (Priests / Days)*</label>
+                  <input 
+                    type="number" min={1} required
+                    value={bookingForm.quantity}
+                    onChange={(e) => setBookingForm({...bookingForm, quantity: Math.max(1, parseInt(e.target.value) || 1)})}
+                    className="w-full bg-stone-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-center"
+                  />
+                </div>
+                <div className="col-span-2 space-y-1">
+                  <label className="text-xs font-bold text-slate-500 uppercase">Service Details & Custom Samagri</label>
+                  <input 
+                    type="text"
+                    value={bookingForm.service_details}
+                    onChange={(e) => setBookingForm({...bookingForm, service_details: e.target.value})}
+                    placeholder="e.g. Full Vedic Samagri, 2 Priests chanting, Havan included"
+                    className="w-full bg-stone-50 border border-slate-200 rounded-xl px-4 py-3 text-sm"
+                  />
+                </div>
+              </div>
+
               <div className="bg-red-50 p-4 rounded-2xl flex justify-between items-center border border-red-100">
                 <div>
-                  <span className="text-xs text-red-800 font-medium block">Listed Puja Rate</span>
-                  <span className="text-2xl font-bold text-red-700">₹{selectedPandit.listed_rate}</span>
+                  <span className="text-xs text-red-800 font-medium block">Billed Amount ({bookingForm.quantity} × ₹{selectedPandit.listed_rate})</span>
+                  <span className="text-2xl font-bold text-red-700">₹{selectedPandit.listed_rate * bookingForm.quantity}</span>
+                  <span className="text-[10px] text-green-700 font-bold block mt-0.5">Includes {selectedPandit.commission_ratio || 15}% ADMN Share (₹{((selectedPandit.listed_rate * bookingForm.quantity) * ((selectedPandit.commission_ratio || 15)/100)).toFixed(2)})</span>
                 </div>
                 <div className="text-right text-xs text-slate-500">
                   <span>Your Wallet Balance:</span>
@@ -5250,7 +5626,7 @@ function Puja({ user, onRegisterPandit, onBooked }: { user?: UserType | null, on
                 type="submit" disabled={bookingLoading}
                 className="w-full bg-red-700 text-white font-bold py-4 rounded-2xl hover:bg-red-800 transition-all shadow-xl shadow-red-700/20 text-sm flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                {bookingLoading ? <Sparkles className="animate-spin" size={18} /> : <CheckCircle2 size={18} />} Confirm & Pay ₹{selectedPandit.listed_rate}
+                {bookingLoading ? <Sparkles className="animate-spin" size={18} /> : <CheckCircle2 size={18} />} Confirm & Pay ₹{selectedPandit.listed_rate * bookingForm.quantity}
               </button>
             </form>
           </motion.div>
