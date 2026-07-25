@@ -153,7 +153,7 @@ export default function App() {
     }
 
     switch (activeTab) {
-      case 'home': return <Home astrologers={astrologers} testimonials={testimonials} banners={banners} onOpenExpress={() => setShowExpressQuestions(true)} />;
+      case 'home': return <Home astrologers={astrologers} testimonials={testimonials} banners={banners} onOpenExpress={() => setShowExpressQuestions(true)} onOpenKundli={() => setActiveTab('kundli')} />;
       case 'horoscope': return <Horoscope />;
       case 'kundli': return <Kundli user={user} onViewPackages={() => setActiveTab('packages')} />;
       case 'chat': return <Chat astrologers={astrologers} user={user} onRecharge={() => fetchUser(user?.email)} />;
@@ -194,7 +194,7 @@ export default function App() {
             onRegisterClick={() => setActiveTab('astrologer-register')}
           />
         );
-      default: return <Home astrologers={astrologers} testimonials={testimonials} banners={banners} />;
+      default: return <Home astrologers={astrologers} testimonials={testimonials} banners={banners} onOpenExpress={() => setShowExpressQuestions(true)} onOpenKundli={() => setActiveTab('kundli')} />;
     }
   };
 
@@ -360,10 +360,10 @@ export default function App() {
           <div>
             <h4 className="font-bold mb-4 text-gold">Quick Links</h4>
             <ul className="space-y-2 text-sm text-slate-400">
-              <li>Daily Horoscope</li>
-              <li>Kundli Matching</li>
-              <li>Talk to Astrologer</li>
-              <li>AstroShop</li>
+              <li className="cursor-pointer hover:text-white" onClick={() => setActiveTab('horoscope')}>Daily Horoscope</li>
+              <li className="cursor-pointer hover:text-white" onClick={() => setActiveTab('kundli')}>Kundli Matching</li>
+              <li className="cursor-pointer hover:text-white" onClick={() => setActiveTab('chat')}>Talk to Astrologer</li>
+              <li className="cursor-pointer hover:text-white" onClick={() => setActiveTab('shop')}>AstroShop</li>
             </ul>
           </div>
           <div>
@@ -423,7 +423,7 @@ const ZODIAC_ICONS: Record<string, string> = {
   Pisces: "https://img.icons8.com/ios-filled/100/D4AF37/pisces.png",
 };
 
-function Home({ astrologers, testimonials, banners, onOpenExpress }: { astrologers: Astrologer[], testimonials: any[], banners: Banner[], onOpenExpress?: () => void }) {
+function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli }: { astrologers: Astrologer[], testimonials: any[], banners: Banner[], onOpenExpress?: () => void, onOpenKundli?: () => void }) {
   const [currentBanner, setCurrentBanner] = useState(0);
 
   useEffect(() => {
@@ -463,6 +463,13 @@ function Home({ astrologers, testimonials, banners, onOpenExpress }: { astrologe
             />
             <div className="absolute inset-0 bg-gradient-to-r from-deep-blue/90 via-deep-blue/60 to-transparent flex items-center px-12">
               <div className="max-w-2xl space-y-6">
+                <motion.div 
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-gold/20 via-saffron/30 to-gold/20 border border-gold/50 backdrop-blur-md text-gold font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg"
+                >
+                  <Sparkles size={16} className="text-saffron animate-pulse shrink-0" /> Highlighting AI Generated Astrological Consultancy Through Software
+                </motion.div>
                 <motion.h1 
                   initial={{ opacity: 0, x: -50 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -483,7 +490,10 @@ function Home({ astrologers, testimonials, banners, onOpenExpress }: { astrologe
                   <button onClick={() => onOpenExpress && onOpenExpress()} className="bg-saffron text-white px-6 py-3 rounded-full font-bold shadow-lg hover:bg-orange-600 transition-all transform hover:scale-105 text-sm md:text-base flex items-center gap-2">
                     <Sparkles size={16} /> Ask 3 Questions (₹50)
                   </button>
-                  <button className="bg-white/20 backdrop-blur-md text-white border border-white/30 px-6 py-3 rounded-full font-bold hover:bg-white/30 transition-all text-sm md:text-base">
+                  <button 
+                    onClick={() => onOpenKundli && onOpenKundli()}
+                    className="bg-white/20 backdrop-blur-md text-white border border-white/30 px-6 py-3 rounded-full font-bold hover:bg-white/30 transition-all text-sm md:text-base cursor-pointer shadow-md"
+                  >
                     Get Free Kundli
                   </button>
                 </div>
@@ -518,6 +528,34 @@ function Home({ astrologers, testimonials, banners, onOpenExpress }: { astrologe
           </>
         )}
       </section>
+
+      {/* AI Generated Astrological Consultancy Highlight Banner */}
+      <motion.div 
+        initial={{ opacity: 0, y: 15 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        className="bg-gradient-to-r from-deep-blue via-slate-900 to-deep-blue rounded-[2.5rem] p-8 text-white border border-gold/30 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden"
+      >
+        <div className="absolute top-0 right-0 w-80 h-80 bg-saffron/15 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16" />
+        <div className="space-y-3 z-10 text-center md:text-left flex-1">
+          <div className="inline-flex items-center gap-2 bg-gold/20 text-gold px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-gold/40 shadow">
+            <Sparkles size={14} className="text-saffron animate-spin" /> Next-Gen Astrological Technology
+          </div>
+          <h2 className="text-2xl md:text-3xl font-serif font-black text-white tracking-wide leading-tight">
+            Highlighting AI Generated Astrological Consultancy Through Software
+          </h2>
+          <p className="text-sm text-slate-300 max-w-2xl leading-relaxed">
+            Experience unparalleled precision with our advanced software algorithms. Generate comprehensive Kundli charts, check planetary alignments, and receive instant, personalized Vedic consultancy 24/7.
+          </p>
+        </div>
+        <div className="z-10 shrink-0 flex flex-col sm:flex-row items-center gap-3">
+          <button
+            onClick={() => onOpenKundli && onOpenKundli()}
+            className="bg-gradient-to-r from-saffron to-amber-600 text-white font-bold px-6 py-4 rounded-2xl shadow-xl hover:from-amber-600 hover:to-saffron transition-all transform hover:scale-105 text-sm flex items-center gap-2 cursor-pointer shrink-0"
+          >
+            <Sparkles size={16} /> Get Free Kundli Now
+          </button>
+        </div>
+      </motion.div>
 
       {/* Express ₹50 / 3-Question Special Offer Banner */}
       <motion.div 
@@ -650,8 +688,8 @@ function Home({ astrologers, testimonials, banners, onOpenExpress }: { astrologe
           </div>
         </div>
         <div className="w-full md:w-1/2 p-12 space-y-6 flex flex-col justify-center">
-          <div className="inline-block bg-saffron/10 text-saffron px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
-            Live Consultation
+          <div className="inline-block bg-saffron/10 text-saffron px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest">
+            Highlighting AI Generated Astrological Consultancy Through Software
           </div>
           <h2 className="text-4xl font-serif font-bold text-deep-blue leading-tight">
             Get Instant Remedies from <span className="text-saffron">Pandit Astro</span>
