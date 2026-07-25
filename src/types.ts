@@ -80,6 +80,16 @@ export interface Package {
   image_url: string;
 }
 
+export interface Banner {
+  id: number;
+  title: string;
+  image_url: string;
+  link_url?: string;
+  is_active: boolean;
+  display_order: number;
+  timestamp: string;
+}
+
 export const ZODIAC_SIGNS = [
   "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", 
   "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"

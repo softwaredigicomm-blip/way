@@ -6,8 +6,18 @@ import dotenv from "dotenv";
 import Database from "better-sqlite3";
 import multer from "multer";
 import fs from "fs";
+import { GoogleGenAI } from "@google/genai";
 
 dotenv.config();
+
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+  httpOptions: {
+    headers: {
+      'User-Agent': 'aistudio-build',
+    }
+  }
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -218,6 +228,7 @@ try { db.exec("ALTER TABLE astrologers ADD COLUMN aadhaar TEXT"); } catch (e) {}
 try { db.exec("ALTER TABLE astrologers ADD COLUMN pan_url TEXT"); } catch (e) {}
 try { db.exec("ALTER TABLE astrologers ADD COLUMN aadhaar_url TEXT"); } catch (e) {}
 try { db.exec("ALTER TABLE astrologers ADD COLUMN cheque_url TEXT"); } catch (e) {}
+try { db.exec("ALTER TABLE astrologers ADD COLUMN bank_details TEXT"); } catch (e) {}
 try { db.exec("ALTER TABLE astrologers ADD COLUMN wallet_balance REAL DEFAULT 0"); } catch (e) {}
 try { db.exec("ALTER TABLE astrologers ADD COLUMN discount_percent REAL DEFAULT 0"); } catch (e) {}
 try { db.exec("ALTER TABLE astrologers ADD COLUMN is_chat_active INTEGER DEFAULT 1"); } catch (e) {}
@@ -225,6 +236,9 @@ try { db.exec("ALTER TABLE astrologers ADD COLUMN is_call_active INTEGER DEFAULT
 try { db.exec("ALTER TABLE astrologers ADD COLUMN commission_percent REAL DEFAULT 70"); } catch (e) {}
 try { db.exec("ALTER TABLE astrologers ADD COLUMN status TEXT DEFAULT 'pending'"); } catch (e) {}
 try { db.exec("ALTER TABLE astrologers ADD COLUMN password TEXT DEFAULT '12345'"); } catch (e) {}
+try { db.exec("ALTER TABLE call_sessions ADD COLUMN astro_earning REAL DEFAULT 0"); } catch (e) {}
+try { db.exec("ALTER TABLE call_sessions ADD COLUMN rating INTEGER"); } catch (e) {}
+try { db.exec("ALTER TABLE call_sessions ADD COLUMN comment TEXT"); } catch (e) {}
 try { db.exec("ALTER TABLE vendors ADD COLUMN address TEXT"); } catch (e) {}
 try { db.exec("ALTER TABLE vendors ADD COLUMN company_name TEXT"); } catch (e) {}
 try { db.exec("ALTER TABLE vendors ADD COLUMN gst TEXT"); } catch (e) {}
@@ -240,6 +254,7 @@ try { db.exec("ALTER TABLE products ADD COLUMN how_to_use TEXT"); } catch (e) {}
 try { db.exec("ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'approved'"); } catch (e) {}
 try { db.exec("ALTER TABLE users ADD COLUMN registration_data TEXT"); } catch (e) {}
 try { db.exec("ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1"); } catch (e) {}
+try { db.exec("ALTER TABLE users ADD COLUMN ai_minutes_remaining INTEGER DEFAULT 15"); } catch (e) {}
 try {
   db.exec(`
     CREATE TABLE IF NOT EXISTS call_sessions (
@@ -252,6 +267,7 @@ try {
     rate_per_min REAL,
     discount_percent REAL DEFAULT 0,
     total_cost REAL DEFAULT 0,
+    astro_earning REAL DEFAULT 0,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(user_id) REFERENCES users(id),
     FOREIGN KEY(astrologer_id) REFERENCES astrologers(id)
@@ -265,6 +281,46 @@ try {
       rating INTEGER,
       image_url TEXT,
       is_active INTEGER DEFAULT 1,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS banners (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT,
+      image_url TEXT,
+      link_url TEXT,
+      is_active INTEGER DEFAULT 1,
+      display_order INTEGER DEFAULT 0,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS ai_wallet_ledger (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_email TEXT,
+      amount REAL,
+      duration_minutes INTEGER,
+      type TEXT, -- 'recharge' | 'usage'
+      description TEXT,
+      balance_minutes_remaining INTEGER,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS ai_chat_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_email TEXT,
+      session_title TEXT,
+      profile_details TEXT,
+      analysis_type TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS ai_chat_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_id INTEGER,
+      user_email TEXT,
+      role TEXT,
+      text TEXT,
+      image_url TEXT,
       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
@@ -553,6 +609,21 @@ async function startServer() {
   });
 
   // Admin Approval API
+  app.get("/api/product-reviews", (req, res) => {
+    try {
+      const reviews = db.prepare(`
+        SELECT pr.*, u.name as user_name, p.name as product_name
+        FROM product_reviews pr
+        JOIN users u ON pr.user_id = u.id
+        JOIN products p ON pr.product_id = p.id
+        ORDER BY pr.timestamp DESC
+      `).all();
+      res.json(reviews);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch product reviews" });
+    }
+  });
+
   app.get("/api/admin/pending-astrologers", (req, res) => {
     try {
       const astrologers = db.prepare("SELECT * FROM astrologers WHERE status = 'pending'").all();
@@ -621,13 +692,14 @@ async function startServer() {
   app.get("/api/admin/pending-products", (req, res) => {
     try {
       const products = db.prepare(`
-        SELECT p.*, v.name as vendor_name 
+        SELECT p.*, v.name as vendor_name, v.company_name as vendor_company
         FROM products p
-        JOIN vendors v ON p.vendor_id = v.id
+        LEFT JOIN vendors v ON p.vendor_id = v.id
         WHERE p.status = 'pending'
       `).all();
       res.json(products);
     } catch (error) {
+      console.error("Pending Products Fetch Error:", error);
       res.status(500).json({ error: "Failed to fetch pending products" });
     }
   });
@@ -1071,6 +1143,21 @@ async function startServer() {
     }
   });
 
+  app.get("/api/admin/purchased-packages", (req, res) => {
+    try {
+      const purchases = db.prepare(`
+        SELECT up.*, u.name as userName, u.email as userEmail, p.name as packageName, p.price as packagePrice
+        FROM user_packages up
+        JOIN users u ON up.user_id = u.id
+        JOIN packages p ON up.package_id = p.id
+        ORDER BY up.purchase_date DESC
+      `).all();
+      res.json(purchases);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch purchased packages" });
+    }
+  });
+
   app.get("/api/admin/testimonials", (req, res) => {
     try {
       const testimonials = db.prepare("SELECT * FROM testimonials ORDER BY timestamp DESC").all();
@@ -1103,6 +1190,72 @@ async function startServer() {
     }
   });
 
+  // Banners
+  app.get("/api/banners", (req, res) => {
+    try {
+      const banners = db.prepare("SELECT * FROM banners WHERE is_active = 1 ORDER BY display_order ASC, timestamp DESC").all();
+      res.json(banners);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Failed to fetch banners" });
+    }
+  });
+
+  app.get("/api/admin/banners", (req, res) => {
+    try {
+      const banners = db.prepare("SELECT * FROM banners ORDER BY display_order ASC, timestamp DESC").all();
+      res.json(banners);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Failed to fetch admin banners" });
+    }
+  });
+
+  app.post("/api/admin/banners", (req, res) => {
+    try {
+      const { title, image_url, link_url, display_order } = req.body;
+      db.prepare("INSERT INTO banners (title, image_url, link_url, display_order) VALUES (?, ?, ?, ?)")
+        .run(title, image_url, link_url, display_order || 0);
+      res.json({ success: true });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Failed to add banner" });
+    }
+  });
+
+  app.patch("/api/admin/banners/:id", (req, res) => {
+    try {
+      const { is_active, display_order, title, image_url, link_url } = req.body;
+      const fields = [];
+      const values = [];
+      
+      if (is_active !== undefined) { fields.push("is_active = ?"); values.push(is_active ? 1 : 0); }
+      if (display_order !== undefined) { fields.push("display_order = ?"); values.push(display_order); }
+      if (title !== undefined) { fields.push("title = ?"); values.push(title); }
+      if (image_url !== undefined) { fields.push("image_url = ?"); values.push(image_url); }
+      if (link_url !== undefined) { fields.push("link_url = ?"); values.push(link_url); }
+      
+      if (fields.length === 0) return res.status(400).json({ error: "No fields to update" });
+      
+      values.push(req.params.id);
+      db.prepare(`UPDATE banners SET ${fields.join(", ")} WHERE id = ?`).run(...values);
+      res.json({ success: true });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Failed to update banner" });
+    }
+  });
+
+  app.delete("/api/admin/banners/:id", (req, res) => {
+    try {
+      db.prepare("DELETE FROM banners WHERE id = ?").run(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Failed to delete banner" });
+    }
+  });
+
   app.patch("/api/admin/testimonials/:id", (req, res) => {
     try {
       const { is_active } = req.body;
@@ -1111,6 +1264,380 @@ async function startServer() {
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Failed to update testimonial" });
+    }
+  });
+
+  // ==========================================
+  // AI ASTROLOGER, EPHEMERIS & WALLET LEDGER API
+  // ==========================================
+
+  app.get("/api/ai/wallet/:email", (req, res) => {
+    try {
+      const email = req.params.email;
+      let user = db.prepare("SELECT id, email, name, ai_minutes_remaining, wallet_balance FROM users WHERE email = ?").get(email) as any;
+      let minutes = 15;
+      if (user) {
+        if (user.ai_minutes_remaining === null || user.ai_minutes_remaining === undefined) {
+          db.prepare("UPDATE users SET ai_minutes_remaining = 15 WHERE id = ?").run(user.id);
+          minutes = 15;
+        } else {
+          minutes = user.ai_minutes_remaining;
+        }
+      }
+
+      let ledger = db.prepare("SELECT * FROM ai_wallet_ledger WHERE user_email = ? ORDER BY timestamp DESC").all(email) as any[];
+      if (ledger.length === 0) {
+        // Insert welcome complimentary bonus
+        db.prepare(`
+          INSERT INTO ai_wallet_ledger (user_email, amount, duration_minutes, type, description, balance_minutes_remaining)
+          VALUES (?, 0, 15, 'recharge', 'Complimentary Welcome Cosmic Trial Pack', 15)
+        `).run(email);
+        ledger = db.prepare("SELECT * FROM ai_wallet_ledger WHERE user_email = ? ORDER BY timestamp DESC").all(email) as any[];
+      }
+
+      res.json({
+        success: true,
+        ai_minutes_remaining: minutes,
+        wallet_balance: user?.wallet_balance || 0,
+        ledger
+      });
+    } catch (error) {
+      console.error("AI Wallet Fetch Error:", error);
+      res.status(500).json({ error: "Failed to fetch AI wallet balance and ledger." });
+    }
+  });
+
+  app.post("/api/ai/wallet/recharge", (req, res) => {
+    try {
+      const { email, amount, durationMinutes, packageTitle, useWalletBalance } = req.body;
+      const user = db.prepare("SELECT id, wallet_balance, ai_minutes_remaining FROM users WHERE email = ?").get(email) as any;
+      if (!user) return res.status(404).json({ error: "User not found. Please log in." });
+
+      if (useWalletBalance) {
+        if (user.wallet_balance < amount) {
+          return res.status(400).json({ error: "INSUFFICIENT_WALLET_BALANCE", message: "Insufficient main wallet balance. Please recharge your main wallet or pay directly." });
+        }
+        db.prepare("UPDATE users SET wallet_balance = wallet_balance - ? WHERE id = ?").run(amount, user.id);
+        db.prepare("INSERT INTO transactions (user_id, amount, type) VALUES (?, ?, 'ai_recharge')").run(user.id, -amount);
+      }
+
+      const currentMins = user.ai_minutes_remaining || 0;
+      const newMins = currentMins + Number(durationMinutes);
+      db.prepare("UPDATE users SET ai_minutes_remaining = ? WHERE id = ?").run(newMins, user.id);
+
+      db.prepare(`
+        INSERT INTO ai_wallet_ledger (user_email, amount, duration_minutes, type, description, balance_minutes_remaining)
+        VALUES (?, ?, ?, 'recharge', ?, ?)
+      `).run(email, amount, durationMinutes, `Recharged: ${packageTitle} (${durationMinutes} mins)`, newMins);
+
+      const updatedLedger = db.prepare("SELECT * FROM ai_wallet_ledger WHERE user_email = ? ORDER BY timestamp DESC").all(email);
+      const updatedUser = db.prepare("SELECT wallet_balance, ai_minutes_remaining FROM users WHERE id = ?").get(user.id) as any;
+
+      res.json({
+        success: true,
+        ai_minutes_remaining: updatedUser.ai_minutes_remaining,
+        wallet_balance: updatedUser.wallet_balance,
+        ledger: updatedLedger
+      });
+    } catch (error) {
+      console.error("AI Recharge Error:", error);
+      res.status(500).json({ error: "Failed to recharge AI duration pack." });
+    }
+  });
+
+  app.post("/api/ai/session/create", (req, res) => {
+    try {
+      const { email, sessionTitle, profileDetails, analysisType } = req.body;
+      const info = db.prepare(`
+        INSERT INTO ai_chat_sessions (user_email, session_title, profile_details, analysis_type)
+        VALUES (?, ?, ?, ?)
+      `).run(email || "guest@astroway.com", sessionTitle || "Cosmic Consultation", JSON.stringify(profileDetails || {}), analysisType || "Vedic Astrology");
+
+      res.json({ success: true, sessionId: info.lastInsertRowid });
+    } catch (error) {
+      console.error("AI Session Create Error:", error);
+      res.status(500).json({ error: "Failed to create AI chat session." });
+    }
+  });
+
+  app.get("/api/ai/sessions/:email", (req, res) => {
+    try {
+      const sessions = db.prepare("SELECT * FROM ai_chat_sessions WHERE user_email = ? ORDER BY created_at DESC").all(req.params.email) as any[];
+      res.json(sessions.map(s => ({ ...s, profile_details: JSON.parse(s.profile_details || '{}') })));
+    } catch (error) {
+      console.error("AI Sessions Fetch Error:", error);
+      res.status(500).json({ error: "Failed to fetch AI sessions." });
+    }
+  });
+
+  app.get("/api/ai/messages/:sessionId", (req, res) => {
+    try {
+      const messages = db.prepare("SELECT * FROM ai_chat_messages WHERE session_id = ? ORDER BY timestamp ASC").all(req.params.sessionId);
+      res.json(messages);
+    } catch (error) {
+      console.error("AI Messages Fetch Error:", error);
+      res.status(500).json({ error: "Failed to fetch session messages." });
+    }
+  });
+
+  app.post("/api/ai/ephemeris", async (req, res) => {
+    try {
+      const { date, time, location, queryType, name } = req.body;
+      const targetDate = date ? new Date(`${date}T${time || "12:00"}:00`) : new Date();
+      
+      // Astronomical approximation math for Vedic Ephemeris (Sidereal / Nirayana)
+      const year = targetDate.getFullYear();
+      const month = targetDate.getMonth() + 1;
+      const day = targetDate.getDate();
+      
+      const signs = ['Aries ♈', 'Taurus ♉', 'Gemini ♊', 'Cancer ♋', 'Leo ♌', 'Virgo ♍', 'Libra ♎', 'Scorpio ♏', 'Sagittarius ♐', 'Capricorn ♑', 'Aquarius ♒', 'Pisces ♓'];
+      const nakshatras = [
+        'Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra', 'Punarvasu', 
+        'Pushya', 'Ashlesha', 'Magha', 'Purva Phalguni', 'Uttara Phalguni', 'Hasta', 
+        'Chitra', 'Swati', 'Vishakha', 'Anuradha', 'Jyeshtha', 'Mula', 'Purva Ashadha', 
+        'Uttara Ashadha', 'Shravana', 'Dhanishta', 'Shatabhisha', 'Purva Bhadrapada', 
+        'Uttara Bhadrapada', 'Revati'
+      ];
+
+      // Approximate planetary longitudes algorithm based on epoch
+      const dayOfYear = Math.floor((targetDate.getTime() - new Date(year, 0, 0).getTime()) / 1000 / 60 / 60 / 24);
+      const sunDegTotal = (dayOfYear * 0.9856 + 280) % 360;
+      const moonDegTotal = (dayOfYear * 13.1763 + 120 + (day * 12)) % 360;
+      const marsDegTotal = (dayOfYear * 0.524 + 45) % 360;
+      const mercDegTotal = (sunDegTotal + ((day % 15) - 7) * 3) % 360;
+      const jupDegTotal = ((year - 2000) * 30.35 + (month * 2.5)) % 360;
+      const venDegTotal = (sunDegTotal + ((day % 20) - 10) * 2.5) % 360;
+      const satDegTotal = ((year - 2000) * 12.22 + (month * 1.0)) % 360;
+      const rahuDegTotal = (360 - ((year - 2000) * 19.34 + month * 1.6) % 360) % 360;
+      const ketuDegTotal = (rahuDegTotal + 180) % 360;
+
+      const getPlanetObj = (name: string, degTotal: number, speed: string, status: string) => {
+        const signIdx = Math.floor(degTotal / 30) % 12;
+        const degInSign = (degTotal % 30).toFixed(2);
+        const nakIdx = Math.floor(degTotal / (360 / 27)) % 27;
+        const pada = Math.floor((degTotal % (360 / 27)) / (360 / 108)) + 1;
+        return {
+          name,
+          longitude: `${degTotal.toFixed(2)}°`,
+          sign: signs[signIdx],
+          degree: `${degInSign}°`,
+          nakshatra: `${nakshatras[nakIdx]} (Pada ${pada})`,
+          speed,
+          status
+        };
+      };
+
+      const planets = [
+        getPlanetObj("Sun (Surya)", sunDegTotal, "1°/day", "Royal King / Soul"),
+        getPlanetObj("Moon (Chandra)", moonDegTotal, "13.2°/day", "Mind / Emotions"),
+        getPlanetObj("Mars (Mangal)", marsDegTotal, "0.52°/day", "Energy / Courage"),
+        getPlanetObj("Mercury (Budha)", mercDegTotal, "1.3°/day", "Intellect / Speech"),
+        getPlanetObj("Jupiter (Guru)", jupDegTotal, "0.08°/day", "Wisdom / Expansion"),
+        getPlanetObj("Venus (Shukra)", venDegTotal, "1.2°/day", "Love / Luxury"),
+        getPlanetObj("Saturn (Shani)", satDegTotal, "0.03°/day", "Karma / Discipline"),
+        getPlanetObj("Rahu (North Node)", rahuDegTotal, "-0.05°/day (Retrograde)", "Shadow / Ambition"),
+        getPlanetObj("Ketu (South Node)", ketuDegTotal, "-0.05°/day (Retrograde)", "Spirituality / Detachment"),
+      ];
+
+      const tithis = ['Pratipada', 'Dwitiya', 'Tritiya', 'Chaturthi', 'Panchami', 'Shashthi', 'Saptami', 'Ashtami', 'Navami', 'Dashami', 'Ekadashi', 'Dwadashi', 'Trayodashi', 'Chaturdashi', 'Purnima / Amavasya'];
+      const yogas = ['Vishkumbha', 'Preeti', 'Ayushman', 'Saubhagya', 'Shobhana', 'Atiganda', 'Sukarma', 'Dhriti', 'Shula', 'Ganda', 'Vriddhi', 'Dhruva', 'Vyaghata', 'Harshana', 'Vajra', 'Siddhi', 'Vyatipata', 'Variyan', 'Parigha', 'Shiva', 'Siddha', 'Sadhya', 'Shubha', 'Shukla', 'Brahma', 'Indra', 'Vaidhriti'];
+      const karanas = ['Bava', 'Balava', 'Kaulava', 'Taitila', 'Gara', 'Vanij', 'Visti (Bhadra)', 'Shakuni', 'Chatushpada', 'Naga', 'Kinstughna'];
+
+      const tithiIdx = Math.floor(Math.abs(moonDegTotal - sunDegTotal) / 12) % 15;
+      const yogaIdx = Math.floor((sunDegTotal + moonDegTotal) / (360 / 27)) % 27;
+      const karanaIdx = Math.floor(Math.abs(moonDegTotal - sunDegTotal) / 6) % 11;
+      const moonNakIdx = Math.floor(moonDegTotal / (360 / 27)) % 27;
+
+      const panchang = {
+        date: targetDate.toDateString(),
+        time: time || "12:00 PM",
+        location: location || "New Delhi, India (Default)",
+        ayanamsa: "24° 11' 22\" (Lahiri / Chitrapaksha)",
+        siderealTime: `${((targetDate.getUTCHours() + 5.5 + (dayOfYear * 0.065)) % 24).toFixed(2)} Hrs`,
+        tithi: tithis[tithiIdx],
+        nakshatra: nakshatras[moonNakIdx],
+        yoga: yogas[yogaIdx],
+        karana: karanas[karanaIdx],
+        sunrise: "05:48 AM",
+        sunset: "07:12 PM",
+        rahukalam: "04:30 PM - 06:00 PM (Inauspicious)"
+      };
+
+      // Generate AI synthesis of the ephemeris
+      let aiSynthesis = "";
+      if (ai) {
+        try {
+          const ephemerisPrompt = `Analyze this Vedic Astrological Ephemeris & Panchang for ${name || "the Native"} on ${panchang.date} at ${panchang.time} in ${panchang.location}.
+          Planetary Positions: ${JSON.stringify(planets)}
+          Panchang Details: ${JSON.stringify(panchang)}
+          Query Type: ${queryType || "General Horoscope Analysis"}
+          
+          Provide an empowering 3-paragraph summary of the planetary alignment:
+          1. Key Yoga and Planetary Strengths (Lagna/MoonNakshatra highlights).
+          2. Immediate transits impacting Career, Family, and Wealth.
+          3. Vedic Astrological Remedies (Lal Kitab, Mantras, or Gemstone suggestions) suitable for these planetary positions.`;
+
+          const aiRes = await ai.models.generateContent({
+            model: "gemini-3.6-flash",
+            contents: ephemerisPrompt,
+            config: {
+              systemInstruction: "You are a master Vedic Astrologer and Ephemeris expert. Provide deep, authentic astronomical and astrological synthesis."
+            }
+          });
+          aiSynthesis = aiRes.text || "Planetary energies indicate a balanced period for spiritual reflection and steady progress.";
+        } catch (e) {
+          console.error("Ephemeris AI synthesis failed:", e);
+          aiSynthesis = "Planetary ephemeris calculated successfully. Moon in " + panchang.nakshatra + " highlights strong intuitive and emotional focus.";
+        }
+      }
+
+      res.json({
+        success: true,
+        panchang,
+        planets,
+        aiSynthesis
+      });
+    } catch (error) {
+      console.error("Ephemeris Error:", error);
+      res.status(500).json({ error: "Failed to compute astrological ephemeris." });
+    }
+  });
+
+  app.post("/api/ai/chat", async (req, res) => {
+    try {
+      const { sessionId, email, message, imageBase64, analysisType, profileDetails } = req.body;
+      const userEmail = email || "guest@astroway.com";
+
+      // 1. Check user wallet/duration remaining
+      const user = db.prepare("SELECT id, ai_minutes_remaining FROM users WHERE email = ?").get(userEmail) as any;
+      let minutesLeft = user ? (user.ai_minutes_remaining !== null ? user.ai_minutes_remaining : 15) : 15;
+
+      if (minutesLeft <= 0) {
+        return res.status(402).json({
+          error: "INSUFFICIENT_AI_MINUTES",
+          message: "Your AI session duration has exhausted! Please recharge your AI Cosmic Wallet immediately to continue chatting without losing your session."
+        });
+      }
+
+      // 2. Deduct 1 minute for query duration
+      const newMinutes = Math.max(0, minutesLeft - 1);
+      if (user) {
+        db.prepare("UPDATE users SET ai_minutes_remaining = ? WHERE id = ?").run(newMinutes, user.id);
+      }
+      db.prepare(`
+        INSERT INTO ai_wallet_ledger (user_email, amount, duration_minutes, type, description, balance_minutes_remaining)
+        VALUES (?, 0, 1, 'usage', ?, ?)
+      `).run(userEmail, `AI Chat Question (${analysisType || 'Vedic Astrology'})`, newMinutes);
+
+      // 3. Save User message
+      db.prepare(`
+        INSERT INTO ai_chat_messages (session_id, user_email, role, text, image_url)
+        VALUES (?, ?, 'user', ?, ?)
+      `).run(sessionId || 0, userEmail, message, imageBase64 ? "Image Attached" : null);
+
+      // 4. Construct AI System Instruction
+      const profileStr = profileDetails ? JSON.stringify(profileDetails) : "No birth profile specified";
+      const systemInstruction = `You are AstroGuru AI, a supreme Vedic Astrologer, K.P. System specialist, Nadi Astrologer, Horary (Prashna Kundli) expert, Palmistry master, Numerologist, and Tarot Card reader on the AstroWay platform.
+      
+      CURRENT ANALYSIS MODE: ${analysisType || 'Vedic Astrology'}
+      NATIVE / FAMILY PROFILE DETAILS: ${profileStr}
+
+      YOUR SCIENTIFIC & ASTROLOGICAL MANDATE:
+      1. Base your answers on actual astrological science, ancient Vedic texts (Parashara Hora Shastra, Bhrigu Nadi, K.P. Reader sub-lords, Jaimini Sutras), Horary (Prashna) charts, and planetary transits.
+      2. If an image is attached (Palm lines photo, Tarot card spread, Birth chart Kundli, or Numerology chart), carefully analyze the visual features (e.g. Life line, Heart line, Fate line, Mounts of Jupiter/Venus on palm; or Major Arcana Tarot symbols) with high precision and mystical depth.
+      3. ASTROLOGICAL REMEDIES: Every comprehensive consultation MUST include specific, actionable Vedic remedies such as:
+         - Ancient Vedic Astrological mantras (Beej mantras, Gayatri mantra, Mahamrityunjaya).
+         - Lal Kitab prescriptions (e.g., feeding birds, copper coin in running water, applying saffron tilak).
+         - Gem therapy & Crystal therapy recommendations (specifying which gemstone/crystal like Yellow Sapphire, Ruby, Amethyst, Clear Quartz to wear and on which finger/day).
+         - Graha Shanti rituals or charity suggestions to appease malefic planets.
+      4. Structure your response clearly with emojis, bullet points, and headings so it is easy to read. Be compassionate, encouraging, and spiritually insightful.`;
+
+      // 5. Call Server-Side Gemini API
+      if (!ai) {
+        return res.status(500).json({ error: "GEMINI_API_KEY is not configured on the server." });
+      }
+
+      const contents: any[] = [];
+      if (imageBase64) {
+        // Handle base64 image input for Palmistry / Kundli / Tarot photos
+        const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+        const mimeMatch = imageBase64.match(/^data:(image\/\w+);base64,/);
+        const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
+        contents.push({
+          inlineData: {
+            mimeType,
+            data: base64Data
+          }
+        });
+      }
+      contents.push({ text: message });
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.6-flash",
+        contents: { parts: contents },
+        config: {
+          systemInstruction,
+          // We enable search grounding when there is no image to allow real-time planetary ephemeris/transit lookup!
+          tools: !imageBase64 ? [{ googleSearch: {} }] : undefined
+        }
+      });
+
+      const aiText = response.text || "The cosmic energies are processing your query. Please ask again shortly.";
+
+      // 6. Save AI Response
+      db.prepare(`
+        INSERT INTO ai_chat_messages (session_id, user_email, role, text)
+        VALUES (?, ?, 'ai', ?)
+      `).run(sessionId || 0, userEmail, aiText);
+
+      const updatedLedger = db.prepare("SELECT * FROM ai_wallet_ledger WHERE user_email = ? ORDER BY timestamp DESC").all(userEmail);
+
+      res.json({
+        success: true,
+        aiMessage: aiText,
+        ai_minutes_remaining: newMinutes,
+        ledger: updatedLedger
+      });
+    } catch (error: any) {
+      console.error("AI Chat Server Error:", error);
+      res.status(500).json({
+        error: "AI_GENERATION_FAILED",
+        message: error?.message || "The cosmic energy is temporarily disrupted. Please retry."
+      });
+    }
+  });
+
+  app.post("/api/ai/horoscope", async (req, res) => {
+    try {
+      const { sign } = req.body;
+      if (!ai) {
+        return res.json({ success: false, text: "The stars are silent today." });
+      }
+      const response = await ai.models.generateContent({
+        model: "gemini-3.6-flash",
+        contents: `Provide a detailed daily horoscope for ${sign} in a professional, spiritual, and encouraging tone. Include categories for Love, Career, and Health.`,
+      });
+      res.json({ success: true, text: response.text });
+    } catch (e) {
+      console.error("Horoscope API error:", e);
+      res.status(500).json({ success: false, error: "Failed to generate horoscope" });
+    }
+  });
+
+  app.post("/api/ai/kundli-report", async (req, res) => {
+    try {
+      const { prompt } = req.body;
+      if (!ai) {
+        return res.json({ success: false, text: "Unable to generate AI report without key." });
+      }
+      const response = await ai.models.generateContent({
+        model: "gemini-3.6-flash",
+        contents: prompt,
+      });
+      res.json({ success: true, text: response.text });
+    } catch (e) {
+      console.error("Kundli Report API error:", e);
+      res.status(500).json({ success: false, error: "Failed to generate kundli report" });
     }
   });
 
@@ -1158,7 +1685,13 @@ async function startServer() {
   app.post("/api/calls/accept", (req, res) => {
     try {
       const { callId } = req.body;
-      db.prepare("UPDATE call_sessions SET status = 'active', start_time = CURRENT_TIMESTAMP WHERE id = ?").run(callId);
+      const session = db.prepare("SELECT astrologer_id FROM call_sessions WHERE id = ?").get(callId) as any;
+      
+      db.transaction(() => {
+        db.prepare("UPDATE call_sessions SET status = 'active', start_time = CURRENT_TIMESTAMP WHERE id = ?").run(callId);
+        db.prepare("UPDATE astrologers SET is_call_active = 1 WHERE id = ?").run(session.astrologer_id);
+      })();
+      
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to accept call" });
@@ -1196,13 +1729,13 @@ async function startServer() {
       const astroEarning = totalCost * (astro.commission_percent / 100);
 
       db.transaction(() => {
-        db.prepare("UPDATE call_sessions SET status = 'completed', end_time = CURRENT_TIMESTAMP, total_cost = ? WHERE id = ?")
-          .run(totalCost, callId);
+        db.prepare("UPDATE call_sessions SET status = 'completed', end_time = CURRENT_TIMESTAMP, total_cost = ?, astro_earning = ? WHERE id = ?")
+          .run(totalCost, astroEarning, callId);
         
         db.prepare("UPDATE users SET wallet_balance = wallet_balance - ? WHERE id = ?")
           .run(totalCost, session.user_id);
         
-        db.prepare("UPDATE astrologers SET wallet_balance = wallet_balance + ? WHERE id = ?")
+        db.prepare("UPDATE astrologers SET wallet_balance = wallet_balance + ?, is_call_active = 0 WHERE id = ?")
           .run(astroEarning, session.astrologer_id);
 
         db.prepare("INSERT INTO transactions (user_id, astrologer_id, amount, type) VALUES (?, ?, ?, 'call')")
@@ -1213,6 +1746,22 @@ async function startServer() {
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Failed to end call" });
+    }
+  });
+
+  app.post("/api/calls/rate", (req, res) => {
+    try {
+      const { callId, rating, comment } = req.body;
+      db.prepare("UPDATE call_sessions SET rating = ?, comment = ? WHERE id = ?").run(rating, comment, callId);
+      
+      // Also add to general reviews for the astrologer
+      const session = db.prepare("SELECT user_id, astrologer_id FROM call_sessions WHERE id = ?").get(callId) as any;
+      db.prepare("INSERT INTO reviews (user_id, astrologer_id, rating, comment) VALUES (?, ?, ?, ?)")
+        .run(session.user_id, session.astrologer_id, rating, comment);
+        
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to submit rating" });
     }
   });
 

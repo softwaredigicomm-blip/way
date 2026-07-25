@@ -680,5 +680,10 @@ export const apiFetch = async (url: string, init?: any): Promise<any> => {
 
   if (path === 'upload') return { url: 'https://picsum.photos/200' };
 
-  throw new Error(`Route not found: ${url}`);
+  // Fallback to real API if not in mock
+  const response = await fetch(url, init);
+  if (!response.ok) {
+    throw new Error(`API Call failed: ${method} ${url} - ${response.statusText}`);
+  }
+  return response.json();
 };

@@ -4,48 +4,20 @@ import {
   Moon, Sun, Star, MessageSquare, Phone, Video, 
   Wallet, User, ShoppingBag, BookOpen, LayoutDashboard,
   Sparkles, Compass, Heart, Calendar, Menu, X, Send,
-  Download, CheckCircle2, AlertCircle, FileText
+  Download, CheckCircle2, AlertCircle, FileText,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { jsPDF } from "jspdf";
-import { Astrologer, User as UserType, ZODIAC_SIGNS, Category, Vendor, Product, Package } from './types';
-import { GoogleGenAI } from "@google/genai";
+import { Astrologer, User as UserType, ZODIAC_SIGNS, Category, Vendor, Product, Package, Banner } from './types';
 import { storageApi, initStorage, apiFetch } from './services/storage';
+import { AIAstrologerPortal } from './components/AIAstrologerPortal';
 
 // Initialize local storage with seed data
 initStorage();
 
 const localFetch = async (url: string, init?: any) => {
-  try {
-    const data = await apiFetch(url, init);
-    return {
-      ok: true,
-      json: async () => data,
-      text: async () => JSON.stringify(data)
-    };
-  } catch (error: any) {
-    return {
-      ok: false,
-      json: async () => ({ error: error.message }),
-      text: async () => JSON.stringify({ error: error.message })
-    };
-  }
+  return fetch(url, init);
 };
-
-let ai: any = null;
-try {
-  // Support both process.env (Vite define) and import.meta.env (Vite standard)
-  const apiKey = (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) || 
-                 (import.meta as any).env?.VITE_GEMINI_API_KEY || 
-                 '';
-                 
-  if (apiKey) {
-    ai = new GoogleGenAI({ apiKey });
-  } else {
-    console.warn("GEMINI_API_KEY not found in environment variables.");
-  }
-} catch (e) {
-  console.error("Failed to initialize GoogleGenAI:", e);
-}
 
 const MOCK_HOROSCOPES: Record<string, string> = {
   'Aries': 'Today is a day of high energy and new beginnings for Aries. Your ruling planet Mars is in a favorable position, boosting your confidence in career matters. In love, be patient with your partner. Health looks stable, but avoid overexertion.',
@@ -108,6 +80,7 @@ export default function App() {
     }
   });
   const [testimonials, setTestimonials] = useState<any[]>([]);
+  const [banners, setBanners] = useState<Banner[]>([]);
 
   useEffect(() => {
     if (user) localStorage.setItem('astroway_user', JSON.stringify(user));
@@ -143,6 +116,10 @@ export default function App() {
     apiFetch('/api/testimonials').then(setTestimonials);
   };
 
+  const fetchBanners = () => {
+    apiFetch('/api/banners').then(setBanners);
+  };
+
   useEffect(() => {
     if (isUserAuthenticated && user?.email) {
       fetchUser(user.email);
@@ -151,6 +128,7 @@ export default function App() {
     }
     fetchAstrologers();
     fetchTestimonials();
+    fetchBanners();
   }, []);
 
   const handleLogout = () => {
@@ -172,7 +150,7 @@ export default function App() {
     }
 
     switch (activeTab) {
-      case 'home': return <Home astrologers={astrologers} testimonials={testimonials} />;
+      case 'home': return <Home astrologers={astrologers} testimonials={testimonials} banners={banners} />;
       case 'horoscope': return <Horoscope />;
       case 'kundli': return <Kundli user={user} onViewPackages={() => setActiveTab('packages')} />;
       case 'chat': return <Chat astrologers={astrologers} user={user} onRecharge={() => fetchUser(user?.email)} />;
@@ -183,7 +161,7 @@ export default function App() {
       }} />;
       case 'packages': return <AstroPackages user={user} onPurchase={() => fetchUser(user?.email)} />;
       case 'profile': return <UserProfile user={user} onUpdate={() => fetchUser(user?.email)} onLogout={handleLogout} />;
-      case 'ai': return <AIAstrologer />;
+      case 'ai': return <AIAstrologerPortal user={user} onRecharge={() => fetchUser(user?.email)} />;
       case 'vendor-register': return <VendorRegistration user={user} onComplete={() => fetchUser(user?.email)} onLoginClick={() => setActiveTab('vendor-panel')} />;
       case 'vendor-panel': return <VendorPanel user={user} />;
       case 'admin': 
@@ -212,7 +190,7 @@ export default function App() {
             onRegisterClick={() => setActiveTab('astrologer-register')}
           />
         );
-      default: return <Home astrologers={astrologers} testimonials={testimonials} />;
+      default: return <Home astrologers={astrologers} testimonials={testimonials} banners={banners} />;
     }
   };
 
@@ -419,44 +397,100 @@ const ZODIAC_ICONS: Record<string, string> = {
   Pisces: "https://img.icons8.com/ios-filled/100/D4AF37/pisces.png",
 };
 
-function Home({ astrologers, testimonials }: { astrologers: Astrologer[], testimonials: any[] }) {
+function Home({ astrologers, testimonials, banners }: { astrologers: Astrologer[], testimonials: any[], banners: Banner[] }) {
+  const [currentBanner, setCurrentBanner] = useState(0);
+
+  useEffect(() => {
+    if (banners && banners.length > 1) {
+      const timer = setInterval(() => {
+        setCurrentBanner(p => (p + 1) % banners.length);
+      }, 5000);
+      return () => clearInterval(timer);
+    }
+  }, [banners]);
+
+  const activeBanners = banners && banners.length > 0 ? banners : [{
+    id: 0,
+    title: 'Discover Your Cosmic Destiny',
+    image_url: 'https://images.unsplash.com/photo-1532968961962-8a0cb3a2d4f5?auto=format&fit=crop&q=80&w=1200&h=600',
+    description: "Consult India's top astrologers, get personalized Kundli insights, and navigate your life's journey with clarity.",
+    is_active: true
+  }];
+
   return (
     <div className="space-y-16">
-      {/* Hero Section */}
-      <section className="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl">
-        <img 
-          src="https://images.unsplash.com/photo-1532968961962-8a0cb3a2d4f5?auto=format&fit=crop&q=80&w=1200&h=600" 
-          className="absolute inset-0 w-full h-full object-cover"
-          referrerPolicy="no-referrer"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-deep-blue/90 via-deep-blue/60 to-transparent flex items-center px-12">
-          <div className="max-w-2xl space-y-6">
-            <motion.h1 
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="text-5xl md:text-6xl font-serif font-bold text-white leading-tight"
-            >
-              Discover Your <span className="text-gold">Cosmic Destiny</span>
-            </motion.h1>
-            <p className="text-slate-200 text-lg">
-              Consult India's top astrologers, get personalized Kundli insights, and navigate your life's journey with clarity.
-            </p>
-            <div className="flex flex-wrap gap-4 pt-4">
-              <button className="bg-saffron text-white px-6 py-3 rounded-full font-bold shadow-lg hover:bg-orange-600 transition-all transform hover:scale-105 text-sm md:text-base">
-                Talk to Astrologer
-              </button>
-              <button className="bg-white/20 backdrop-blur-md text-white border border-white/30 px-6 py-3 rounded-full font-bold hover:bg-white/30 transition-all text-sm md:text-base">
-                Get Free Kundli
-              </button>
-              <button className="bg-orange-500 text-white px-6 py-3 rounded-full font-bold shadow-lg hover:bg-orange-600 transition-all transform hover:scale-105 flex items-center gap-2 text-sm md:text-base">
-                <Phone size={18} /> Call Pandit
-              </button>
-              <button className="bg-blue-600 text-white px-6 py-3 rounded-full font-bold shadow-lg hover:bg-blue-700 transition-all transform hover:scale-105 flex items-center gap-2 text-sm md:text-base">
-                <MessageSquare size={18} /> Chat with Pandit
-              </button>
+      {/* Dynamic Hero Carousel */}
+      <section className="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl bg-deep-blue">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentBanner}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8 }}
+            className="absolute inset-0"
+          >
+            <img 
+              src={activeBanners[currentBanner].image_url} 
+              className="absolute inset-0 w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-deep-blue/90 via-deep-blue/60 to-transparent flex items-center px-12">
+              <div className="max-w-2xl space-y-6">
+                <motion.h1 
+                  initial={{ opacity: 0, x: -50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="text-5xl md:text-6xl font-serif font-bold text-white leading-tight"
+                >
+                  {activeBanners[currentBanner].title.includes(' ') ? (
+                    <>
+                      {activeBanners[currentBanner].title.split(' ').slice(0, -2).join(' ')} <span className="text-gold">{activeBanners[currentBanner].title.split(' ').slice(-2).join(' ')}</span>
+                    </>
+                  ) : activeBanners[currentBanner].title}
+                </motion.h1>
+                <p className="text-slate-200 text-lg">
+                  {activeBanners[currentBanner].id === 0 
+                    ? "Consult India's top astrologers, get personalized Kundli insights, and navigate your life's journey with clarity."
+                    : (activeBanners[currentBanner] as any).description || "Your destiny is written in the stars. Explore your path with our expert guidance and personalized insights."}
+                </p>
+                <div className="flex flex-wrap gap-4 pt-4">
+                  <button className="bg-saffron text-white px-6 py-3 rounded-full font-bold shadow-lg hover:bg-orange-600 transition-all transform hover:scale-105 text-sm md:text-base">
+                    Talk to Astrologer
+                  </button>
+                  <button className="bg-white/20 backdrop-blur-md text-white border border-white/30 px-6 py-3 rounded-full font-bold hover:bg-white/30 transition-all text-sm md:text-base">
+                    Get Free Kundli
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {activeBanners.length > 1 && (
+          <>
+            <button 
+              onClick={() => setCurrentBanner(p => (p - 1 + activeBanners.length) % activeBanners.length)}
+              className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 backdrop-blur-md text-white rounded-full hover:bg-white/20 transition-all z-10"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <button 
+              onClick={() => setCurrentBanner(p => (p + 1) % activeBanners.length)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 backdrop-blur-md text-white rounded-full hover:bg-white/20 transition-all z-10"
+            >
+              <ChevronRight size={24} />
+            </button>
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+              {activeBanners.map((_, i) => (
+                <button 
+                  key={i} 
+                  onClick={() => setCurrentBanner(i)}
+                  className={`w-2 h-2 rounded-full transition-all ${currentBanner === i ? 'bg-saffron w-8' : 'bg-white/50 hover:bg-white'}`}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </section>
 
       {/* Zodiac Grid */}
@@ -632,12 +666,14 @@ function Horoscope() {
   const fetchHoroscope = async (sign: string) => {
     setLoading(true);
     try {
-      if (ai) {
-        const response = await ai.models.generateContent({
-          model: "gemini-3-flash-preview",
-          contents: `Provide a detailed daily horoscope for ${sign} in a professional, spiritual, and encouraging tone. Include categories for Love, Career, and Health.`,
-        });
-        setPrediction(response.text || 'Unable to fetch prediction.');
+      const res = await fetch('/api/ai/horoscope', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sign })
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.text) {
+        setPrediction(data.text);
       } else {
         setPrediction(MOCK_HOROSCOPES[sign] || 'The stars are silent today.');
       }
@@ -784,12 +820,14 @@ function Kundli({ user, onViewPackages }: { user: UserType | null, onViewPackage
 
     try {
       let generatedReport = '';
-      if (ai) {
-        const response = await ai.models.generateContent({
-          model: "gemini-3-flash-preview",
-          contents: prompt,
-        });
-        generatedReport = response.text || 'Unable to generate report.';
+      const res = await fetch('/api/ai/kundli-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.text) {
+        generatedReport = data.text;
       } else {
         // Fallback to mock data if AI is not available
         generatedReport = activeTab === 'making' 
@@ -1097,6 +1135,7 @@ function Kundli({ user, onViewPackages }: { user: UserType | null, onViewPackage
 function CallInterface({ session, onEnd, isAstrologer, userBalance }: { session: any, onEnd: (duration: number, cost: number) => void, isAstrologer: boolean, userBalance?: number }) {
   const [duration, setDuration] = useState(0);
   const [cost, setCost] = useState(0);
+  const [isEnding, setIsEnding] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -1107,7 +1146,7 @@ function CallInterface({ session, onEnd, isAstrologer, userBalance }: { session:
         setCost(currentCost);
         
         if (!isAstrologer && userBalance !== undefined && currentCost >= userBalance) {
-          alert("Insufficient balance. Ending call.");
+          setIsEnding(true);
           onEnd(newDuration, currentCost);
         }
         
@@ -1122,6 +1161,20 @@ function CallInterface({ session, onEnd, isAstrologer, userBalance }: { session:
     const secs = s % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+
+  if (isEnding) {
+    return (
+      <div className="fixed inset-0 bg-deep-blue/95 backdrop-blur-xl z-[200] flex flex-col items-center justify-center p-8 text-white">
+        <div className="text-center space-y-4">
+          <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto text-red-500">
+            <X size={40} />
+          </div>
+          <h2 className="text-2xl font-serif font-bold">Call Ended</h2>
+          <p className="text-slate-400">Insufficient balance to continue the session.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-deep-blue/95 backdrop-blur-xl z-[200] flex flex-col items-center justify-center p-8 text-white">
@@ -1167,7 +1220,7 @@ function CallInterface({ session, onEnd, isAstrologer, userBalance }: { session:
 function Chat({ astrologers, user, onRecharge }: { astrologers: Astrologer[], user: UserType | null, onRecharge: () => void }) {
   const [showRecharge, setShowRecharge] = useState(false);
   const [rechargeAmount, setRechargeAmount] = useState(100);
-  const [showReviewModal, setShowReviewModal] = useState<number | null>(null);
+  const [showReviewModal, setShowReviewModal] = useState<{ astroId: number, callId?: number } | null>(null);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [activeChat, setActiveChat] = useState<{ sessionId: number, astrologer: Astrologer } | null>(null);
@@ -1280,24 +1333,40 @@ function Chat({ astrologers, user, onRecharge }: { astrologers: Astrologer[], us
     });
     if (res.ok) {
       const { cost } = await res.json();
+      const astroId = activeCall?.astrologer.id;
+      const callId = activeCall?.callId;
       setActiveCall(null);
       onRecharge();
-      setShowReviewModal(activeCall?.astrologer.id || null);
+      setShowReviewModal({ astroId: astroId!, callId });
     }
   };
 
   const handleSubmitReview = async () => {
     if (!showReviewModal) return;
-    await localFetch('/api/user/review', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        email: user?.email, 
-        astrologerId: showReviewModal, 
-        rating, 
-        comment 
-      })
-    });
+    
+    if (showReviewModal.callId) {
+      await localFetch('/api/calls/rate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          callId: showReviewModal.callId, 
+          rating, 
+          comment 
+        })
+      });
+    } else {
+      await localFetch('/api/user/review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: user?.email, 
+          astrologerId: showReviewModal.astroId, 
+          rating, 
+          comment 
+        })
+      });
+    }
+    
     setShowReviewModal(null);
     setComment('');
   };
@@ -1784,6 +1853,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
   const [chatHistory, setChatHistory] = useState<any[]>([]);
   const [callHistory, setCallHistory] = useState<any[]>([]);
   const [testimonials, setTestimonials] = useState<any[]>([]);
+  const [banners, setBanners] = useState<Banner[]>([]);
   const [selectedSession, setSelectedSession] = useState<any | null>(null);
   const [selectedEnrollment, setSelectedEnrollment] = useState<any | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -1791,7 +1861,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
 
   const fetchData = async () => {
     try {
-      const [astroRes, userRes, catRes, venRes, prodRes, transRes, revRes, pRevRes, pendingVenRes, pendingProdRes, pendingAstroRes, pendingUserRes, pkgRes, purchasedPkgRes, pujaRes, testRes, callRes] = await Promise.all([
+      const [astroRes, userRes, catRes, venRes, prodRes, transRes, revRes, pRevRes, pendingVenRes, pendingProdRes, pendingAstroRes, pendingUserRes, pkgRes, purchasedPkgRes, pujaRes, testRes, callRes, bannerRes] = await Promise.all([
         localFetch('/api/admin/astrologers'),
         localFetch('/api/admin/users'),
         localFetch('/api/categories'),
@@ -1808,27 +1878,29 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
         localFetch('/api/admin/purchased-packages'),
         localFetch('/api/admin/puja'),
         localFetch('/api/admin/testimonials'),
-        localFetch('/api/admin/calls')
+        localFetch('/api/admin/calls'),
+        localFetch('/api/admin/banners')
       ]);
 
       const results = await Promise.all([
-        astroRes.ok ? astroRes.json() : Promise.resolve([]),
-        userRes.ok ? userRes.json() : Promise.resolve([]),
-        catRes.ok ? catRes.json() : Promise.resolve([]),
-        venRes.ok ? venRes.json() : Promise.resolve([]),
-        prodRes.ok ? prodRes.json() : Promise.resolve([]),
-        transRes.ok ? transRes.json() : Promise.resolve([]),
-        revRes.ok ? revRes.json() : Promise.resolve([]),
-        pRevRes.ok ? pRevRes.json() : Promise.resolve([]),
-        pendingVenRes.ok ? pendingVenRes.json() : Promise.resolve([]),
-        pendingProdRes.ok ? pendingProdRes.json() : Promise.resolve([]),
-        pendingAstroRes.ok ? pendingAstroRes.json() : Promise.resolve([]),
-        pendingUserRes.ok ? pendingUserRes.json() : Promise.resolve([]),
-        pkgRes.ok ? pkgRes.json() : Promise.resolve([]),
-        purchasedPkgRes.ok ? purchasedPkgRes.json() : Promise.resolve([]),
-        pujaRes.ok ? pujaRes.json() : Promise.resolve([]),
-        testRes.ok ? testRes.json() : Promise.resolve([]),
-        callRes.ok ? callRes.json() : Promise.resolve([])
+        astroRes.ok ? astroRes.json() : astroRes.text().then(t => { console.error("/api/admin/astrologers failed:", t); return []; }),
+        userRes.ok ? userRes.json() : userRes.text().then(t => { console.error("/api/admin/users failed:", t); return []; }),
+        catRes.ok ? catRes.json() : catRes.text().then(t => { console.error("/api/categories failed:", t); return []; }),
+        venRes.ok ? venRes.json() : venRes.text().then(t => { console.error("/api/admin/vendors failed:", t); return []; }),
+        prodRes.ok ? prodRes.json() : prodRes.text().then(t => { console.error("/api/products failed:", t); return []; }),
+        transRes.ok ? transRes.json() : transRes.text().then(t => { console.error("/api/admin/transactions failed:", t); return []; }),
+        revRes.ok ? revRes.json() : revRes.text().then(t => { console.error("/api/admin/reviews failed:", t); return []; }),
+        pRevRes.ok ? pRevRes.json() : pRevRes.text().then(t => { console.error("/api/admin/product-reviews failed:", t); return []; }),
+        pendingVenRes.ok ? pendingVenRes.json() : pendingVenRes.text().then(t => { console.error("/api/admin/pending-vendors failed:", t); return []; }),
+        pendingProdRes.ok ? pendingProdRes.json() : pendingProdRes.text().then(t => { console.error("/api/admin/pending-products failed:", t); return []; }),
+        pendingAstroRes.ok ? pendingAstroRes.json() : pendingAstroRes.text().then(t => { console.error("/api/admin/pending-astrologers failed:", t); return []; }),
+        pendingUserRes.ok ? pendingUserRes.json() : pendingUserRes.text().then(t => { console.error("/api/admin/pending-users failed:", t); return []; }),
+        pkgRes.ok ? pkgRes.json() : pkgRes.text().then(t => { console.error("/api/packages failed:", t); return []; }),
+        purchasedPkgRes.ok ? purchasedPkgRes.json() : purchasedPkgRes.text().then(t => { console.error("/api/admin/purchased-packages failed:", t); return []; }),
+        pujaRes.ok ? pujaRes.json() : pujaRes.text().then(t => { console.error("/api/admin/puja failed:", t); return []; }),
+        testRes.ok ? testRes.json() : testRes.text().then(t => { console.error("/api/admin/testimonials failed:", t); return []; }),
+        callRes.ok ? callRes.json() : callRes.text().then(t => { console.error("/api/admin/calls failed:", t); return []; }),
+        bannerRes.ok ? bannerRes.json() : bannerRes.text().then(t => { console.error("/api/admin/banners failed:", t); return []; })
       ]);
 
       setAstrologers(results[0]);
@@ -1848,6 +1920,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
       setPuja(results[14]);
       setTestimonials(results[15]);
       setCallHistory(results[16]);
+      setBanners(results[17]);
     } catch (error) {
       console.error("Error fetching admin data:", error);
     }
@@ -1855,7 +1928,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [adminTab]);
 
   const toggleAstro = async (id: number, currentStatus: boolean) => {
     await localFetch(`/api/admin/astrologers/${id}`, {
@@ -2024,6 +2097,48 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
     fetchData();
   };
 
+  const handleAddBanner = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const file = formData.get('image_file') as File;
+    let imageUrl = formData.get('image_url') as string;
+
+    if (file && file.size > 0) {
+      const uploadedUrl = await handleFileUpload(file);
+      if (uploadedUrl) imageUrl = uploadedUrl;
+    }
+
+    const data = {
+      title: formData.get('title'),
+      link_url: formData.get('link_url'),
+      display_order: parseInt(formData.get('display_order') as string) || 0,
+      image_url: imageUrl
+    };
+
+    await localFetch('/api/admin/banners', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    setShowModal(null);
+    fetchData();
+  };
+
+  const deleteBanner = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this banner?')) return;
+    await localFetch(`/api/admin/banners/${id}`, { method: 'DELETE' });
+    fetchData();
+  };
+
+  const toggleBanner = async (id: number, currentStatus: boolean) => {
+    await localFetch(`/api/admin/banners/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_active: !currentStatus })
+    });
+    fetchData();
+  };
+
   const handleAddPuja = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -2133,7 +2248,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-2 border-b border-slate-200 pb-4 overflow-x-auto no-scrollbar">
-        {['Astrologers', 'Users', 'Vendors', 'Categories', 'Products', 'Packages', 'Purchased Packages', 'Puja', 'Testimonials', 'Transactions', 'Sessions', 'Calls', 'Astro Reviews', 'Product Reviews', 'Approvals'].map(tab => (
+        {['Astrologers', 'Users', 'Vendors', 'Categories', 'Products', 'Packages', 'Purchased Packages', 'Puja', 'Testimonials', 'Banners', 'Transactions', 'Sessions', 'Calls', 'Astro Reviews', 'Product Reviews', 'Approvals'].map(tab => (
           <button 
             key={tab}
             onClick={() => setAdminTab(tab.toLowerCase().replace(' ', '-'))}
@@ -2274,6 +2389,32 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
         </div>
       )}
 
+      {showModal === 'banner' && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-3xl p-8 max-w-lg w-full space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-2xl font-serif font-bold text-deep-blue">Add Banner</h3>
+              <button onClick={() => setShowModal(null)} className="p-2 hover:bg-slate-100 rounded-full transition-all">
+                <X size={20} className="text-slate-400" />
+              </button>
+            </div>
+            <form onSubmit={handleAddBanner} className="space-y-4">
+              <input name="title" placeholder="Banner Title (Optional)" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-saffron transition-all" />
+              <input name="link_url" placeholder="Link URL" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-saffron transition-all" />
+              <input name="display_order" type="number" placeholder="Display Order" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-saffron transition-all" />
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-400">Banner Image</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <input name="image_url" placeholder="Image URL" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-saffron transition-all" />
+                  <input type="file" name="image_file" accept="image/*" className="w-full p-3 border border-slate-200 rounded-2xl text-xs" />
+                </div>
+              </div>
+              <button type="submit" className="w-full bg-saffron text-white py-4 rounded-2xl font-bold">Add Banner</button>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
       {showModal === 'chat' && selectedSession && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
           <div className="bg-white p-8 rounded-3xl max-w-2xl w-full space-y-6 max-h-[90vh] flex flex-col">
@@ -2348,12 +2489,28 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
                     </div>
                     <div className="bg-stone-50 p-4 rounded-2xl border border-slate-100">
                       <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">Documents</p>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {selectedEnrollment.data.pan_url && <a href={selectedEnrollment.data.pan_url} target="_blank" className="text-[10px] bg-saffron/10 text-saffron px-3 py-1.5 rounded-lg font-bold">PAN Card</a>}
-                        {selectedEnrollment.data.aadhaar_url && <a href={selectedEnrollment.data.aadhaar_url} target="_blank" className="text-[10px] bg-saffron/10 text-saffron px-3 py-1.5 rounded-lg font-bold">Aadhaar</a>}
-                        {selectedEnrollment.data.cheque_url && <a href={selectedEnrollment.data.cheque_url} target="_blank" className="text-[10px] bg-saffron/10 text-saffron px-3 py-1.5 rounded-lg font-bold">Cheque</a>}
-                        {selectedEnrollment.data.id_proof_url && <a href={selectedEnrollment.data.id_proof_url} target="_blank" className="text-[10px] bg-saffron/10 text-saffron px-3 py-1.5 rounded-lg font-bold">ID Proof</a>}
-                      </div>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {selectedEnrollment.data.pan_url && (
+                            <a href={selectedEnrollment.data.pan_url} target="_blank" download className="text-[10px] bg-saffron/10 text-saffron px-3 py-1.5 rounded-lg font-bold flex items-center gap-1">
+                              <Download size={12} /> PAN Card
+                            </a>
+                          )}
+                          {selectedEnrollment.data.aadhaar_url && (
+                            <a href={selectedEnrollment.data.aadhaar_url} target="_blank" download className="text-[10px] bg-saffron/10 text-saffron px-3 py-1.5 rounded-lg font-bold flex items-center gap-1">
+                              <Download size={12} /> Aadhaar
+                            </a>
+                          )}
+                          {selectedEnrollment.data.cheque_url && (
+                            <a href={selectedEnrollment.data.cheque_url} target="_blank" download className="text-[10px] bg-saffron/10 text-saffron px-3 py-1.5 rounded-lg font-bold flex items-center gap-1">
+                              <Download size={12} /> Cheque
+                            </a>
+                          )}
+                          {selectedEnrollment.data.id_proof_url && (
+                            <a href={selectedEnrollment.data.id_proof_url} target="_blank" download className="text-[10px] bg-saffron/10 text-saffron px-3 py-1.5 rounded-lg font-bold flex items-center gap-1">
+                              <Download size={12} /> ID Proof
+                            </a>
+                          )}
+                        </div>
                     </div>
                   </div>
                 </>
@@ -2394,8 +2551,8 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
                         <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">Documents</p>
                         <div className="flex flex-wrap gap-2 mt-2">
                           {JSON.parse(selectedEnrollment.data.documents || '[]').map((doc: string, i: number) => (
-                            <a key={i} href={doc} target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition-all">
-                              <BookOpen size={14} /> Doc {i+1}
+                            <a key={i} href={doc} target="_blank" rel="noreferrer" download className="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition-all">
+                              <Download size={14} /> Download Doc {i+1}
                             </a>
                           ))}
                         </div>
@@ -2978,11 +3135,23 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
                   </div>
                   <div className="space-y-2">
                     <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Documents</p>
-                    <div className="flex gap-2">
-                      <a href={astro.pan_url} target="_blank" className="text-[10px] bg-saffron/10 text-saffron px-3 py-1.5 rounded-lg font-bold">PAN Card</a>
-                      <a href={astro.aadhaar_url} target="_blank" className="text-[10px] bg-saffron/10 text-saffron px-3 py-1.5 rounded-lg font-bold">Aadhaar</a>
-                      <a href={astro.cheque_url} target="_blank" className="text-[10px] bg-saffron/10 text-saffron px-3 py-1.5 rounded-lg font-bold">Cheque</a>
-                    </div>
+                      <div className="flex gap-2">
+                        {astro.pan_url && (
+                          <a href={astro.pan_url} target="_blank" download className="text-[10px] bg-saffron/10 text-saffron px-3 py-1.5 rounded-lg font-bold flex items-center gap-1 hover:bg-saffron/20 transition-all">
+                            <Download size={12} /> PAN Card
+                          </a>
+                        )}
+                        {astro.aadhaar_url && (
+                          <a href={astro.aadhaar_url} target="_blank" download className="text-[10px] bg-saffron/10 text-saffron px-3 py-1.5 rounded-lg font-bold flex items-center gap-1 hover:bg-saffron/20 transition-all">
+                            <Download size={12} /> Aadhaar
+                          </a>
+                        )}
+                        {astro.cheque_url && (
+                          <a href={astro.cheque_url} target="_blank" download className="text-[10px] bg-saffron/10 text-saffron px-3 py-1.5 rounded-lg font-bold flex items-center gap-1 hover:bg-saffron/20 transition-all">
+                            <Download size={12} /> Cheque
+                          </a>
+                        )}
+                      </div>
                   </div>
                   <div className="flex gap-2 pt-2">
                     <button onClick={() => handleAstroAction(astro.id, 'approved')} className="flex-1 bg-green-600 text-white py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-green-600/20 hover:bg-green-700 transition-all">Approve</button>
@@ -3054,8 +3223,8 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
                     <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Verification Documents</p>
                     <div className="flex flex-wrap gap-3">
                       {JSON.parse(v.documents || '[]').map((doc: string, i: number) => (
-                        <a key={i} href={doc} target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition-all">
-                          <BookOpen size={14} /> Document {i+1}
+                        <a key={i} href={doc} target="_blank" rel="noreferrer" download className="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition-all">
+                          <Download size={14} /> Download Doc {i+1}
                         </a>
                       ))}
                     </div>
@@ -3134,6 +3303,69 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {adminTab === 'banners' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-2xl font-serif font-bold text-deep-blue">Home Page Banners</h3>
+              <p className="text-sm text-slate-500">Manage promotional banners for the website home page (Min 5 recommended)</p>
+            </div>
+            <button 
+              onClick={() => setShowModal('banner')} 
+              className="bg-saffron text-white px-6 py-3 rounded-xl text-sm font-bold shadow-lg shadow-saffron/20 hover:bg-orange-600 transition-all flex items-center gap-2"
+            >
+              <Sparkles size={18} /> Add New Banner
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {banners.map(banner => (
+              <div key={banner.id} className={`glass overflow-hidden rounded-3xl border-2 transition-all ${banner.is_active ? 'border-transparent' : 'grayscale border-slate-200'}`}>
+                <div className="relative h-40 overflow-hidden bg-slate-100">
+                  <img src={banner.image_url} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <div className="absolute top-4 right-4 flex gap-2">
+                    <button 
+                      onClick={() => toggleBanner(banner.id, !!banner.is_active)}
+                      className={`p-2 rounded-lg shadow-lg backdrop-blur-md transition-all ${banner.is_active ? 'bg-green-500 text-white' : 'bg-slate-500 text-white'}`}
+                      title={banner.is_active ? "Deactivate" : "Activate"}
+                    >
+                      {banner.is_active ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+                    </button>
+                    <button 
+                      onClick={() => deleteBanner(banner.id)}
+                      className="p-2 bg-red-500 text-white rounded-lg shadow-lg hover:bg-red-600 transition-all"
+                      title="Delete"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                  {banner.display_order > 0 && (
+                    <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                      Order: {banner.display_order}
+                    </div>
+                  )}
+                </div>
+                <div className="p-6 space-y-3">
+                  <h4 className="font-bold text-deep-blue line-clamp-1">{banner.title || "Untitled Banner"}</h4>
+                  {banner.link_url && (
+                    <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 p-2 rounded-lg truncate">
+                      <Compass size={14} className="text-saffron shrink-0" />
+                      {banner.link_url}
+                    </div>
+                  )}
+                  <div className="text-[10px] text-slate-400 font-medium">Added on {new Date(banner.timestamp).toLocaleDateString()}</div>
+                </div>
+              </div>
+            ))}
+            {banners.length === 0 && (
+              <div className="col-span-full py-16 text-center bg-stone-50 rounded-3xl border-2 border-dashed border-slate-200">
+                <p className="text-slate-400 font-medium italic">No banners added yet. Upload more than 5 for best results.</p>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -4062,6 +4294,7 @@ function AstrologerPanel({ profile, onUpdate, onLogout }: { profile: any, onUpda
             <div className="p-6 bg-green-50 rounded-2xl border border-green-100">
               <p className="text-sm text-green-600 font-bold uppercase">Available Balance</p>
               <p className="text-4xl font-bold text-green-700">₹{(profile.wallet_balance || 0).toFixed(2)}</p>
+              <p className="text-[10px] text-green-600 mt-2 font-bold uppercase">Commission: {profile.commission_percent || 70}%</p>
             </div>
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-500 uppercase">Withdraw Amount</label>
@@ -4095,14 +4328,14 @@ function AstrologerPanel({ profile, onUpdate, onLogout }: { profile: any, onUpda
               <tbody className="divide-y divide-slate-100">
                 {callHistory.map(call => {
                   const start = new Date(call.start_time);
-                  const end = new Date(call.end_time);
-                  const duration = call.end_time ? Math.round((end.getTime() - start.getTime()) / 60000) : 0;
+                  const end = call.end_time ? new Date(call.end_time) : null;
+                  const duration = end ? Math.round((end.getTime() - start.getTime()) / 60000) : 0;
                   return (
-                    <tr key={call.id} className="text-sm">
-                      <td className="p-4 font-bold">{call.user_name}</td>
+                    <tr key={call.id} className="text-sm hover:bg-stone-50 transition-colors">
+                      <td className="p-4 font-bold text-deep-blue">{call.user_name}</td>
                       <td className="p-4 text-slate-500">{new Date(call.timestamp).toLocaleString()}</td>
-                      <td className="p-4">{duration} mins</td>
-                      <td className="p-4 text-green-600 font-bold">₹{(call.total_cost * 0.7).toFixed(2)}</td>
+                      <td className="p-4 text-slate-600">{duration} mins</td>
+                      <td className="p-4 text-green-600 font-bold">₹{(call.astro_earning || (call.total_cost * 0.7)).toFixed(2)}</td>
                       <td className="p-4">
                         <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
                           call.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
@@ -4977,25 +5210,16 @@ function AIAstrologer() {
     setLoading(true);
 
     try {
-      if (!ai) {
-        setMessages(prev => [...prev, { role: 'ai', text: 'Cosmic connection not established. Please ensure the GEMINI_API_KEY is set in your environment variables and the app is rebuilt.' }]);
-        setLoading(false);
-        return;
-      }
-      
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: userMsg,
-        config: {
-          systemInstruction: "You are a wise Vedic Astrologer named AstroGuru. Provide spiritual, accurate, and helpful advice based on Indian astrology principles. Keep responses concise and encouraging. If you don't know something, say the stars are unclear on that matter.",
-        }
+      const res = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMsg, analysisType: 'Vedic Astrology' })
       });
-      
-      const text = response.text;
-      if (text) {
-        setMessages(prev => [...prev, { role: 'ai', text }]);
+      const data = await res.json();
+      if (res.ok && data.success && data.aiMessage) {
+        setMessages(prev => [...prev, { role: 'ai', text: data.aiMessage }]);
       } else {
-        throw new Error("Empty response from AI");
+        throw new Error(data.message || "Empty response from AI");
       }
     } catch (error: any) {
       console.error("AI Chat Error:", error);
