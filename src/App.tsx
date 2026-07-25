@@ -14,6 +14,7 @@ import { AIAstrologerPortal } from './components/AIAstrologerPortal';
 import { PaymentGatewayModal, PaymentReceipt } from './components/PaymentGatewayModal';
 import { Express3QuestionModal } from './components/Express3QuestionModal';
 import { LanguageSwitcherModal, SUPPORTED_LANGUAGES, LanguageOption, initGoogleTranslate, triggerGoogleTranslate } from './components/LanguageSwitcherModal';
+import { UndertakingAcceptanceModal } from './components/UndertakingAcceptanceModal';
 
 // Initialize local storage with seed data
 initStorage();
@@ -492,6 +493,13 @@ export default function App() {
           fetchUser(user?.email);
         }}
         localFetch={localFetch}
+      />
+
+      <LanguageSwitcherModal
+        isOpen={showLangModal}
+        onClose={() => setShowLangModal(false)}
+        currentLangCode={currentLang.code}
+        onSelectLang={handleSelectLanguage}
       />
     </div>
   );
@@ -4258,6 +4266,7 @@ function AstrologerRegistration({ onComplete, onLoginClick }: { onComplete: () =
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showUndertaking, setShowUndertaking] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     specialty: '',
@@ -4290,7 +4299,12 @@ function AstrologerRegistration({ onComplete, onLoginClick }: { onComplete: () =
       setError('Please agree to all terms and sign the contract.');
       return;
     }
+    setError('');
+    setShowUndertaking(true);
+  };
 
+  const handleExecuteUndertaking = async (signatureName: string) => {
+    setShowUndertaking(false);
     setLoading(true);
     setError('');
 
@@ -4298,7 +4312,11 @@ function AstrologerRegistration({ onComplete, onLoginClick }: { onComplete: () =
       const res = await localFetch('/api/astrologer/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          undertaking_signature: signatureName,
+          undertaking_executed_at: new Date().toISOString()
+        })
       });
 
       if (res.ok) {
@@ -4318,8 +4336,19 @@ function AstrologerRegistration({ onComplete, onLoginClick }: { onComplete: () =
     <div className="max-w-4xl mx-auto mt-10 mb-20">
       <div className="glass p-8 md:p-12 rounded-[2.5rem] shadow-2xl space-y-8">
         <div className="text-center space-y-2">
+          <div className="inline-flex items-center gap-1.5 bg-purple-900/10 text-purple-900 px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-widest border border-purple-300">
+            <Shield size={14} className="text-purple-700" /> Pre-Presence Verification Required
+          </div>
           <h2 className="text-4xl font-serif font-bold text-deep-blue">Join as a Consultant</h2>
           <p className="text-slate-500">Share your wisdom with the world</p>
+        </div>
+
+        <div className="bg-gradient-to-r from-purple-900/10 via-amber-500/10 to-purple-900/10 border border-purple-200 p-4 rounded-2xl flex items-start gap-3 text-xs text-purple-950">
+          <span className="text-xl">🪐</span>
+          <div className="space-y-1">
+            <strong className="block text-purple-900 font-bold">Mandatory Pre-Registration Undertaking Notice:</strong>
+            <span>As per platform regulations, consulting Astrologers must execute an official digital undertaking regarding credential authenticity, ethical counseling, and commission sharing before presence on the website/software.</span>
+          </div>
         </div>
 
         {error && (
@@ -4454,6 +4483,14 @@ function AstrologerRegistration({ onComplete, onLoginClick }: { onComplete: () =
           </p>
         </div>
       </div>
+
+      <UndertakingAcceptanceModal
+        isOpen={showUndertaking}
+        onClose={() => setShowUndertaking(false)}
+        onConfirm={handleExecuteUndertaking}
+        type="astrologer"
+        defaultName={formData.name}
+      />
     </div>
   );
 }
@@ -4537,6 +4574,7 @@ function AstrologerLogin({ onLogin, onRegisterClick }: { onLogin: (profile: any)
 
 function AstrologerPanel({ profile, onUpdate, onLogout }: { profile: any, onUpdate: () => void, onLogout: () => void }) {
   const [tab, setTab] = useState('dashboard');
+  const [showUndertaking, setShowUndertaking] = useState(false);
   const [requests, setRequests] = useState<any[]>([]);
   const [callRequests, setCallRequests] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
@@ -4661,6 +4699,16 @@ function AstrologerPanel({ profile, onUpdate, onLogout }: { profile: any, onUpda
         <button onClick={() => setTab('history')} className={`px-4 py-2 font-bold ${tab === 'history' ? 'text-saffron border-b-2 border-saffron' : 'text-slate-500'}`}>History</button>
         <button onClick={() => setTab('reviews')} className={`px-4 py-2 font-bold ${tab === 'reviews' ? 'text-saffron border-b-2 border-saffron' : 'text-slate-500'}`}>Reviews</button>
         <button onClick={onLogout} className="px-4 py-2 font-bold text-red-500 ml-auto hover:underline">Logout</button>
+      </div>
+
+      <div className="bg-purple-900/5 border border-purple-200 px-5 py-3 rounded-2xl flex items-center justify-between text-xs text-purple-950 shadow-sm">
+        <div className="flex items-center gap-2.5 font-medium">
+          <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block animate-pulse"></span>
+          <span><strong className="text-purple-900 font-bold">Pre-Presence Declaration Verified:</strong> Official Undertaking Executed ({profile.undertaking_signature || profile.name || 'Verified Consultant'})</span>
+        </div>
+        <button onClick={() => setShowUndertaking(true)} className="text-purple-700 font-bold hover:underline bg-purple-100/80 px-3 py-1 rounded-lg border border-purple-200">
+          View Signed Declaration
+        </button>
       </div>
 
       {tab === 'dashboard' && (
@@ -4883,6 +4931,14 @@ function AstrologerPanel({ profile, onUpdate, onLogout }: { profile: any, onUpda
           {reviews.length === 0 && <p className="text-center py-12 text-slate-400 col-span-full">No reviews yet.</p>}
         </div>
       )}
+
+      <UndertakingAcceptanceModal
+        isOpen={showUndertaking}
+        onClose={() => setShowUndertaking(false)}
+        onConfirm={() => setShowUndertaking(false)}
+        type="astrologer"
+        defaultName={profile.undertaking_signature || profile.name || 'Verified Consultant'}
+      />
     </div>
   );
 }
@@ -5794,8 +5850,8 @@ function PanditRegistration({ user, onComplete, onLoginClick }: { user: UserType
     setShowTermsModal(true);
   };
 
-  const handleConfirmSubmit = async () => {
-    if (!pendingData || !acceptedTerms) return;
+  const handleConfirmSubmit = async (signatureName?: string) => {
+    if (!pendingData) return;
     setLoading(true);
     setShowTermsModal(false);
 
@@ -5805,7 +5861,9 @@ function PanditRegistration({ user, onComplete, onLoginClick }: { user: UserType
       body: JSON.stringify({
         ...pendingData,
         user_id: user?.id || 1,
-        document_url: (pendingData.document_url as string) || 'https://picsum.photos/seed/vedic_doc/600/800'
+        document_url: (pendingData.document_url as string) || 'https://picsum.photos/seed/vedic_doc/600/800',
+        undertaking_signature: signatureName || pendingData.name,
+        undertaking_executed_at: new Date().toISOString()
       })
     });
 
@@ -5882,6 +5940,14 @@ function PanditRegistration({ user, onComplete, onLoginClick }: { user: UserType
         </p>
       </div>
 
+      <div className="bg-gradient-to-r from-red-950/10 via-amber-500/10 to-red-950/10 border border-red-200 p-5 rounded-[2rem] flex items-start gap-3.5 shadow-sm text-xs text-red-950">
+        <div className="w-10 h-10 rounded-xl bg-red-100 text-red-700 flex items-center justify-center font-bold text-lg shrink-0">🛕</div>
+        <div className="space-y-1">
+          <strong className="block text-red-900 font-bold text-sm">Mandatory Pre-Registration Undertaking Notice:</strong>
+          <span className="text-slate-600 leading-relaxed">Before your profile, remedial puja services, or anushthans can appear on AstroWay, you must execute the official Undertaking regarding Vedic ritual authenticity, samagri purity, and platform commission sharing ratios.</span>
+        </div>
+      </div>
+
       <form onSubmit={handleSubmit} className="glass p-8 md:p-12 rounded-[3rem] space-y-8 shadow-2xl border border-red-100">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-2">
@@ -5951,54 +6017,13 @@ function PanditRegistration({ user, onComplete, onLoginClick }: { user: UserType
         </button>
       </form>
 
-      {/* Terms and Conditions Modal */}
-      {showTermsModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-[2.5rem] max-w-lg w-full p-8 shadow-2xl border border-red-100 space-y-6 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center gap-3 text-red-700 border-b border-red-100 pb-4">
-              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center font-bold">✨</div>
-              <h3 className="font-serif font-bold text-xl text-deep-blue">Terms & Conditions for Commission & Verification</h3>
-            </div>
-
-            <div className="bg-red-50/60 p-6 rounded-2xl border border-red-100 text-xs text-red-800 space-y-2 leading-relaxed">
-              <p className="font-bold">✨ Terms & Conditions for Commission & Verification:</p>
-              <p>
-                By registering, you agree that your services and listed rates will be offered to willing customers after verification and acceptance by Admin. A platform commission ratio will be agreed upon and auto-calculated on each booking as per Admin terms.
-              </p>
-            </div>
-
-            <label className="flex items-start gap-3 cursor-pointer p-3 bg-stone-50 rounded-xl border border-slate-200">
-              <input 
-                type="checkbox" 
-                checked={acceptedTerms} 
-                onChange={(e) => setAcceptedTerms(e.target.checked)} 
-                className="mt-0.5 w-5 h-5 rounded border-slate-300 text-red-700 focus:ring-red-700 cursor-pointer"
-              />
-              <span className="text-sm font-medium text-slate-800 leading-snug">
-                I accept and agree to these Terms & Conditions for Commission & Verification.
-              </span>
-            </label>
-
-            <div className="flex items-center gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowTermsModal(false)}
-                className="flex-1 px-5 py-3.5 rounded-2xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all text-sm cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={!acceptedTerms}
-                onClick={handleConfirmSubmit}
-                className="flex-1 bg-red-700 text-white font-bold py-3.5 px-5 rounded-2xl shadow-lg hover:bg-red-800 transition-all text-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <Sparkles size={16} /> Accept & Submit Application
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <UndertakingAcceptanceModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        onConfirm={(sig) => handleConfirmSubmit(sig)}
+        type="pandit"
+        defaultName={pendingData?.name || user?.name || ''}
+      />
     </div>
   );
 }
@@ -6034,8 +6059,8 @@ function VendorRegistration({ user, onComplete, onLoginClick }: { user: UserType
     setShowTermsModal(true);
   };
 
-  const handleConfirmSubmit = async () => {
-    if (!pendingData || !acceptedTerms) return;
+  const handleConfirmSubmit = async (signatureName?: string) => {
+    if (!pendingData) return;
     setLoading(true);
     setShowTermsModal(false);
 
@@ -6049,7 +6074,9 @@ function VendorRegistration({ user, onComplete, onLoginClick }: { user: UserType
         ...pendingData,
         user_id: user?.id,
         documents: docs,
-        document_url: (pendingData.document_url as string) || docs[0]
+        document_url: (pendingData.document_url as string) || docs[0],
+        undertaking_signature: signatureName || pendingData.name,
+        undertaking_executed_at: new Date().toISOString()
       })
     });
 
@@ -6133,6 +6160,14 @@ function VendorRegistration({ user, onComplete, onLoginClick }: { user: UserType
         </div>
       </div>
 
+      <div className="bg-gradient-to-r from-amber-950/10 via-yellow-500/10 to-amber-950/10 border border-amber-300 p-5 rounded-[2rem] flex items-start gap-3.5 shadow-sm text-xs text-amber-950">
+        <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-lg shrink-0">💎</div>
+        <div className="space-y-1">
+          <strong className="block text-amber-950 font-bold text-sm">Mandatory Pre-Registration Undertaking Notice:</strong>
+          <span className="text-slate-600 leading-relaxed">Before your product catalog or gemstone listings can appear on AstroWay, you must execute the official Undertaking regarding 100% natural lab-certified items and agreed platform commission sharing ratios.</span>
+        </div>
+      </div>
+
       <form onSubmit={handleSubmit} className="glass p-8 md:p-12 rounded-[3rem] space-y-8 shadow-2xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-1">
@@ -6199,60 +6234,20 @@ function VendorRegistration({ user, onComplete, onLoginClick }: { user: UserType
         </button>
       </form>
 
-      {/* Terms and Conditions Modal */}
-      {showTermsModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-[2.5rem] max-w-lg w-full p-8 shadow-2xl border border-amber-200 space-y-6 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center gap-3 text-amber-900 border-b border-amber-100 pb-4">
-              <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center font-bold">🤝</div>
-              <h3 className="font-serif font-bold text-xl text-deep-blue">Agreed Terms & Commission Ratios</h3>
-            </div>
-
-            <div className="bg-amber-50 p-6 rounded-2xl border border-amber-200 text-xs text-amber-900 space-y-2 leading-relaxed">
-              <p className="font-bold">🤝 Agreed Terms & Commission Ratios:</p>
-              <p>
-                The purchase of products will be made to willing customers at your listed rates after verification and acceptance by Admin. A predefined platform commission ratio will be auto-calculated by the software on every sale as per agreed terms.
-              </p>
-            </div>
-
-            <label className="flex items-start gap-3 cursor-pointer p-3 bg-stone-50 rounded-xl border border-slate-200">
-              <input 
-                type="checkbox" 
-                checked={acceptedTerms} 
-                onChange={(e) => setAcceptedTerms(e.target.checked)} 
-                className="mt-0.5 w-5 h-5 rounded border-slate-300 text-saffron focus:ring-saffron cursor-pointer"
-              />
-              <span className="text-sm font-medium text-slate-800 leading-snug">
-                I have read and accept the listed rates verification and predefined platform commission ratios.
-              </span>
-            </label>
-
-            <div className="flex items-center gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowTermsModal(false)}
-                className="flex-1 px-5 py-3.5 rounded-2xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all text-sm cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={!acceptedTerms}
-                onClick={handleConfirmSubmit}
-                className="flex-1 bg-saffron text-white font-bold py-3.5 px-5 rounded-2xl shadow-lg hover:bg-orange-600 transition-all text-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <Sparkles size={16} /> Accept & Submit Application
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <UndertakingAcceptanceModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        onConfirm={(sig) => handleConfirmSubmit(sig)}
+        type="vendor"
+        defaultName={pendingData?.name || pendingData?.company_name || user?.name || ''}
+      />
     </div>
   );
 }
 
 function VendorPanel({ user }: { user: UserType | null }) {
   const [tab, setTab] = useState('dashboard');
+  const [showUndertaking, setShowUndertaking] = useState(false);
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [showAddProduct, setShowAddProduct] = useState(false);
@@ -6304,6 +6299,16 @@ function VendorPanel({ user }: { user: UserType | null }) {
           <button onClick={() => setTab('dashboard')} className={`px-4 py-2 font-bold ${tab === 'dashboard' ? 'text-saffron border-b-2 border-saffron' : 'text-slate-500'}`}>Products</button>
           <button onClick={() => setTab('profile')} className={`px-4 py-2 font-bold ${tab === 'profile' ? 'text-saffron border-b-2 border-saffron' : 'text-slate-500'}`}>Profile</button>
         </div>
+      </div>
+
+      <div className="bg-amber-950/5 border border-amber-300 px-5 py-3 rounded-2xl flex items-center justify-between text-xs text-amber-950 shadow-sm">
+        <div className="flex items-center gap-2.5 font-medium">
+          <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block animate-pulse"></span>
+          <span><strong className="text-amber-900 font-bold">Pre-Presence Declaration Verified:</strong> Official Supplier Undertaking Executed ({vendor?.company_name || vendor?.name || 'Verified Supplier'})</span>
+        </div>
+        <button onClick={() => setShowUndertaking(true)} className="text-amber-800 font-bold hover:underline bg-amber-100/80 px-3 py-1 rounded-lg border border-amber-300">
+          View Signed Declaration
+        </button>
       </div>
 
       {tab === 'dashboard' && (
@@ -6367,6 +6372,14 @@ function VendorPanel({ user }: { user: UserType | null }) {
           </form>
         </div>
       )}
+
+      <UndertakingAcceptanceModal
+        isOpen={showUndertaking}
+        onClose={() => setShowUndertaking(false)}
+        onConfirm={() => setShowUndertaking(false)}
+        type="vendor"
+        defaultName={vendor?.company_name || vendor?.name || 'Verified Supplier'}
+      />
     </div>
   );
 }
@@ -7236,13 +7249,6 @@ function UserProfile({ user, onUpdate, onLogout, onOpenExpress, localFetch }: { 
         userWalletBalance={user?.wallet_balance || 0}
         allowWalletPayment={false}
         onSuccess={handleRechargeSuccess}
-      />
-
-      <LanguageSwitcherModal
-        isOpen={showLangModal}
-        onClose={() => setShowLangModal(false)}
-        currentLangCode={currentLang.code}
-        onSelectLang={handleSelectLanguage}
       />
     </div>
   );
