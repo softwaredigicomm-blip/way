@@ -526,6 +526,10 @@ export const apiFetch = async (url: string, init?: any): Promise<any> => {
       if (path.includes('/packages')) return storageApi.getUserPackages(email);
       if (path.includes('/transactions')) return storageApi.getUserTransactions(email);
       if (path.includes('/calls')) return storageApi.getUserCalls(email);
+      if (path.includes('/orders')) return [];
+      if (path.includes('/chats')) return [];
+      if (path.includes('/reports')) return [];
+      if (path.includes('/reviews')) return { astrologerReviews: [], productReviews: [] };
       return storageApi.getUser(email);
     } else if (method === 'POST') {
       if (path === 'user/recharge') return storageApi.rechargeWallet(body.email, body.amount);

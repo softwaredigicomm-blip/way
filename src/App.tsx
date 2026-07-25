@@ -256,12 +256,6 @@ export default function App() {
           >
             Astrologer Panel
           </button>
-          {isUserAuthenticated && (
-            <div className="hidden sm:flex items-center gap-2 bg-saffron/10 px-3 py-1.5 rounded-full border border-saffron/20">
-              <Wallet size={16} className="text-saffron" />
-              <span className="text-sm font-bold text-saffron">₹{user?.wallet_balance || 0}</span>
-            </div>
-          )}
           <button 
             onClick={() => setActiveTab('admin')}
             className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-600"
@@ -5932,14 +5926,15 @@ function UserProfile({ user, onUpdate, onLogout }: { user: UserType | null, onUp
 
   useEffect(() => {
     if (user) {
+      setLoading(true);
       Promise.all([
-        localFetch(`/api/user/${user.email}/packages`).then(res => res.json()),
-        localFetch(`/api/user/${user.email}/transactions`).then(res => res.json()),
-        localFetch(`/api/user/${user.email}/calls`).then(res => res.json()),
-        localFetch(`/api/user/${user.email}/orders`).then(res => res.json()),
-        localFetch(`/api/user/${user.email}/chats`).then(res => res.json()),
-        localFetch(`/api/user/${user.email}/reports`).then(res => res.json()),
-        localFetch(`/api/user/${user.email}/reviews`).then(res => res.json())
+        localFetch(`/api/user/${user.email}/packages`).then(res => res.ok ? res.json() : []).catch(() => []),
+        localFetch(`/api/user/${user.email}/transactions`).then(res => res.ok ? res.json() : []).catch(() => []),
+        localFetch(`/api/user/${user.email}/calls`).then(res => res.ok ? res.json() : []).catch(() => []),
+        localFetch(`/api/user/${user.email}/orders`).then(res => res.ok ? res.json() : []).catch(() => []),
+        localFetch(`/api/user/${user.email}/chats`).then(res => res.ok ? res.json() : []).catch(() => []),
+        localFetch(`/api/user/${user.email}/reports`).then(res => res.ok ? res.json() : []).catch(() => []),
+        localFetch(`/api/user/${user.email}/reviews`).then(res => res.ok ? res.json() : { astrologerReviews: [], productReviews: [] }).catch(() => ({ astrologerReviews: [], productReviews: [] }))
       ]).then(([pkgs, trans, calls, orders, chats, reports, revs]) => {
         setPurchasedPackages(Array.isArray(pkgs) ? pkgs : []);
         setTransactions(Array.isArray(trans) ? trans : []);
@@ -5947,9 +5942,14 @@ function UserProfile({ user, onUpdate, onLogout }: { user: UserType | null, onUp
         setOrderHistory(Array.isArray(orders) ? orders : []);
         setChatHistory(Array.isArray(chats) ? chats : []);
         setGeneratedReports(Array.isArray(reports) ? reports : []);
-        setReviews(revs || { astrologerReviews: [], productReviews: [] });
+        setReviews((revs && Array.isArray(revs.astrologerReviews)) ? revs : { astrologerReviews: [], productReviews: [] });
+      }).catch(err => {
+        console.error("Error loading user profile:", err);
+      }).finally(() => {
         setLoading(false);
       });
+    } else {
+      setLoading(false);
     }
   }, [user]);
 
@@ -6068,21 +6068,21 @@ function UserProfile({ user, onUpdate, onLogout }: { user: UserType | null, onUp
               <div key={i} className="glass p-4 rounded-2xl border border-slate-100">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h4 className="font-bold text-deep-blue capitalize">{report.type} Report</h4>
-                    <p className="text-[10px] text-slate-400">{new Date(report.timestamp).toLocaleString()}</p>
-                    <p className="text-xs text-slate-500 mt-1">For: {report.data.name}</p>
+                    <h4 className="font-bold text-deep-blue capitalize">{report?.type || 'Report'}</h4>
+                    <p className="text-[10px] text-slate-400">{report?.timestamp ? new Date(report.timestamp).toLocaleString() : ''}</p>
+                    <p className="text-xs text-slate-500 mt-1">For: {report?.data?.name || 'User'}</p>
                   </div>
                   <button 
                     onClick={() => {
                       const doc = new jsPDF();
                       doc.setFontSize(22);
                       doc.setTextColor(242, 125, 38);
-                      doc.text(`${report.type.toUpperCase()} Report`, 105, 20, { align: 'center' });
+                      doc.text(`${(report?.type || 'Report').toUpperCase()} Report`, 105, 20, { align: 'center' });
                       doc.setFontSize(10);
                       doc.setTextColor(20, 20, 20);
-                      const splitText = doc.splitTextToSize(report.report, 170);
+                      const splitText = doc.splitTextToSize(report?.report || '', 170);
                       doc.text(splitText, 20, 40);
-                      doc.save(`${report.data.name}_${report.type}_Report.pdf`);
+                      doc.save(`${report?.data?.name || 'User'}_${report?.type || 'Report'}_Report.pdf`);
                     }}
                     className="text-[10px] bg-saffron/10 text-saffron px-3 py-1 rounded-full font-bold hover:bg-saffron/20"
                   >
@@ -6101,7 +6101,7 @@ function UserProfile({ user, onUpdate, onLogout }: { user: UserType | null, onUp
             <div>
               <h4 className="text-sm font-bold text-deep-blue mb-4">Astrologer Reviews</h4>
               <div className="space-y-4">
-                {reviews.astrologerReviews.length > 0 ? reviews.astrologerReviews.map((rev, i) => (
+                {(reviews?.astrologerReviews?.length || 0) > 0 ? reviews.astrologerReviews.map((rev, i) => (
                   <div key={i} className="glass p-4 rounded-2xl border border-slate-100">
                     <div className="flex justify-between">
                       <h5 className="font-bold text-deep-blue">{rev.astrologer_name}</h5>
@@ -6122,7 +6122,7 @@ function UserProfile({ user, onUpdate, onLogout }: { user: UserType | null, onUp
             <div>
               <h4 className="text-sm font-bold text-deep-blue mb-4">Product Reviews</h4>
               <div className="space-y-4">
-                {reviews.productReviews.length > 0 ? reviews.productReviews.map((rev, i) => (
+                {(reviews?.productReviews?.length || 0) > 0 ? reviews.productReviews.map((rev, i) => (
                   <div key={i} className="glass p-4 rounded-2xl border border-slate-100">
                     <div className="flex justify-between">
                       <h5 className="font-bold text-deep-blue">{rev.product_name}</h5>
@@ -6203,11 +6203,11 @@ function UserProfile({ user, onUpdate, onLogout }: { user: UserType | null, onUp
               {transactions.slice(0, 5).map((t, i) => (
                 <div key={i} className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-bold text-deep-blue capitalize">{t.type.replace('_', ' ')}</p>
-                    <p className="text-[10px] text-slate-400">{new Date(t.timestamp).toLocaleDateString()}</p>
+                    <p className="text-xs font-bold text-deep-blue capitalize">{(t?.type || 'transaction').replace('_', ' ')}</p>
+                    <p className="text-[10px] text-slate-400">{t?.timestamp ? new Date(t.timestamp).toLocaleDateString() : ''}</p>
                   </div>
-                  <span className={`text-xs font-bold ${t.amount < 0 ? 'text-red-500' : 'text-green-500'}`}>
-                    {t.amount < 0 ? '-' : '+'}₹{Math.abs(t.amount)}
+                  <span className={`text-xs font-bold ${(t?.amount || 0) < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                    {(t?.amount || 0) < 0 ? '-' : '+'}₹{Math.abs(t?.amount || 0)}
                   </span>
                 </div>
               ))}
