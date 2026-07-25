@@ -1504,9 +1504,10 @@ async function startServer() {
   });
 
   app.post("/api/ai/chat", async (req, res) => {
+    let userEmail = "guest@astroway.com";
     try {
       const { sessionId, email, message, imageBase64, analysisType, profileDetails } = req.body;
-      const userEmail = email || "guest@astroway.com";
+      userEmail = email || "guest@astroway.com";
 
       // 1. Check user wallet/duration remaining
       const user = db.prepare("SELECT id, ai_minutes_remaining FROM users WHERE email = ?").get(userEmail) as any;
@@ -1576,9 +1577,7 @@ async function startServer() {
         model: "gemini-3.6-flash",
         contents: { parts: contents },
         config: {
-          systemInstruction,
-          // We enable search grounding when there is no image to allow real-time planetary ephemeris/transit lookup!
-          tools: !imageBase64 ? [{ googleSearch: {} }] : undefined
+          systemInstruction
         }
       });
 
@@ -1600,6 +1599,22 @@ async function startServer() {
       });
     } catch (error: any) {
       console.error("AI Chat Server Error:", error);
+      // Refund the deducted minute if generation fails so user does not lose minutes on API errors
+      if (userEmail) {
+        try {
+          const u = db.prepare("SELECT ai_minutes_remaining FROM users WHERE email = ?").get(userEmail) as any;
+          if (u) {
+            const refundedMins = (u.ai_minutes_remaining || 0) + 1;
+            db.prepare("UPDATE users SET ai_minutes_remaining = ? WHERE email = ?").run(refundedMins, userEmail);
+            db.prepare(`
+              INSERT INTO ai_wallet_ledger (user_email, amount, duration_minutes, type, description, balance_minutes_remaining)
+              VALUES (?, 0, 1, 'recharge', 'Refund: Cosmic Static (Generation Error)', ?)
+            `).run(userEmail, refundedMins);
+          }
+        } catch (dbErr) {
+          console.error("Failed to refund AI minutes:", dbErr);
+        }
+      }
       res.status(500).json({
         error: "AI_GENERATION_FAILED",
         message: error?.message || "The cosmic energy is temporarily disrupted. Please retry."
