@@ -8,7 +8,7 @@ import {
   ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { jsPDF } from "jspdf";
-import { Astrologer, User as UserType, ZODIAC_SIGNS, Category, Vendor, Product, Package, Banner } from './types';
+import { Astrologer, User as UserType, ZODIAC_SIGNS, Category, Vendor, Product, Package, Banner, PanditRegistration as PanditType, PujaBooking as PujaBookingType } from './types';
 import { storageApi, initStorage, apiFetch } from './services/storage';
 import { AIAstrologerPortal } from './components/AIAstrologerPortal';
 
@@ -154,14 +154,15 @@ export default function App() {
       case 'horoscope': return <Horoscope />;
       case 'kundli': return <Kundli user={user} onViewPackages={() => setActiveTab('packages')} />;
       case 'chat': return <Chat astrologers={astrologers} user={user} onRecharge={() => fetchUser(user?.email)} />;
-      case 'puja': return <Puja />;
-      case 'shop': return <Shop user={user} onPurchase={() => fetchUser(user?.email)} onLogin={(email) => {
+      case 'puja': return <Puja user={user} onRegisterPandit={() => setActiveTab('pandit-register')} onBooked={() => fetchUser(user?.email)} />;
+      case 'shop': return <Shop user={user} onPurchase={() => fetchUser(user?.email)} onRegisterVendor={() => setActiveTab('vendor-register')} onLogin={(email) => {
         setIsUserAuthenticated(true);
         fetchUser(email);
       }} />;
       case 'packages': return <AstroPackages user={user} onPurchase={() => fetchUser(user?.email)} />;
       case 'profile': return <UserProfile user={user} onUpdate={() => fetchUser(user?.email)} onLogout={handleLogout} />;
       case 'ai': return <AIAstrologerPortal user={user} onRecharge={() => fetchUser(user?.email)} />;
+      case 'pandit-register': return <PanditRegistration user={user} onComplete={() => fetchUser(user?.email)} onLoginClick={() => setActiveTab('puja')} />;
       case 'vendor-register': return <VendorRegistration user={user} onComplete={() => fetchUser(user?.email)} onLoginClick={() => setActiveTab('vendor-panel')} />;
       case 'vendor-panel': return <VendorPanel user={user} />;
       case 'admin': 
@@ -4375,7 +4376,7 @@ function AstrologerPanel({ profile, onUpdate, onLogout }: { profile: any, onUpda
   );
 }
 
-function Shop({ user, onPurchase, onLogin }: { user: UserType | null, onPurchase: () => void, onLogin: (email: string) => void }) {
+function Shop({ user, onPurchase, onLogin, onRegisterVendor }: { user: UserType | null, onPurchase: () => void, onLogin: (email: string) => void, onRegisterVendor?: () => void }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<{product: Product, quantity: number}[]>([]);
   const [view, setView] = useState<'products' | 'cart' | 'product-details'>('products');
@@ -4711,6 +4712,23 @@ function Shop({ user, onPurchase, onLogin }: { user: UserType | null, onPurchase
 
   return (
     <div className="space-y-8">
+      {/* Supplier & Manufacturer Registration Banner */}
+      <div className="bg-gradient-to-r from-deep-blue via-slate-800 to-amber-900 text-white p-8 rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 border-2 border-amber-500/30">
+        <div className="space-y-2 text-center md:text-left">
+          <div className="inline-flex items-center gap-2 bg-amber-400/20 text-amber-300 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+            <Sparkles size={14} /> Vedic Supplier & Dealer Partner
+          </div>
+          <h3 className="text-2xl md:text-3xl font-serif font-bold text-amber-200">Are you a Supplier, Manufacturer, or Dealer?</h3>
+          <p className="text-amber-100/80 text-sm max-w-xl">Register as a supplier or dealer of Gemstones, Vedic remedial items, Vastu products, or Tarot reading services. After verification by Admin, list your products at your listed rates.</p>
+        </div>
+        <button 
+          onClick={onRegisterVendor}
+          className="bg-gradient-to-r from-amber-400 to-amber-500 text-red-950 px-8 py-4 rounded-2xl font-bold text-sm shadow-xl hover:from-amber-300 hover:to-amber-400 transition-all flex items-center gap-2 shrink-0"
+        >
+          <ShoppingBag size={18} /> Apply for Supplier / Dealer Registration
+        </button>
+      </div>
+
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-serif font-bold text-deep-blue">AstroShop</h2>
         <div className="flex items-center gap-4">
@@ -4800,16 +4818,30 @@ function Shop({ user, onPurchase, onLogin }: { user: UserType | null, onPurchase
   );
 }
 
-function Puja() {
+function Puja({ user, onRegisterPandit, onBooked }: { user?: UserType | null, onRegisterPandit?: () => void, onBooked?: () => void }) {
   const [services, setServices] = useState<any[]>([]);
+  const [pandits, setPandits] = useState<PanditType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPandit, setSelectedPandit] = useState<PanditType | null>(null);
+  const [bookingForm, setBookingForm] = useState({
+    puja_name: 'Graha Shanti Puja',
+    booking_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+    booking_time: '10:00 AM',
+    sankalp_details: ''
+  });
+  const [bookingLoading, setBookingLoading] = useState(false);
 
   useEffect(() => {
     const fetchPuja = async () => {
       try {
-        const res = await localFetch('/api/puja');
+        const [res, pRes] = await Promise.all([
+          localFetch('/api/puja'),
+          localFetch('/api/pandits?status=approved')
+        ]);
         const data = await res.json();
+        const pData = await pRes.json();
         setServices(data);
+        if (Array.isArray(pData)) setPandits(pData);
       } catch (error) {
         console.error("Failed to fetch puja services:", error);
       } finally {
@@ -4818,6 +4850,52 @@ function Puja() {
     };
     fetchPuja();
   }, []);
+
+  const handleBookPandit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      alert("Please login to book a Puja with Panditjee.");
+      return;
+    }
+    if (!selectedPandit) return;
+
+    if (user.wallet_balance < selectedPandit.listed_rate) {
+      alert(`Insufficient wallet balance (₹${user.wallet_balance}). Listed rate is ₹${selectedPandit.listed_rate}. Please recharge your wallet.`);
+      return;
+    }
+
+    setBookingLoading(true);
+    try {
+      const res = await localFetch('/api/puja/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_email: user.email,
+          user_name: user.name,
+          pandit_id: selectedPandit.id,
+          puja_name: bookingForm.puja_name,
+          booking_date: bookingForm.booking_date,
+          booking_time: bookingForm.booking_time,
+          sankalp_details: bookingForm.sankalp_details,
+          amount: selectedPandit.listed_rate
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        alert(`🙏 Puja booked successfully with ${selectedPandit.name}!\n\nBooking ID: #${data.booking.id}\nAmount Deducted: ₹${selectedPandit.listed_rate}\nStatus: Confirmed & Commission Recorded.`);
+        setSelectedPandit(null);
+        onBooked?.();
+      } else {
+        const err = await res.json();
+        alert(`Booking failed: ${err.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      alert("Error booking Puja. Please try again.");
+    } finally {
+      setBookingLoading(false);
+    }
+  };
 
   const stats = [
     { label: "Puja Performed", value: "17000+", icon: <Sparkles className="text-saffron" /> },
@@ -4828,8 +4906,25 @@ function Puja() {
 
   return (
     <div className="space-y-16 -mt-8">
+      {/* Pandit Registration Banner */}
+      <div className="bg-gradient-to-r from-red-900 via-red-800 to-amber-900 text-white p-8 rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 border-2 border-amber-500/30 mx-4 md:mx-0">
+        <div className="space-y-2 text-center md:text-left">
+          <div className="inline-flex items-center gap-2 bg-amber-400/20 text-amber-300 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+            <Sparkles size={14} /> Vedic Partner Opportunity
+          </div>
+          <h3 className="text-2xl md:text-3xl font-serif font-bold text-amber-200">Are you a Vedic Pandit, Head Purohit, or Ritual Institution?</h3>
+          <p className="text-amber-100/80 text-sm max-w-xl">Register with your bio data and experience. After verification by Admin, list your Vedic Puja, Graha Shanti, and Vastu remedies at your listed rates.</p>
+        </div>
+        <button 
+          onClick={onRegisterPandit}
+          className="bg-gradient-to-r from-amber-400 to-amber-500 text-red-950 px-8 py-4 rounded-2xl font-bold text-sm shadow-xl hover:from-amber-300 hover:to-amber-400 transition-all flex items-center gap-2 shrink-0"
+        >
+          <User size={18} /> Apply for Panditjee Registration
+        </button>
+      </div>
+
       {/* Puja Hero */}
-      <section className="relative h-[400px] bg-[#8B0000] overflow-hidden flex items-center justify-center text-center px-4">
+      <section className="relative h-[400px] bg-[#8B0000] overflow-hidden flex items-center justify-center text-center px-4 rounded-3xl">
         <div className="absolute inset-0 opacity-10 pointer-events-none">
           <div className="grid grid-cols-4 gap-8 p-12">
             {[...Array(12)].map((_, i) => (
@@ -4850,7 +4945,7 @@ function Puja() {
       </section>
 
       {/* Intro Section */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center px-4 md:px-0">
         <div className="space-y-6">
           <h2 className="text-4xl font-serif font-bold text-deep-blue">
             <span className="text-red-700">PANDIT BOOKING</span> - BOOK PANDITJI FOR PUJA
@@ -4861,8 +4956,11 @@ function Puja() {
           <p className="text-slate-600 leading-relaxed">
             Our pandits perform rituals like Havan, Yagya, Shanti Vidhi, Shubh Vivah – Wedding Ceremony, Satyanarayan Katha, Griha Pravesh, Namkaran Sanskar, Nava Graha Shanti, Engagement, Festival Puja, Janeu, Ganesh Puja, Ram Katha, Mundan Sanskar, Shrimant Puja, Namkaran, Bhagwat Katha, Vastu Shanti, etc.
           </p>
-          <button className="bg-red-700 text-white px-8 py-3 rounded-full font-bold hover:bg-red-800 transition-all flex items-center gap-2">
-            LEARN MORE <Sparkles size={16} />
+          <button onClick={() => {
+            const el = document.getElementById('verified-pandits');
+            el?.scrollIntoView({ behavior: 'smooth' });
+          }} className="bg-red-700 text-white px-8 py-3 rounded-full font-bold hover:bg-red-800 transition-all flex items-center gap-2">
+            BROWSE VERIFIED PANDITJEES <Sparkles size={16} />
           </button>
         </div>
         <div className="grid grid-cols-2 gap-4">
@@ -4874,7 +4972,7 @@ function Puja() {
       </section>
 
       {/* Stats Section */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-6 px-4 md:px-0">
         {stats.map((stat, i) => (
           <div key={i} className="glass p-8 rounded-3xl text-center space-y-2 border-b-4 border-saffron">
             <div className="flex justify-center mb-4">{stat.icon}</div>
@@ -4884,11 +4982,72 @@ function Puja() {
         ))}
       </section>
 
+      {/* Verified Panditjees Section */}
+      <section id="verified-pandits" className="space-y-8 bg-stone-50 p-8 md:p-12 rounded-[3rem] border border-red-100">
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center gap-2 bg-red-100 text-red-800 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest">
+            <Sparkles size={14} /> Verified Vedic Purohits
+          </div>
+          <h2 className="text-4xl font-serif font-bold text-deep-blue">
+            <span className="text-red-700">BOOK PANDITJEE</span> - REGISTERED PUROHITS & INSTITUTIONS
+          </h2>
+          <p className="text-slate-600 max-w-2xl mx-auto text-sm">
+            Book well-known purohits, Vedic institutions, or remedial specialists for Graha Shanti, Vedic remedies, and auspicious ceremonies at their verified listed rates.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {pandits.map((p) => (
+            <div key={p.id} className="bg-white rounded-3xl p-6 shadow-xl border border-red-50 flex flex-col justify-between space-y-6 hover:shadow-2xl transition-all">
+              <div className="space-y-4">
+                <div className="flex items-start gap-4">
+                  <img src={p.image_url} alt={p.name} className="w-16 h-16 rounded-2xl object-cover border border-amber-200" referrerPolicy="no-referrer" />
+                  <div className="flex-1 min-w-0">
+                    <span className="bg-red-50 text-red-700 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider block w-fit mb-1">
+                      {p.type}
+                    </span>
+                    <h3 className="text-lg font-bold text-deep-blue truncate">{p.name}</h3>
+                    <p className="text-xs text-slate-500 truncate">📍 {p.address}</p>
+                  </div>
+                </div>
+
+                <div className="bg-stone-50 p-3 rounded-2xl space-y-1.5 text-xs">
+                  <p className="text-slate-700"><strong>Experience:</strong> {p.experience} Years in Vedic Tradition</p>
+                  <p className="text-slate-700 line-clamp-1"><strong>Specialty:</strong> {p.field_of_practice}</p>
+                </div>
+
+                <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed italic bg-amber-50/50 p-3 rounded-2xl border border-amber-100/50">
+                  "{p.bio_data}"
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-4">
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase block">Listed Rate</span>
+                  <span className="text-xl font-bold text-red-700">₹{p.listed_rate}</span>
+                </div>
+                <button 
+                  onClick={() => setSelectedPandit(p)}
+                  className="bg-red-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-red-800 transition-all shadow-lg shadow-red-700/20 flex items-center gap-1.5"
+                >
+                  <Sparkles size={14} /> Book Puja
+                </button>
+              </div>
+            </div>
+          ))}
+          {pandits.length === 0 && (
+            <div className="col-span-full text-center py-12 text-slate-400 italic">
+              No registered Panditjees listed yet. Be the first to apply above!
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Services Section */}
-      <section className="space-y-12">
+      <section className="space-y-12 px-4 md:px-0">
         <div className="text-center space-y-2">
           <h2 className="text-4xl font-serif font-bold text-deep-blue">
-            <span className="text-red-700">OUR SERVICES</span> - HOW WE CAN HELP
+            <span className="text-red-700">STANDARD PUJA PACKAGES</span> - HOW WE CAN HELP
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -4904,7 +5063,10 @@ function Puja() {
                 <p className="text-sm text-slate-600 line-clamp-3">{service.description}</p>
                 <div className="flex items-center justify-between">
                   <span className="text-red-700 font-bold text-sm">Price: ₹{service.price}</span>
-                  <button className="bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-red-800 transition-colors">
+                  <button onClick={() => {
+                    if (!user) { alert("Please login to book this package."); return; }
+                    alert(`Booking package "${service.name}" for ₹${service.price}. Please check your bookings in profile.`);
+                  }} className="bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-red-800 transition-colors">
                     BOOK NOW
                   </button>
                 </div>
@@ -4922,16 +5084,16 @@ function Puja() {
       </section>
 
       {/* Booking Form Section */}
-      <section className="bg-stone-900 rounded-[3rem] p-12 text-white space-y-8">
+      <section className="bg-stone-900 rounded-[3rem] p-12 text-white space-y-8 mx-4 md:mx-0">
         <div className="text-center space-y-2">
           <h2 className="text-4xl font-serif font-bold">
             <span className="text-red-600">BOOK NOW</span> - ASTROWAY ONLINE
           </h2>
         </div>
-        <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <input type="text" placeholder="Your Name*" className="bg-white/10 border border-white/20 rounded-xl px-6 py-4 focus:outline-none focus:border-red-600" />
-          <input type="email" placeholder="Email Address*" className="bg-white/10 border border-white/20 rounded-xl px-6 py-4 focus:outline-none focus:border-red-600" />
-          <input type="tel" placeholder="Phone Number*" className="bg-white/10 border border-white/20 rounded-xl px-6 py-4 focus:outline-none focus:border-red-600" />
+        <form onSubmit={(e) => { e.preventDefault(); alert("Enquiry submitted! Our representative will contact you shortly."); }} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <input type="text" required placeholder="Your Name*" className="bg-white/10 border border-white/20 rounded-xl px-6 py-4 focus:outline-none focus:border-red-600" />
+          <input type="email" required placeholder="Email Address*" className="bg-white/10 border border-white/20 rounded-xl px-6 py-4 focus:outline-none focus:border-red-600" />
+          <input type="tel" required placeholder="Phone Number*" className="bg-white/10 border border-white/20 rounded-xl px-6 py-4 focus:outline-none focus:border-red-600" />
           <select className="bg-white/10 border border-white/20 rounded-xl px-6 py-4 focus:outline-none focus:border-red-600 text-slate-400">
             <option>---Please choose an option---</option>
             <option>Bhagwat Katha</option>
@@ -4941,12 +5103,251 @@ function Puja() {
           <input type="text" placeholder="Other Service" className="md:col-span-2 bg-white/10 border border-white/20 rounded-xl px-6 py-4 focus:outline-none focus:border-red-600" />
           <textarea placeholder="Your Message" rows={4} className="md:col-span-2 bg-white/10 border border-white/20 rounded-xl px-6 py-4 focus:outline-none focus:border-red-600"></textarea>
           <div className="md:col-span-2 text-center">
-            <button className="bg-red-600 text-white px-12 py-4 rounded-full font-bold hover:bg-red-700 transition-all shadow-lg shadow-red-600/20">
+            <button type="submit" className="bg-red-600 text-white px-12 py-4 rounded-full font-bold hover:bg-red-700 transition-all shadow-lg shadow-red-600/20">
               SUBMIT NOW
             </button>
           </div>
         </form>
       </section>
+
+      {/* Booking Modal */}
+      {selectedPandit && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-[3rem] p-8 md:p-10 max-w-lg w-full space-y-6 shadow-2xl border border-red-100 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start border-b border-slate-100 pb-4">
+              <div>
+                <span className="bg-red-50 text-red-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Book Vedic Ritual</span>
+                <h3 className="text-2xl font-serif font-bold text-deep-blue mt-2">{selectedPandit.name}</h3>
+                <p className="text-xs text-slate-500">{selectedPandit.type} • {selectedPandit.experience} Yrs Exp</p>
+              </div>
+              <button onClick={() => setSelectedPandit(null)} className="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100">
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleBookPandit} className="space-y-4 text-left">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase">Select Ceremony / Vedic Puja*</label>
+                <select 
+                  value={bookingForm.puja_name}
+                  onChange={(e) => setBookingForm({...bookingForm, puja_name: e.target.value})}
+                  className="w-full bg-stone-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-deep-blue focus:border-red-600 focus:outline-none"
+                >
+                  <option value="Graha Shanti Puja">Graha Shanti Puja (Navagraha Shanti)</option>
+                  <option value="Vedic Remedial Anushthan">Vedic Remedial Anushthan</option>
+                  <option value="Kundli Dosh Nivaran Havan">Kundli Dosh Nivaran Havan</option>
+                  <option value="Vastu Shanti Yagya">Vastu Shanti Yagya</option>
+                  <option value="Maha Mrityunjaya Jaap">Maha Mrityunjaya Jaap</option>
+                  <option value="Satyanarayan Katha & Puja">Satyanarayan Katha & Puja</option>
+                  <option value="Griha Pravesh Shubh Vidhi">Griha Pravesh Shubh Vidhi</option>
+                  <option value="Shubh Vivah / Wedding Ceremony">Shubh Vivah / Wedding Ceremony</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-500 uppercase">Date*</label>
+                  <input 
+                    type="date" required
+                    value={bookingForm.booking_date}
+                    onChange={(e) => setBookingForm({...bookingForm, booking_date: e.target.value})}
+                    className="w-full bg-stone-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-500 uppercase">Time Slot*</label>
+                  <select 
+                    value={bookingForm.booking_time}
+                    onChange={(e) => setBookingForm({...bookingForm, booking_time: e.target.value})}
+                    className="w-full bg-stone-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium"
+                  >
+                    <option value="06:00 AM (Brahma Muhurta)">06:00 AM (Brahma Muhurta)</option>
+                    <option value="09:00 AM (Pratah Kaal)">09:00 AM (Pratah Kaal)</option>
+                    <option value="11:30 AM (Madhyahn)">11:30 AM (Madhyahn)</option>
+                    <option value="04:00 PM (Sayankaal)">04:00 PM (Sayankaal)</option>
+                    <option value="07:00 PM (Sandhya Aarti)">07:00 PM (Sandhya Aarti)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase">Sankalp Details (Gotra, Rashi, Wish/Remedy Purpose)*</label>
+                <textarea 
+                  required rows={3}
+                  value={bookingForm.sankalp_details}
+                  onChange={(e) => setBookingForm({...bookingForm, sankalp_details: e.target.value})}
+                  placeholder="e.g. Kashyap Gotra, Mesha Rashi. For peace of mind and planetary dosh remedy."
+                  className="w-full bg-stone-50 border border-slate-200 rounded-xl px-4 py-3 text-sm"
+                />
+              </div>
+
+              <div className="bg-red-50 p-4 rounded-2xl flex justify-between items-center border border-red-100">
+                <div>
+                  <span className="text-xs text-red-800 font-medium block">Listed Puja Rate</span>
+                  <span className="text-2xl font-bold text-red-700">₹{selectedPandit.listed_rate}</span>
+                </div>
+                <div className="text-right text-xs text-slate-500">
+                  <span>Your Wallet Balance:</span>
+                  <strong className="block text-deep-blue text-sm">₹{user?.wallet_balance || 0}</strong>
+                </div>
+              </div>
+
+              <button 
+                type="submit" disabled={bookingLoading}
+                className="w-full bg-red-700 text-white font-bold py-4 rounded-2xl hover:bg-red-800 transition-all shadow-xl shadow-red-700/20 text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {bookingLoading ? <Sparkles className="animate-spin" size={18} /> : <CheckCircle2 size={18} />} Confirm & Pay ₹{selectedPandit.listed_rate}
+              </button>
+            </form>
+          </motion.div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PanditRegistration({ user, onComplete, onLoginClick }: { user: UserType | null, onComplete: () => void, onLoginClick: () => void }) {
+  const [status, setStatus] = useState<'idle' | 'pending' | 'rejected' | 'approved'>('idle');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user?.id) {
+      localFetch(`/api/pandit/profile/${user.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.status) setStatus(data.status);
+          setLoading(false);
+        }).catch(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const data = Object.fromEntries(formData.entries());
+    
+    const res = await localFetch('/api/pandit/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...data,
+        user_id: user?.id || 1,
+        document_url: (data.document_url as string) || 'https://picsum.photos/seed/vedic_doc/600/800'
+      })
+    });
+
+    if (res.ok) {
+      setStatus('pending');
+      onComplete();
+    } else {
+      const err = await res.json();
+      alert(err.error || "Registration failed");
+    }
+  };
+
+  if (loading) return <div className="text-center py-20"><Sparkles className="animate-spin mx-auto text-saffron" /></div>;
+
+  if (status === 'pending') {
+    return (
+      <div className="max-w-2xl mx-auto text-center space-y-6 py-20 glass p-12 rounded-[3rem]">
+        <div className="w-20 h-20 bg-saffron/10 rounded-full flex items-center justify-center mx-auto text-saffron">
+          <Calendar size={40} />
+        </div>
+        <h2 className="text-3xl font-serif font-bold text-deep-blue">Panditjee Application Under Review</h2>
+        <p className="text-slate-500">Our Vedic Verification Council & Admin team is reviewing your credentials, bio data, and shastric experience. Once approved, your services and listed rates will be published on our Puja pages.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-12 py-12 px-4">
+      <div className="text-center space-y-4">
+        <div className="inline-flex items-center gap-2 bg-red-50 text-red-700 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest">
+          <Sparkles size={14} /> Vedic & Anushthan Partner Registration
+        </div>
+        <h2 className="text-4xl font-serif font-bold text-deep-blue">Register as Panditjee / Purohit / Vedic Institution</h2>
+        <p className="text-slate-500 max-w-2xl mx-auto">
+          Perform Vedic Puja, Graha Shanti, Havan, Vastu Yagya, and Remedial Anushthans for willing devotees worldwide at your listed rates.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="glass p-8 md:p-12 rounded-[3rem] space-y-8 shadow-2xl border border-red-100">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Registration Category*</label>
+            <select name="type" required className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron font-medium text-deep-blue">
+              <option value="Individual Vedic Panditjee / Purohit">Individual Vedic Panditjee / Purohit</option>
+              <option value="Head Purohit of Group of Pandits">Head Purohit (Group of Pandits)</option>
+              <option value="Vedic Institution / Anushthan Kendra">Vedic Institution / Anushthan Kendra</option>
+              <option value="Tarot Reader / Vastu Remedial Specialist">Tarot Reader / Vastu Remedial Specialist</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Full Name / Purohit Title*</label>
+            <input name="name" required defaultValue={user?.name || ''} className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron" placeholder="e.g. Acharya Vidyadhar Shastri / Vedic Kendra" />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Contact Mobile Number*</label>
+            <input name="contact" required className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron" placeholder="+91 9876543210" />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Email Address*</label>
+            <input name="email" type="email" required defaultValue={user?.email || ''} className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron" placeholder="shastri@example.com" />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Full Address / Shrine Location*</label>
+            <input name="address" required className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron" placeholder="Shri Kashi Vishwanath Marg, Varanasi, UP" />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Experience (in Years)*</label>
+            <input name="experience" type="number" required min="1" max="60" defaultValue="10" className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron" placeholder="e.g. 15" />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Field of Practice / Knowledge*</label>
+            <input name="field_of_practice" required className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron" placeholder="e.g. Navagraha Shanti, Rudrabhishek, Vastu Dosh Shanti, Marriage Vidhi" />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Listed Rate for Standard Puja (₹)*</label>
+            <input name="listed_rate" type="number" required min="500" step="100" defaultValue="2500" className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron font-bold text-saffron" placeholder="2500" />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Bio Data / Detailed Experience & Tradition*</label>
+          <textarea name="bio_data" required rows={4} className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron" placeholder="Describe your Vedic tradition (Gotra/Veda), notable anushthans performed, qualifications (Acharya/Shastri), or details of your Pandit group/institution..." />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Profile Photo / Shrine Image URL</label>
+            <input name="image_url" defaultValue="https://picsum.photos/seed/pandit_reg/400/400" className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron text-sm" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Document Attachment URL (Vedic Degree / ID / Cert)</label>
+            <input name="document_url" defaultValue="https://picsum.photos/seed/vedic_cert/600/800" className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron text-sm" placeholder="URL to degree / certificate / bio data PDF" />
+          </div>
+        </div>
+
+        <div className="bg-red-50/60 p-6 rounded-2xl border border-red-100 text-xs text-red-800 space-y-2">
+          <p className="font-bold">✨ Terms & Conditions for Commission & Verification:</p>
+          <p>
+            By registering, you agree that your services and listed rates will be offered to willing customers after verification and acceptance by Admin. A platform commission ratio will be agreed upon and auto-calculated on each booking as per Admin terms.
+          </p>
+        </div>
+
+        <button type="submit" className="w-full bg-red-700 text-white font-bold py-5 rounded-[2rem] shadow-xl shadow-red-700/20 hover:bg-red-800 transition-all text-lg flex items-center justify-center gap-2">
+          <Sparkles size={20} /> Submit Panditjee / Institution Application
+        </button>
+      </form>
     </div>
   );
 }
@@ -4980,13 +5381,15 @@ function VendorRegistration({ user, onComplete, onLoginClick }: { user: UserType
       body: JSON.stringify({
         ...data,
         user_id: user?.id,
-        documents: docs
+        documents: docs,
+        document_url: (data.document_url as string) || docs[0]
       })
     });
 
     if (res.ok) {
       setStatus('pending');
       alert("Application submitted successfully!");
+      onComplete();
     } else {
       const err = await res.json();
       alert(err.error || "Registration failed");
@@ -5002,18 +5405,21 @@ function VendorRegistration({ user, onComplete, onLoginClick }: { user: UserType
           <Calendar size={40} />
         </div>
         <h2 className="text-3xl font-serif font-bold text-deep-blue">Application Under Review</h2>
-        <p className="text-slate-500">Our admin team is reviewing your vendor application. This usually takes 24-48 hours. We'll notify you once it's approved.</p>
+        <p className="text-slate-500">Our admin team is reviewing your vendor application, bio data, and experience. This usually takes 24-48 hours. We'll notify you once it's approved and list your items at agreed rates.</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-12 py-12">
+    <div className="max-w-4xl mx-auto space-y-12 py-12 px-4">
       <div className="text-center space-y-4">
-        <h2 className="text-4xl font-serif font-bold text-deep-blue">Become an AstroWay Vendor</h2>
-        <p className="text-slate-500">Join our marketplace and sell your spiritual products to thousands of users.</p>
+        <div className="inline-flex items-center gap-2 bg-saffron/10 text-saffron px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest">
+          <Sparkles size={14} /> Gemstones & Vedic Remedial Supplier Registration
+        </div>
+        <h2 className="text-4xl font-serif font-bold text-deep-blue">Become an AstroWay Vendor / Supplier</h2>
+        <p className="text-slate-500">Register as a supplier/manufacturer/dealer of Gemstones, Astrological remedial items, Vastu Shastra items, or Tarot decks.</p>
         <div className="flex items-center justify-center gap-2 pt-2">
-          <p className="text-sm text-slate-500">Already a vendor?</p>
+          <p className="text-sm text-slate-500">Already an approved vendor?</p>
           <button 
             onClick={onLoginClick}
             className="text-sm font-bold text-saffron hover:text-orange-600 underline underline-offset-4"
@@ -5023,19 +5429,37 @@ function VendorRegistration({ user, onComplete, onLoginClick }: { user: UserType
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="glass p-12 rounded-[3rem] space-y-8 shadow-2xl">
+      <form onSubmit={handleSubmit} className="glass p-8 md:p-12 rounded-[3rem] space-y-8 shadow-2xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Supplier / Vendor Category*</label>
+            <select name="vendor_type" required className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron font-medium text-deep-blue">
+              <option value="Gemstone Manufacturer & Supplier">Gemstone Manufacturer & Supplier</option>
+              <option value="Astrological Remedial Items Dealer">Astrological Remedial Items Dealer</option>
+              <option value="Vastu Shastra Products Specialist">Vastu Shastra Products Specialist</option>
+              <option value="Tarot & Divination Deck Reader / Dealer">Tarot & Divination Deck Reader / Dealer</option>
+              <option value="Yantra & Vedic Anushthan Supplies">Yantra & Vedic Anushthan Supplies</option>
+            </select>
+          </div>
+          <div className="space-y-1">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Full Name*</label>
-            <input name="name" required className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron" placeholder="John Doe" />
+            <input name="name" required defaultValue={user?.name || ''} className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron" placeholder="John Doe" />
           </div>
           <div className="space-y-1">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Contact Number*</label>
             <input name="contact" required className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron" placeholder="+91 9876543210" />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Company Name*</label>
-            <input name="company_name" required className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron" placeholder="Spiritual Gems Pvt Ltd" />
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Email Address*</label>
+            <input name="email" type="email" required defaultValue={user?.email || ''} className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron" placeholder="vendor@example.com" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Company / Institution Name*</label>
+            <input name="company_name" required className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron" placeholder="Vedic Gems & Yantra Pvt Ltd" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Experience in Domain (Years)*</label>
+            <input name="experience" type="number" required min="1" max="60" defaultValue="5" className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron" placeholder="e.g. 10" />
           </div>
           <div className="space-y-1">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">GST Number*</label>
@@ -5045,30 +5469,36 @@ function VendorRegistration({ user, onComplete, onLoginClick }: { user: UserType
             <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">PAN Number*</label>
             <input name="pan" required className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron" placeholder="ABCDE1234F" />
           </div>
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Address*</label>
-            <input name="address" required className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron" placeholder="123, Spiritual Street, Varanasi" />
+          <div className="space-y-1 col-span-full">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Address / Warehouse & Showroom*</label>
+            <input name="address" required className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron" placeholder="123, Spiritual Street, Johari Bazaar, Jaipur" />
           </div>
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Bank Details (A/C No, IFSC, Bank Name)*</label>
-          <textarea name="bank_details" required className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron h-32" placeholder="A/C: 123456789, IFSC: SBIN0001234, SBI Bank" />
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Bio Data / Company Profile & Specialty Catalog*</label>
+          <textarea name="bio_data" required rows={3} className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron" placeholder="Describe your gemstone purity certifications, remedial item quality, Vedic shastra compliance, Tarot specialties, etc." />
         </div>
 
-        <div className="space-y-4">
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Upload Documents (ID Proof, GST Cert, PAN)*</label>
-          <div className="border-2 border-dashed border-slate-200 rounded-[2rem] p-12 text-center space-y-4 hover:border-saffron transition-colors cursor-pointer">
-            <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
-              <Sparkles size={32} />
-            </div>
-            <p className="text-slate-500 font-medium">Drag & drop multiple files here or click to browse</p>
-            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">PDF, JPG, PNG (Max 5MB each)</p>
-          </div>
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Bank Details (A/C No, IFSC, Bank Name)*</label>
+          <textarea name="bank_details" required className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron h-24" placeholder="A/C: 123456789, IFSC: SBIN0001234, SBI Bank" />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Document / Certification URL (Gemstone Lab Cert / Trade License)</label>
+          <input name="document_url" defaultValue="https://picsum.photos/seed/gem_cert/600/800" className="w-full bg-stone-50 border border-slate-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-saffron text-sm" placeholder="URL to certificate PDF/JPG" />
+        </div>
+
+        <div className="bg-amber-50 p-6 rounded-2xl border border-amber-200 text-xs text-amber-900 space-y-2">
+          <p className="font-bold">🤝 Agreed Terms & Commission Ratios:</p>
+          <p>
+            The purchase of products will be made to willing customers at your listed rates after verification and acceptance by Admin. A predefined platform commission ratio will be auto-calculated by the software on every sale as per agreed terms.
+          </p>
         </div>
 
         <button type="submit" className="w-full bg-saffron text-white font-bold py-5 rounded-[2rem] shadow-xl shadow-saffron/20 hover:bg-orange-600 transition-all text-lg">
-          Submit Application for Approval
+          Submit Supplier / Dealer Application for Approval
         </button>
       </form>
     </div>

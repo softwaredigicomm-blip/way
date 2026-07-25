@@ -57,6 +57,13 @@ export interface Vendor {
   documents: string; // JSON string of URLs
   status: 'pending' | 'approved' | 'rejected';
   contact: string;
+  vendor_type?: string;
+  email?: string;
+  bio_data?: string;
+  experience?: number;
+  commission_ratio?: number;
+  document_url?: string;
+  is_active?: boolean;
 }
 
 export interface Product {
@@ -68,6 +75,50 @@ export interface Product {
   status: 'pending' | 'approved' | 'rejected';
   description?: string;
   how_to_use?: string;
+  vendor_name?: string;
+  vendor_company?: string;
+  v_ratio?: number;
+}
+
+export interface PanditRegistration {
+  id: number;
+  user_id?: number;
+  name: string;
+  type: string;
+  contact: string;
+  email: string;
+  address: string;
+  bio_data: string;
+  experience: number;
+  field_of_practice: string;
+  document_url?: string;
+  listed_rate: number;
+  status: 'pending' | 'approved' | 'rejected';
+  commission_ratio: number;
+  rating: number;
+  image_url: string;
+  is_active: boolean;
+  created_at?: string;
+}
+
+export interface PujaBooking {
+  id: number;
+  user_email: string;
+  user_name: string;
+  pandit_id: number;
+  puja_name: string;
+  booking_date: string;
+  booking_time: string;
+  sankalp_details?: string;
+  amount: number;
+  commission_ratio: number;
+  admin_commission: number;
+  pandit_earning: number;
+  status: string;
+  created_at?: string;
+  pandit_name?: string;
+  pandit_type?: string;
+  pandit_contact?: string;
 }
 
 export interface Package {

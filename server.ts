@@ -248,9 +248,19 @@ try { db.exec("ALTER TABLE vendors ADD COLUMN documents TEXT"); } catch (e) {}
 try { db.exec("ALTER TABLE vendors ADD COLUMN status TEXT DEFAULT 'pending'"); } catch (e) {}
 try { db.exec("ALTER TABLE vendors ADD COLUMN is_active INTEGER DEFAULT 1"); } catch (e) {}
 try { db.exec("ALTER TABLE vendors ADD COLUMN user_id INTEGER"); } catch (e) {}
+try { db.exec("ALTER TABLE vendors ADD COLUMN vendor_type TEXT DEFAULT 'Gemstone Manufacturer & Supplier'"); } catch (e) {}
+try { db.exec("ALTER TABLE vendors ADD COLUMN email TEXT"); } catch (e) {}
+try { db.exec("ALTER TABLE vendors ADD COLUMN bio_data TEXT"); } catch (e) {}
+try { db.exec("ALTER TABLE vendors ADD COLUMN experience INTEGER DEFAULT 5"); } catch (e) {}
+try { db.exec("ALTER TABLE vendors ADD COLUMN commission_ratio REAL DEFAULT 10"); } catch (e) {}
+try { db.exec("ALTER TABLE vendors ADD COLUMN document_url TEXT"); } catch (e) {}
 try { db.exec("ALTER TABLE products ADD COLUMN status TEXT DEFAULT 'pending'"); } catch (e) {}
 try { db.exec("ALTER TABLE products ADD COLUMN description TEXT"); } catch (e) {}
 try { db.exec("ALTER TABLE products ADD COLUMN how_to_use TEXT"); } catch (e) {}
+try { db.exec("ALTER TABLE orders ADD COLUMN vendor_id INTEGER"); } catch (e) {}
+try { db.exec("ALTER TABLE orders ADD COLUMN commission_ratio REAL DEFAULT 10"); } catch (e) {}
+try { db.exec("ALTER TABLE orders ADD COLUMN admin_commission REAL DEFAULT 0"); } catch (e) {}
+try { db.exec("ALTER TABLE orders ADD COLUMN vendor_earning REAL DEFAULT 0"); } catch (e) {}
 try { db.exec("ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'approved'"); } catch (e) {}
 try { db.exec("ALTER TABLE users ADD COLUMN registration_data TEXT"); } catch (e) {}
 try { db.exec("ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1"); } catch (e) {}
@@ -322,6 +332,45 @@ try {
       text TEXT,
       image_url TEXT,
       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS pandit_registrations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      name TEXT,
+      type TEXT DEFAULT 'Individual Panditjee',
+      contact TEXT,
+      email TEXT UNIQUE,
+      address TEXT,
+      bio_data TEXT,
+      experience INTEGER,
+      field_of_practice TEXT,
+      document_url TEXT,
+      listed_rate REAL DEFAULT 2100,
+      status TEXT DEFAULT 'pending',
+      commission_ratio REAL DEFAULT 15,
+      rating REAL DEFAULT 5.0,
+      image_url TEXT,
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS puja_bookings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_email TEXT,
+      user_name TEXT,
+      pandit_id INTEGER,
+      puja_name TEXT,
+      booking_date TEXT,
+      booking_time TEXT,
+      sankalp_details TEXT,
+      amount REAL,
+      commission_ratio REAL,
+      admin_commission REAL,
+      pandit_earning REAL,
+      status TEXT DEFAULT 'confirmed',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(pandit_id) REFERENCES pandit_registrations(id)
     );
   `);
 } catch (e) {}
@@ -560,18 +609,18 @@ async function startServer() {
   // Vendor API
   app.post("/api/vendor/register", (req, res) => {
     try {
-      const { user_id, name, company_name, address, gst, pan, bank_details, documents, contact } = req.body;
-      const existing = db.prepare("SELECT * FROM vendors WHERE user_id = ?").get(user_id);
-      if (existing) return res.status(400).json({ error: "Vendor application already exists" });
+      const { user_id, name, company_name, address, gst, pan, bank_details, documents, contact, vendor_type, email, bio_data, experience, document_url } = req.body;
+      const existing = db.prepare("SELECT * FROM vendors WHERE (user_id = ? AND user_id IS NOT NULL AND user_id != -1) OR (email = ? AND email IS NOT NULL AND email != '')").get(user_id || -1, email || '');
+      if (existing) return res.status(400).json({ error: "Vendor/Supplier application already exists for this account or email" });
 
-      db.prepare(`
-        INSERT INTO vendors (user_id, name, company_name, address, gst, pan, bank_details, documents, contact, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
-      `).run(user_id, name, company_name, address, gst, pan, bank_details, JSON.stringify(documents), contact);
+      const info = db.prepare(`
+        INSERT INTO vendors (user_id, name, company_name, address, gst, pan, bank_details, documents, contact, status, vendor_type, email, bio_data, experience, commission_ratio, document_url, is_active)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, 10, ?, 0)
+      `).run(user_id || null, name, company_name, address, gst, pan, bank_details, typeof documents === 'string' ? documents : JSON.stringify(documents || []), contact, vendor_type || 'Gemstone Manufacturer & Supplier', email || '', bio_data || '', experience || 5, document_url || '');
       
-      res.json({ success: true });
+      res.json({ success: true, id: info.lastInsertRowid });
     } catch (error) {
-      console.error(error);
+      console.error("Vendor registration error:", error);
       res.status(500).json({ error: "Registration failed" });
     }
   });
@@ -706,17 +755,29 @@ async function startServer() {
 
   app.post("/api/admin/vendor/approve", (req, res) => {
     try {
-      const { vendorId, action } = req.body; // action: 'approved' or 'rejected'
-      db.prepare("UPDATE vendors SET status = ? WHERE id = ?").run(action, vendorId);
-      
+      const { vendorId, action, commission_ratio } = req.body; // action: 'approved' or 'rejected'
       if (action === 'approved') {
+        db.prepare("UPDATE vendors SET status = 'approved', is_active = 1, commission_ratio = COALESCE(?, commission_ratio) WHERE id = ?").run(commission_ratio || 10, vendorId);
         const vendor = db.prepare("SELECT user_id FROM vendors WHERE id = ?").get(vendorId) as any;
-        db.prepare("UPDATE users SET role = 'vendor' WHERE id = ?").run(vendor.user_id);
+        if (vendor && vendor.user_id) {
+          db.prepare("UPDATE users SET role = 'vendor' WHERE id = ?").run(vendor.user_id);
+        }
+      } else {
+        db.prepare("UPDATE vendors SET status = ?, is_active = 0 WHERE id = ?").run(action, vendorId);
       }
-      
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Action failed" });
+    }
+  });
+
+  app.patch("/api/admin/vendor/:id/terms", (req, res) => {
+    try {
+      const { commission_ratio } = req.body;
+      db.prepare("UPDATE vendors SET commission_ratio = ? WHERE id = ?").run(commission_ratio, req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update vendor commission terms" });
     }
   });
 
@@ -1129,6 +1190,139 @@ async function startServer() {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to update puja" });
+    }
+  });
+
+  // Panditjee / Purohit / Vedic Institution Registration & Bookings
+  app.post("/api/pandit/register", (req, res) => {
+    try {
+      const { user_id, name, type, contact, email, address, bio_data, experience, field_of_practice, document_url, listed_rate } = req.body;
+      const existing = db.prepare("SELECT * FROM pandit_registrations WHERE email = ?").get(email);
+      if (existing) return res.status(400).json({ error: "Email already registered for Panditjee/Purohit services" });
+
+      const info = db.prepare(`
+        INSERT INTO pandit_registrations (user_id, name, type, contact, email, address, bio_data, experience, field_of_practice, document_url, listed_rate, status, commission_ratio, is_active)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 15, 0)
+      `).run(user_id || null, name, type || 'Individual Panditjee', contact, email, address, bio_data, experience || 5, field_of_practice, document_url || '', listed_rate || 2100);
+
+      res.json({ success: true, id: info.lastInsertRowid });
+    } catch (error: any) {
+      console.error("Pandit registration error:", error);
+      res.status(500).json({ error: "Panditjee registration failed", details: error.message });
+    }
+  });
+
+  app.get("/api/pandits", (req, res) => {
+    try {
+      const pandits = db.prepare("SELECT * FROM pandit_registrations WHERE status = 'approved' AND is_active = 1").all();
+      res.json(pandits);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch registered pandits" });
+    }
+  });
+
+  app.get("/api/admin/pending-pandits", (req, res) => {
+    try {
+      const pandits = db.prepare("SELECT * FROM pandit_registrations WHERE status = 'pending'").all();
+      res.json(pandits);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch pending pandit registrations" });
+    }
+  });
+
+  app.get("/api/admin/pandits", (req, res) => {
+    try {
+      const pandits = db.prepare("SELECT * FROM pandit_registrations").all();
+      res.json(pandits);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch all pandits" });
+    }
+  });
+
+  app.post("/api/admin/pandit/approve", (req, res) => {
+    try {
+      const { panditId, action, commission_ratio, listed_rate } = req.body;
+      if (action === 'approved') {
+        db.prepare("UPDATE pandit_registrations SET status = 'approved', is_active = 1, commission_ratio = COALESCE(?, commission_ratio), listed_rate = COALESCE(?, listed_rate) WHERE id = ?").run(commission_ratio || 15, listed_rate || 2100, panditId);
+      } else {
+        db.prepare("UPDATE pandit_registrations SET status = ?, is_active = 0 WHERE id = ?").run(action, panditId);
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update pandit status" });
+    }
+  });
+
+  app.patch("/api/admin/pandit/:id/terms", (req, res) => {
+    try {
+      const { commission_ratio, listed_rate } = req.body;
+      db.prepare("UPDATE pandit_registrations SET commission_ratio = COALESCE(?, commission_ratio), listed_rate = COALESCE(?, listed_rate) WHERE id = ?").run(commission_ratio, listed_rate, req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update pandit terms" });
+    }
+  });
+
+  app.post("/api/puja/book", (req, res) => {
+    try {
+      const { user_email, user_name, pandit_id, puja_name, booking_date, booking_time, sankalp_details, amount } = req.body;
+      const pandit = db.prepare("SELECT * FROM pandit_registrations WHERE id = ?").get(pandit_id) as any;
+      if (!pandit) return res.status(404).json({ error: "Registered Panditjee/Purohit not found" });
+
+      const finalAmount = amount || pandit.listed_rate || 2100;
+      const ratio = pandit.commission_ratio || 15;
+      const adminCommission = Number((finalAmount * (ratio / 100)).toFixed(2));
+      const panditEarning = Number((finalAmount - adminCommission).toFixed(2));
+
+      const user = db.prepare("SELECT * FROM users WHERE email = ?").get(user_email) as any;
+      if (user && user.wallet_balance < finalAmount) {
+        return res.status(400).json({ error: `Insufficient wallet balance (₹${user.wallet_balance}). Please recharge ₹${finalAmount - user.wallet_balance} more to book this Puja.` });
+      }
+
+      db.transaction(() => {
+        if (user) {
+          db.prepare("UPDATE users SET wallet_balance = wallet_balance - ? WHERE id = ?").run(finalAmount, user.id);
+          db.prepare("INSERT INTO transactions (user_id, amount, type) VALUES (?, ?, 'puja_booking')").run(user.id, -finalAmount);
+        }
+        db.prepare(`
+          INSERT INTO puja_bookings (user_email, user_name, pandit_id, puja_name, booking_date, booking_time, sankalp_details, amount, commission_ratio, admin_commission, pandit_earning, status)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed')
+        `).run(user_email, user_name || (user ? user.name : 'Devotee'), pandit_id, puja_name, booking_date, booking_time, typeof sankalp_details === 'string' ? sankalp_details : JSON.stringify(sankalp_details || {}), finalAmount, ratio, adminCommission, panditEarning);
+      })();
+
+      res.json({ success: true, adminCommission, panditEarning, newBalance: user ? user.wallet_balance - finalAmount : 0 });
+    } catch (error: any) {
+      console.error("Puja booking error:", error);
+      res.status(500).json({ error: "Puja booking failed", details: error.message });
+    }
+  });
+
+  app.get("/api/user/:email/puja-bookings", (req, res) => {
+    try {
+      const bookings = db.prepare(`
+        SELECT pb.*, pr.name as pandit_name, pr.type as pandit_type, pr.contact as pandit_contact
+        FROM puja_bookings pb
+        LEFT JOIN pandit_registrations pr ON pb.pandit_id = pr.id
+        WHERE pb.user_email = ?
+        ORDER BY pb.created_at DESC
+      `).all(req.params.email);
+      res.json(bookings);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch user puja bookings" });
+    }
+  });
+
+  app.get("/api/admin/puja-bookings", (req, res) => {
+    try {
+      const bookings = db.prepare(`
+        SELECT pb.*, pr.name as pandit_name, pr.type as pandit_type
+        FROM puja_bookings pb
+        LEFT JOIN pandit_registrations pr ON pb.pandit_id = pr.id
+        ORDER BY pb.created_at DESC
+      `).all();
+      res.json(bookings);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch admin puja bookings" });
     }
   });
 
@@ -1899,22 +2093,42 @@ async function startServer() {
   app.post("/api/user/purchase", (req, res) => {
     try {
       const { email, productId } = req.body;
-      const product = db.prepare("SELECT * FROM products WHERE id = ?").get(productId) as any;
+      const product = db.prepare("SELECT p.*, v.id as v_id, v.commission_ratio as v_ratio FROM products p LEFT JOIN vendors v ON p.vendor_id = v.id WHERE p.id = ?").get(productId) as any;
       const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email) as any;
 
       if (!product || !user) return res.status(404).json({ error: "Product or User not found" });
       if (user.wallet_balance < product.price) return res.status(400).json({ error: "Insufficient balance" });
 
+      const ratio = product.v_ratio || 10;
+      const adminCommission = Number((product.price * (ratio / 100)).toFixed(2));
+      const vendorEarning = Number((product.price - adminCommission).toFixed(2));
+
       db.transaction(() => {
         db.prepare("UPDATE users SET wallet_balance = wallet_balance - ? WHERE id = ?").run(product.price, user.id);
         db.prepare("INSERT INTO transactions (user_id, amount, type) VALUES (?, ?, 'purchase')").run(user.id, -product.price);
-        db.prepare("INSERT INTO orders (user_id, product_id, amount) VALUES (?, ?, ?)").run(user.id, productId, product.price);
+        db.prepare("INSERT INTO orders (user_id, product_id, amount, vendor_id, commission_ratio, admin_commission, vendor_earning) VALUES (?, ?, ?, ?, ?, ?, ?)").run(user.id, productId, product.price, product.v_id || null, ratio, adminCommission, vendorEarning);
       })();
       
-      res.json({ success: true, newBalance: user.wallet_balance - product.price });
+      res.json({ success: true, newBalance: user.wallet_balance - product.price, adminCommission, vendorEarning });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Purchase failed" });
+    }
+  });
+
+  app.get("/api/admin/orders-commission", (req, res) => {
+    try {
+      const orders = db.prepare(`
+        SELECT o.*, p.name as product_name, v.name as vendor_name, v.company_name as vendor_company, v.vendor_type, u.name as buyer_name, u.email as buyer_email
+        FROM orders o
+        LEFT JOIN products p ON o.product_id = p.id
+        LEFT JOIN vendors v ON o.vendor_id = v.id OR p.vendor_id = v.id
+        LEFT JOIN users u ON o.user_id = u.id
+        ORDER BY o.timestamp DESC
+      `).all();
+      res.json(orders);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch orders commission audit" });
     }
   });
 
@@ -2022,8 +2236,8 @@ try {
     const vendorUser = db.prepare("SELECT id FROM users WHERE email = ?").get("vendor_user") as { id: number };
     if (vendorUser) {
       db.prepare(`
-        INSERT INTO vendors (name, contact, company_name, gst, pan, address, bank_details, status, user_id) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO vendors (name, contact, company_name, gst, pan, address, bank_details, status, user_id, vendor_type, email, bio_data, experience, commission_ratio, document_url, is_active) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
       `).run(
         "Astro Store", 
         "9876543210", 
@@ -2033,7 +2247,34 @@ try {
         "123, Celestial Plaza, Mumbai", 
         "HDFC Bank - 50100012345678", 
         "approved", 
-        vendorUser.id
+        vendorUser.id,
+        "Gemstone Manufacturer & Supplier",
+        "astrostore@astroway.com",
+        "Certified dealer and direct manufacturer of authentic natural gemstones, rudraksha beads, and energized Vedic Yantras since 2008.",
+        16,
+        10,
+        "https://picsum.photos/seed/doc_gem/400/600"
+      );
+
+      db.prepare(`
+        INSERT INTO vendors (name, contact, company_name, gst, pan, address, bank_details, status, user_id, vendor_type, email, bio_data, experience, commission_ratio, document_url, is_active) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+      `).run(
+        "Divination & Vastu House", 
+        "9811122233", 
+        "Vedic Shastra & Divination LLP", 
+        "07BBBB0000B1Z9", 
+        "VWXYZ9876Q", 
+        "45, Spiritual Arcade, Haridwar", 
+        "ICICI Bank - 000405001122", 
+        "approved", 
+        vendorUser.id,
+        "Vastu Products & Tarot Card Dealer",
+        "vastutarot@astroway.com",
+        "Specialist manufacturer and importer of Vastu Shastra remedial pyramids, crystal grids, energized Sphatik, and authentic Tarot decks.",
+        12,
+        12,
+        "https://picsum.photos/seed/doc_vastu/400/600"
       );
     }
   }
@@ -2041,17 +2282,82 @@ try {
   console.error("Warning: Vendor seeding failed:", err);
 }
 
+// Seed Pandit Registrations
+try {
+  const panditCount = db.prepare("SELECT COUNT(*) as count FROM pandit_registrations").get() as { count: number };
+  if (panditCount.count === 0) {
+    const seedPandit = db.prepare(`
+      INSERT INTO pandit_registrations (name, type, contact, email, address, bio_data, experience, field_of_practice, document_url, listed_rate, status, commission_ratio, rating, image_url, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, ?, 1)
+    `);
+    seedPandit.run(
+      "Acharya Vidyadhar Shastri",
+      "Head Purohit of Group",
+      "+91 9450011223",
+      "vidyadhar.shastri@vedicpuja.org",
+      "Dashashwamedh Ghat Road, Varanasi (Kashi), UP",
+      "Head Purohit of Kashi Vedic Anushthan Mandal. Specialist in Shodash Sanskar rituals, Navagraha Shanti Havan, Maharudra Abhishekam, and Vedic remedial ceremonies with a team of 11 learned Brahmins.",
+      24,
+      "Graha Shanti Puja & Vedic Remedies",
+      "https://picsum.photos/seed/pdoc1/400/600",
+      5100,
+      15,
+      4.9,
+      "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?auto=format&fit=crop&q=80&w=300&h=300"
+    );
+    seedPandit.run(
+      "Pandit Deendayal Joshi",
+      "Vedic Institution",
+      "+91 9837044556",
+      "haridwar.anushthan@astroved.in",
+      "Har Ki Pauri Marg, Haridwar, Uttarakhand",
+      "Founder & Chief Purohit of Haridwar Vedic Anushthan Kendra. Expert in Mangal Dosh Nivaran, Kaal Sarp Dosh Shanti, Maha Mrityunjaya Jaap, and Vastu Dosh Shanti Yagya.",
+      18,
+      "Kundli Dosh Nivaran & Vastu Yagya",
+      "https://picsum.photos/seed/pdoc2/400/600",
+      11000,
+      15,
+      5.0,
+      "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=300&h=300"
+    );
+    seedPandit.run(
+      "Guru Dr. Vani Sharma",
+      "Tarot & Vastu Ritual Specialist",
+      "+91 9810099887",
+      "vani.tarotvastu@divinelight.in",
+      "Greater Kailash Part 1, New Delhi",
+      "Certified Vastu Shastra Consultant and Tarot Remedial Master. Conducts crystal energizing rituals, Vastu space cleansing, and Tarot divination remedial ceremonies.",
+      14,
+      "Vastu Shanti & Tarot Divination Rituals",
+      "https://picsum.photos/seed/pdoc3/400/600",
+      3100,
+      12,
+      4.8,
+      "https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?auto=format&fit=crop&q=80&w=300&h=300"
+    );
+  }
+} catch (err) {
+  console.error("Warning: Pandit seeding failed:", err);
+}
+
 // Seed Products
 try {
   const productCount = db.prepare("SELECT COUNT(*) as count FROM products").get() as { count: number };
   if (productCount.count === 0) {
-    const vendor = db.prepare("SELECT id FROM vendors WHERE name = ?").get("Astro Store") as { id: number };
-    if (vendor) {
-      const seedProduct = db.prepare("INSERT INTO products (name, price, vendor_id, image_url, status) VALUES (?, ?, ?, ?, ?)");
-      seedProduct.run("Natural Ruby (Manik)", 4500, vendor.id, "https://picsum.photos/seed/ruby/400/400", "approved");
-      seedProduct.run("Yellow Sapphire (Pukhraj)", 8500, vendor.id, "https://picsum.photos/seed/sapphire/400/400", "approved");
-      seedProduct.run("Rudraksha Mala (108 Beads)", 750, vendor.id, "https://picsum.photos/seed/mala/400/400", "approved");
-      seedProduct.run("Copper Yantra for Prosperity", 1200, vendor.id, "https://picsum.photos/seed/yantra/400/400", "approved");
+    const vendor1 = db.prepare("SELECT id FROM vendors WHERE name = ?").get("Astro Store") as { id: number };
+    const vendor2 = db.prepare("SELECT id FROM vendors WHERE name = ?").get("Divination & Vastu House") as { id: number };
+    if (vendor1) {
+      const seedProduct = db.prepare("INSERT INTO products (name, price, vendor_id, image_url, status, description, how_to_use) VALUES (?, ?, ?, ?, ?, ?, ?)");
+      seedProduct.run("Natural Ruby (Manik)", 4500, vendor1.id, "https://picsum.photos/seed/ruby/400/400", "approved", "Certified natural unheated ruby gemstone for Surya (Sun) strengthening.", "Wear in gold or copper ring on Sunday morning during Shukla Paksha.");
+      seedProduct.run("Yellow Sapphire (Pukhraj)", 8500, vendor1.id, "https://picsum.photos/seed/sapphire/400/400", "approved", "Original Ceylonese yellow sapphire for Jupiter wisdom, prosperity, and spiritual blessings.", "Wear in gold ring on index finger on Thursday morning after purifying with Gangajal.");
+      seedProduct.run("Rudraksha Mala (108 Beads)", 750, vendor1.id, "https://picsum.photos/seed/mala/400/400", "approved", "Authentic Himalayan Panchmukhi Rudraksha rosary for meditation, peace, and Shiva grace.", "Wear around neck or use for mantra chanting daily.");
+      seedProduct.run("Copper Yantra for Prosperity", 1200, vendor1.id, "https://picsum.photos/seed/yantra/400/400", "approved", "Energized Sri Yantra engraved on thick pure copper sheet for wealth and abundance.", "Install in home altar or cash box facing East on Friday morning.");
+    }
+    if (vendor2) {
+      const seedProduct = db.prepare("INSERT INTO products (name, price, vendor_id, image_url, status, description, how_to_use) VALUES (?, ?, ?, ?, ?, ?, ?)");
+      seedProduct.run("Sphatik Shree Yantra (Crystal Grid)", 3500, vendor2.id, "https://picsum.photos/seed/sphatik/400/400", "approved", "Natural Himalayan Quartz crystal pyramid for Vastu space clearing and positive cosmic vibes.", "Place in the North-East (Ishan Kon) of your living room or office.");
+      seedProduct.run("Original Amethyst Tarot Deck", 1800, vendor2.id, "https://picsum.photos/seed/tarotdeck/400/400", "approved", "78-card professional Tarot deck bundled with natural amethyst crystal for intuition amplification.", "Keep wrapped in violet silk cloth when not reading.");
+      seedProduct.run("Parad Shivling for Vastu Dosh", 5100, vendor2.id, "https://picsum.photos/seed/parad/400/400", "approved", "Sacred Mercury (Parad) Shivling crafted as per ancient Vedic alchemy for home harmony.", "Perform daily water abhishekam and keep in clean altar space.");
     }
   }
 } catch (err) {
