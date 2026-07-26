@@ -930,8 +930,13 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli,
         <span className="text-amber-300 font-semibold">🔒 Encrypted 24/7 Counseling</span>
       </div>
 
-      {/* Dynamic Hero Carousel - Taller length, Luminous Light Background, Colorful Buttons */}
-      <section className="relative min-h-[680px] sm:min-h-[750px] lg:min-h-[820px] rounded-[2.5rem] overflow-hidden shadow-2xl bg-gradient-to-br from-[#FFFDF9] via-[#FEF8E2] via-[#FFF3D1] to-[#FDE68A] border-2 border-amber-300">
+      {/* Dynamic Hero Carousel - Pastel Pink-to-Yellow Overlapping Circles Background (Image 1 Style) */}
+      <section 
+        className="relative min-h-[680px] sm:min-h-[750px] lg:min-h-[820px] rounded-[2.5rem] overflow-hidden shadow-2xl border-2 border-pink-300/80"
+        style={{
+          background: 'linear-gradient(135deg, #FFB6C1 0%, #FFC5D3 25%, #FFDAB9 55%, #FFE885 85%, #FFF3B0 100%)'
+        }}
+      >
         <AnimatePresence mode="wait">
           <motion.div
             key={currentBanner}
@@ -941,16 +946,71 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli,
             transition={{ duration: 0.8 }}
             className="absolute inset-0"
           >
-            <img 
-              src={activeBanners[currentBanner].image_url} 
-              className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-multiply pointer-events-none"
-              referrerPolicy="no-referrer"
-            />
-            {/* Subtle decorative cosmic aura overlays */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-amber-300/40 via-orange-300/20 to-transparent rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-gradient-to-tr from-purple-300/30 via-indigo-200/20 to-transparent rounded-full blur-3xl pointer-events-none" />
+            {/* Pastel Pink-to-Yellow Overlapping Geometric Circles Background (Image 1 Replica) */}
+            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+              {/* Unsplash abstract pastel pink yellow gradient image */}
+              <img 
+                src="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&q=80&w=2000" 
+                alt="Pastel Circles Background" 
+                className="absolute inset-0 w-full h-full object-cover opacity-35 mix-blend-overlay scale-105"
+                referrerPolicy="no-referrer"
+              />
+              {/* Overlapping Geometric Circles (Exact Image 1 Replica) */}
+              <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+                <defs>
+                  <radialGradient id="pinkCircle1" cx="30%" cy="30%" r="70%">
+                    <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.85" />
+                    <stop offset="50%" stopColor="#FFB6C1" stopOpacity="0.65" />
+                    <stop offset="100%" stopColor="#FF9EBA" stopOpacity="0.1" />
+                  </radialGradient>
+                  <radialGradient id="pinkCircle2" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#FFD1DC" stopOpacity="0.85" />
+                    <stop offset="70%" stopColor="#FF8DA1" stopOpacity="0.35" />
+                    <stop offset="100%" stopColor="#FF8DA1" stopOpacity="0" />
+                  </radialGradient>
+                  <radialGradient id="peachCircle" cx="40%" cy="40%" r="60%">
+                    <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.9" />
+                    <stop offset="50%" stopColor="#FFE5B4" stopOpacity="0.7" />
+                    <stop offset="100%" stopColor="#FFDAB9" stopOpacity="0.15" />
+                  </radialGradient>
+                  <radialGradient id="yellowCircle1" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.85" />
+                    <stop offset="60%" stopColor="#FFF3B0" stopOpacity="0.75" />
+                    <stop offset="100%" stopColor="#FFE885" stopOpacity="0.2" />
+                  </radialGradient>
+                  <radialGradient id="yellowCircle2" cx="40%" cy="40%" r="60%">
+                    <stop offset="0%" stopColor="#FFF8DC" stopOpacity="0.9" />
+                    <stop offset="70%" stopColor="#FFD700" stopOpacity="0.45" />
+                    <stop offset="100%" stopColor="#FF8C00" stopOpacity="0.05" />
+                  </radialGradient>
+                </defs>
+                
+                {/* Left Side: Overlapping Pink & Rose Circles */}
+                <circle cx="12%" cy="18%" r="28%" fill="url(#pinkCircle1)" />
+                <circle cx="6%" cy="65%" r="33%" fill="url(#pinkCircle2)" />
+                <circle cx="28%" cy="75%" r="26%" fill="url(#pinkCircle1)" />
+                <circle cx="25%" cy="35%" r="22%" fill="url(#pinkCircle2)" />
+
+                {/* Center: Warm Cream & Peach Overlapping Circles */}
+                <circle cx="48%" cy="28%" r="30%" fill="url(#peachCircle)" />
+                <circle cx="42%" cy="72%" r="28%" fill="url(#pinkCircle1)" />
+                <circle cx="62%" cy="58%" r="32%" fill="url(#peachCircle)" />
+
+                {/* Right Side: Butter Yellow & Sunburst Circles */}
+                <circle cx="78%" cy="22%" r="28%" fill="url(#yellowCircle1)" />
+                <circle cx="92%" cy="65%" r="35%" fill="url(#yellowCircle2)" />
+                <circle cx="72%" cy="82%" r="25%" fill="url(#yellowCircle1)" />
+                <circle cx="85%" cy="12%" r="22%" fill="url(#peachCircle)" />
+              </svg>
+
+              {/* Additional CSS bokeh glowing circles for depth */}
+              <div className="absolute -top-10 -left-10 w-[450px] h-[450px] rounded-full bg-gradient-to-tr from-pink-300/50 to-white/70 blur-2xl pointer-events-none" />
+              <div className="absolute bottom-5 left-1/3 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-orange-200/50 to-pink-200/50 blur-xl pointer-events-none" />
+              <div className="absolute top-1/4 -right-10 w-[500px] h-[500px] rounded-full bg-gradient-to-bl from-yellow-200/70 to-amber-100/50 blur-2xl pointer-events-none" />
+              <div className="absolute bottom-0 right-1/4 w-[350px] h-[350px] rounded-full bg-gradient-to-t from-yellow-100/60 to-peach-100/40 blur-xl pointer-events-none" />
+            </div>
             
-            <div className="absolute inset-0 bg-gradient-to-r from-[#FFFDF9]/95 via-[#FFFDF9]/85 via-[#FEF3C7]/60 to-transparent flex items-center px-6 sm:px-12 lg:px-16 py-12">
+            <div className="absolute inset-0 flex items-center px-6 sm:px-12 lg:px-16 py-12">
               <div className="w-full flex flex-col lg:flex-row items-center justify-between gap-10 z-10">
                 <div className="max-w-2xl space-y-6 sm:space-y-8">
                   <motion.div 
@@ -971,7 +1031,7 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli,
                       </>
                     ) : activeBanners[currentBanner].title}
                   </motion.h1>
-                  <p className="text-stone-700 text-base sm:text-lg lg:text-xl leading-relaxed font-medium max-w-xl">
+                  <p className="text-stone-900 text-base sm:text-lg lg:text-xl leading-relaxed font-bold max-w-xl drop-shadow-sm">
                     {activeBanners[currentBanner].id === 0 
                       ? "Consult India's top astrologers, get personalized Kundli insights, and navigate your life's journey with clarity."
                       : (activeBanners[currentBanner] as any).description || "Your destiny is written in the stars. Explore your path with our expert guidance and personalized insights."}
