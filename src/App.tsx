@@ -412,77 +412,161 @@ export default function App() {
         {renderContent()}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-deep-blue text-white py-12 px-4 mt-12">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-8">
-          <div>
-            <h3 className="text-2xl font-serif font-bold mb-4 flex items-center gap-2">
-              <Sparkles className="text-gold" /> AstroWay
-            </h3>
-            <p className="text-slate-400 text-sm leading-relaxed">
-              Your spiritual guide to the cosmos. Combining ancient Vedic wisdom with modern technology.
-            </p>
-          </div>
-          <div>
-            <h4 className="font-bold mb-4 text-gold flex items-center gap-1.5">
-              <Languages size={16} /> Auto Translation
-            </h4>
-            <p className="text-xs text-slate-400 leading-relaxed mb-3">
-              Vedic astrology in regional North & South Indian languages:
-            </p>
-            <div className="flex flex-wrap gap-1.5 text-[11px]">
-              {SUPPORTED_LANGUAGES.slice(1, 9).map(l => (
-                <button
-                  key={l.code}
-                  onClick={() => handleSelectLanguage(l)}
-                  className="bg-white/10 hover:bg-saffron text-slate-300 hover:text-white px-2 py-1 rounded transition-all cursor-pointer"
-                >
-                  {l.nativeName}
-                </button>
-              ))}
-              <button
-                onClick={() => setShowLangModal(true)}
-                className="bg-gold text-deep-blue font-bold px-2 py-1 rounded hover:bg-yellow-400 transition-all cursor-pointer"
-              >
-                +6 More
-              </button>
+      {/* Footer - Psychedelic Swirling Marble Background (Image 2 Style) */}
+      <footer 
+        className="relative text-white py-16 px-4 mt-16 overflow-hidden shadow-2xl border-t-4 border-amber-400"
+        style={{
+          background: `
+            radial-gradient(circle at 15% 25%, #FF007F 0%, transparent 50%),
+            radial-gradient(circle at 85% 85%, #00FF66 0%, #32CD32 30%, transparent 55%),
+            radial-gradient(circle at 80% 20%, #FF4500 0%, #FF8C00 40%, transparent 60%),
+            radial-gradient(circle at 45% 65%, #FFD700 0%, transparent 45%),
+            linear-gradient(135deg, #FF007F 0%, #FF2A00 25%, #FF7F00 50%, #00FF66 75%, #9900FF 100%)
+          `,
+        }}
+      >
+        {/* Psychedelic Swirling Marble Background Layers (Image 2 Style) */}
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          {/* Unsplash abstract liquid marble texture overlay */}
+          <img 
+            src="https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&q=80&w=2000" 
+            alt="Psychedelic Marble Background" 
+            className="absolute inset-0 w-full h-full object-cover opacity-70 mix-blend-color-dodge scale-105"
+            referrerPolicy="no-referrer"
+          />
+          <img 
+            src="https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&q=80&w=2000" 
+            alt="Swirling Paint Texture" 
+            className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay scale-110"
+            referrerPolicy="no-referrer"
+          />
+          {/* SVG Swirl/Wave Lines Overlay to simulate fine marble lines */}
+          <svg className="absolute inset-0 w-full h-full opacity-40 mix-blend-overlay" xmlns="http://www.w3.org/2000/svg">
+            <filter id="marble-swirl">
+              <feTurbulence type="fractalNoise" baseFrequency="0.015 0.005" numOctaves="4" result="noise" />
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="80" xChannelSelector="R" yChannelSelector="G" />
+            </filter>
+            <rect width="100%" height="100%" fill="url(#marble-pattern)" filter="url(#marble-swirl)" />
+            <defs>
+              <linearGradient id="marble-pattern" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#FF007F" />
+                <stop offset="25%" stopColor="#FF4500" />
+                <stop offset="50%" stopColor="#FFD700" />
+                <stop offset="75%" stopColor="#00FF66" />
+                <stop offset="100%" stopColor="#9900FF" />
+              </linearGradient>
+            </defs>
+          </svg>
+          {/* Subtle vignette/tint to ensure text readability while keeping the vivid marble pattern visible */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/35 to-black/45 backdrop-blur-[2px]" />
+        </div>
+
+        <div className="relative z-10 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-6">
+          <div className="bg-slate-950/60 hover:bg-slate-950/70 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-2xl transition-all duration-300 flex flex-col justify-between">
+            <div>
+              <h3 className="text-2xl font-serif font-black mb-4 flex items-center gap-2 text-white drop-shadow-md">
+                <Sparkles className="text-amber-400 animate-pulse" /> AstroWay
+              </h3>
+              <p className="text-slate-100 text-sm leading-relaxed font-medium drop-shadow-sm">
+                Your spiritual guide to the cosmos. Combining ancient Vedic wisdom with modern technology.
+              </p>
+            </div>
+            <div className="pt-4">
+              <span className="inline-block bg-amber-400/20 text-amber-300 border border-amber-400/40 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+                ✨ Vedic AI Certified
+              </span>
             </div>
           </div>
-          <div>
-            <h4 className="font-bold mb-4 text-gold">Quick Links</h4>
-            <ul className="space-y-2 text-sm text-slate-400">
-              <li className="cursor-pointer hover:text-white" onClick={() => setActiveTab('horoscope')}>Daily Horoscope</li>
-              <li className="cursor-pointer hover:text-white" onClick={() => setActiveTab('kundli')}>Kundli Matching</li>
-              <li className="cursor-pointer hover:text-white" onClick={() => setActiveTab('chat')}>Talk to Astrologer</li>
-              <li className="cursor-pointer hover:text-white" onClick={() => setActiveTab('shop')}>AstroShop</li>
-            </ul>
+
+          <div className="bg-slate-950/60 hover:bg-slate-950/70 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-2xl transition-all duration-300 flex flex-col justify-between">
+            <div>
+              <h4 className="font-extrabold mb-3 text-amber-300 flex items-center gap-1.5 text-base drop-shadow-sm">
+                <Languages size={18} className="text-amber-400" /> Auto Translation
+              </h4>
+              <p className="text-xs text-slate-100 leading-relaxed mb-3 font-medium">
+                Vedic astrology in regional North & South Indian languages:
+              </p>
+              <div className="flex flex-wrap gap-1.5 text-[11px]">
+                {SUPPORTED_LANGUAGES.slice(1, 9).map(l => (
+                  <button
+                    key={l.code}
+                    onClick={() => handleSelectLanguage(l)}
+                    className="bg-white/15 hover:bg-amber-500 text-white font-semibold px-2.5 py-1 rounded-lg transition-all cursor-pointer border border-white/20 hover:border-amber-400 shadow-sm"
+                  >
+                    {l.nativeName}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setShowLangModal(true)}
+                  className="bg-gradient-to-r from-amber-400 to-orange-400 text-stone-950 font-black px-2.5 py-1 rounded-lg hover:brightness-110 transition-all cursor-pointer shadow-md"
+                >
+                  +6 More
+                </button>
+              </div>
+            </div>
           </div>
-          <div>
-            <h4 className="font-bold mb-4 text-gold">Support</h4>
-            <ul className="space-y-2 text-sm text-slate-400">
-              <li className="cursor-pointer hover:text-white" onClick={() => setActiveTab('admin')}>Admin Access</li>
-              <li className="cursor-pointer hover:text-white" onClick={() => setActiveTab('astrologer-register')}>Register as Consultant</li>
-              <li>Contact Us</li>
-              <li>Terms of Service</li>
-              <li>Privacy Policy</li>
-            </ul>
+
+          <div className="bg-slate-950/60 hover:bg-slate-950/70 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-2xl transition-all duration-300 flex flex-col justify-between">
+            <div>
+              <h4 className="font-extrabold mb-4 text-amber-300 text-base drop-shadow-sm">Quick Links</h4>
+              <ul className="space-y-2.5 text-sm text-slate-100 font-medium">
+                <li className="cursor-pointer hover:text-amber-300 transition-colors flex items-center gap-1.5" onClick={() => setActiveTab('horoscope')}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" /> Daily Horoscope
+                </li>
+                <li className="cursor-pointer hover:text-amber-300 transition-colors flex items-center gap-1.5" onClick={() => setActiveTab('kundli')}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" /> Kundli Matching
+                </li>
+                <li className="cursor-pointer hover:text-amber-300 transition-colors flex items-center gap-1.5" onClick={() => setActiveTab('chat')}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" /> Talk to Astrologer
+                </li>
+                <li className="cursor-pointer hover:text-amber-300 transition-colors flex items-center gap-1.5" onClick={() => setActiveTab('shop')}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" /> AstroShop
+                </li>
+              </ul>
+            </div>
           </div>
-          <div>
-            <h4 className="font-bold mb-4 text-gold">Newsletter</h4>
-            <div className="flex gap-2">
-              <input 
-                type="email" 
-                placeholder="Email" 
-                className="bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm flex-1 focus:outline-none focus:border-gold"
-              />
-              <button className="bg-gold text-deep-blue font-bold px-4 py-2 rounded-lg text-sm hover:bg-yellow-400 transition-colors">
-                Join
-              </button>
+
+          <div className="bg-slate-950/60 hover:bg-slate-950/70 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-2xl transition-all duration-300 flex flex-col justify-between">
+            <div>
+              <h4 className="font-extrabold mb-4 text-amber-300 text-base drop-shadow-sm">Support</h4>
+              <ul className="space-y-2.5 text-sm text-slate-100 font-medium">
+                <li className="cursor-pointer hover:text-amber-300 transition-colors flex items-center gap-1.5" onClick={() => setActiveTab('admin')}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" /> Admin Access
+                </li>
+                <li className="cursor-pointer hover:text-amber-300 transition-colors flex items-center gap-1.5" onClick={() => setActiveTab('astrologer-register')}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" /> Register as Consultant
+                </li>
+                <li className="cursor-pointer hover:text-amber-300 transition-colors">Contact Us</li>
+                <li className="cursor-pointer hover:text-amber-300 transition-colors">Terms of Service</li>
+                <li className="cursor-pointer hover:text-amber-300 transition-colors">Privacy Policy</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="bg-slate-950/60 hover:bg-slate-950/70 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-2xl transition-all duration-300 flex flex-col justify-between">
+            <div>
+              <h4 className="font-extrabold mb-4 text-amber-300 text-base drop-shadow-sm">Newsletter</h4>
+              <p className="text-xs text-slate-100 mb-3 font-medium">
+                Subscribe to get planetary transits & daily predictions.
+              </p>
+              <div className="flex gap-2">
+                <input 
+                  type="email" 
+                  placeholder="Email address" 
+                  className="bg-black/50 border border-white/30 rounded-xl px-3 py-2.5 text-sm text-white placeholder-slate-300 flex-1 focus:outline-none focus:border-amber-400 transition-all shadow-inner"
+                />
+                <button className="bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 text-stone-950 font-black px-4 py-2.5 rounded-xl text-sm hover:brightness-110 transition-all cursor-pointer shadow-lg shrink-0">
+                  Join
+                </button>
+              </div>
             </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto border-t border-white/10 mt-12 pt-8 text-center text-slate-500 text-xs">
-          © 2026 AstroWay. All spiritual rights reserved.
+
+        <div className="relative z-10 max-w-7xl mx-auto mt-12 pt-6 text-center">
+          <div className="inline-block bg-slate-950/60 backdrop-blur-md px-8 py-3 rounded-full border border-white/20 text-slate-100 text-xs font-semibold shadow-xl">
+            © 2026 AstroWay. All spiritual rights reserved. • Powered by Vedic AI & Planetary Science
+          </div>
         </div>
       </footer>
 
