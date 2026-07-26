@@ -618,18 +618,18 @@ const SHOWCASE_SLIDERS = [
   },
   {
     id: 'astro_shop',
-    tabLabel: '💎 Lab-Certified Shop & Guarantee',
-    badge: '✨ 100% LAB-TESTED PURITY & ENERGIZATION',
-    title: 'Authentic Astrological Gemstones, Rudrakshas & Energized Vedic Yantras',
-    slogan: 'We Don\'t Just Sell Stones; We Deliver Awoken Vedic Remedies Shipped Worldwide',
-    description: 'Every gemstone in our Astro Shop undergoes rigorous gemological lab testing and is awakened through authentic Vedic Shuddhikaran and Pran-Pratishtha rituals by verified Vedic brahmins.',
+    tabLabel: '💎 Verified Vendors & Lab-Certified Shop',
+    badge: '✨ VERIFIED LAB-TESTED SUPPLIERS & VENDORS',
+    title: 'We Connect You to the Best, Authentic, Lab-Tested Suppliers & Vendors',
+    slogan: 'Enabling You to Get 100% Certified, Quality Gemstones & Sacred Ritual Items',
+    description: 'We connect you directly to India\'s best, authentic, lab-tested suppliers and vendors to enable you to get 100% certified, premium quality Gemstones, Rudrakshas, and Pran-Pratishtha energized ritual items with guaranteed purity.',
     bgGradient: 'from-[#FFFDF9] via-[#FFEDD5] to-[#FDBA74]',
     accentColor: 'text-amber-900 font-extrabold',
     badgeStyle: 'bg-amber-100 text-amber-900 border-amber-300',
     borderColor: 'border-amber-400/80',
     tabActiveBg: 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-amber-500/30',
     buttonColor: 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white font-black shadow-lg shadow-orange-500/30 border border-amber-300',
-    buttonText: 'Explore Lab-Certified Gemstones Now',
+    buttonText: 'Explore Certified Gemstones & Ritual Items',
     actionType: 'shop',
     cardStyle: 'bg-white/90 hover:bg-white text-stone-800 border-amber-200/80 shadow-md hover:shadow-xl',
     cardTitleColor: 'text-stone-900 group-hover:text-amber-900',
@@ -638,21 +638,21 @@ const SHOWCASE_SLIDERS = [
     cards: [
       {
         icon: 'Award',
-        title: '100% Natural, Unheated Gemstones',
-        slogan: 'Government-Approved Lab Certificates Included',
-        detail: 'Pukhraj, Neelam, Manik, and Panna—each crystal comes with guaranteed purity and refractive testing.'
+        title: 'Authentic Lab-Tested Suppliers',
+        slogan: 'Direct Connection to Certified Vendors',
+        detail: 'We connect you to certified suppliers offering 100% natural, unheated gemstones accompanied by government-approved lab certificates.'
       },
       {
         icon: 'Layers',
-        title: 'Pran-Pratishtha Energized Yantras',
-        slogan: 'Sacred Geometric Instruments for Wealth & Shielding',
-        detail: 'Crafted in pure copper/gold and awakened during auspicious Siddhi muhurats for maximum cosmic resonance.'
+        title: 'Verified Ritual Item Vendors',
+        slogan: 'Energized Vedic Yantras & Rudrakshas',
+        detail: 'Sourced from authentic temple artisans and vendors who perform Shuddhikaran and Pran-Pratishtha rituals during auspicious muhurats.'
       },
       {
         icon: 'Lock',
-        title: 'Bank-Grade Security & Refund Guarantee',
-        slogan: 'No Hidden Charges • Transparent Per-Minute Billing',
-        detail: 'Instant wallet recharge, 25% bonus rewards, and 100% satisfaction guarantee or instant refund.'
+        title: '100% Supplier Quality Assurance',
+        slogan: 'Strict Vendor Audit & Refund Guarantee',
+        detail: 'Every vendor is strictly audited for quality compliance. Enjoy complete peace of mind with certified items & refund guarantee.'
       }
     ]
   }
@@ -826,7 +826,7 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli 
   const activeBanners = banners && banners.length > 0 ? banners : [{
     id: 0,
     title: 'Discover Your Cosmic Destiny',
-    image_url: 'https://images.unsplash.com/photo-1532968961962-8a0cb3a2d4f5?auto=format&fit=crop&q=80&w=1200&h=600',
+    image_url: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&q=80&w=1600&h=1000',
     description: "Consult India's top astrologers, get personalized Kundli insights, and navigate your life's journey with clarity.",
     is_active: true
   }];
@@ -845,8 +845,8 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli 
         <span className="text-amber-300 font-semibold">🔒 Encrypted 24/7 Counseling</span>
       </div>
 
-      {/* Dynamic Hero Carousel */}
-      <section className="relative min-h-[520px] lg:h-[580px] rounded-[2.5rem] overflow-hidden shadow-2xl bg-deep-blue border border-slate-800">
+      {/* Dynamic Hero Carousel - Taller length, Luminous Light Background, Colorful Buttons */}
+      <section className="relative min-h-[680px] sm:min-h-[750px] lg:min-h-[820px] rounded-[2.5rem] overflow-hidden shadow-2xl bg-gradient-to-br from-[#FFFDF9] via-[#FEF8E2] via-[#FFF3D1] to-[#FDE68A] border-2 border-amber-300">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentBanner}
@@ -858,45 +858,104 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli 
           >
             <img 
               src={activeBanners[currentBanner].image_url} 
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-multiply pointer-events-none"
               referrerPolicy="no-referrer"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-deep-blue/95 via-deep-blue/75 to-transparent flex items-center px-6 sm:px-12 lg:px-16">
-              <div className="max-w-2xl space-y-6 sm:space-y-8">
-                <motion.div 
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-400/40 backdrop-blur-md text-amber-300 font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg"
-                >
-                  <Sparkles size={16} className="text-amber-400 animate-pulse shrink-0" /> AI-Powered Astrological Consultancy • Precision Guidance Through Advanced Software
-                </motion.div>
-                <motion.h1 
-                  initial={{ opacity: 0, x: -50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="text-4xl sm:text-5xl lg:text-6xl font-serif font-black text-white leading-[1.15] tracking-tight drop-shadow-md"
-                >
-                  {activeBanners[currentBanner].title.includes(' ') ? (
-                    <>
-                      {activeBanners[currentBanner].title.split(' ').slice(0, -2).join(' ')} <span className="text-amber-400">{activeBanners[currentBanner].title.split(' ').slice(-2).join(' ')}</span>
-                    </>
-                  ) : activeBanners[currentBanner].title}
-                </motion.h1>
-                <p className="text-slate-200 text-base sm:text-lg lg:text-xl leading-relaxed font-normal max-w-xl">
-                  {activeBanners[currentBanner].id === 0 
-                    ? "Consult India's top astrologers, get personalized Kundli insights, and navigate your life's journey with clarity."
-                    : (activeBanners[currentBanner] as any).description || "Your destiny is written in the stars. Explore your path with our expert guidance and personalized insights."}
-                </p>
-                <div className="flex flex-wrap items-center gap-4 pt-2">
-                  <button onClick={() => onOpenExpress && onOpenExpress()} className="bg-gradient-to-r from-amber-500 via-saffron to-amber-600 text-white px-7 py-3.5 rounded-2xl font-black shadow-xl hover:brightness-110 transition-all transform hover:-translate-y-0.5 text-sm sm:text-base flex items-center gap-2.5 cursor-pointer border border-amber-300/40">
-                    <Sparkles size={18} /> Ask 3 Questions (₹50)
-                  </button>
-                  <button 
-                    onClick={() => onOpenKundli && onOpenKundli()}
-                    className="bg-white/15 backdrop-blur-md text-white border border-white/40 px-7 py-3.5 rounded-2xl font-bold hover:bg-white/25 transition-all text-sm sm:text-base cursor-pointer shadow-lg hover:border-white"
+            {/* Subtle decorative cosmic aura overlays */}
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-amber-300/40 via-orange-300/20 to-transparent rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-gradient-to-tr from-purple-300/30 via-indigo-200/20 to-transparent rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="absolute inset-0 bg-gradient-to-r from-[#FFFDF9]/95 via-[#FFFDF9]/85 via-[#FEF3C7]/60 to-transparent flex items-center px-6 sm:px-12 lg:px-16 py-12">
+              <div className="w-full flex flex-col lg:flex-row items-center justify-between gap-10 z-10">
+                <div className="max-w-2xl space-y-6 sm:space-y-8">
+                  <motion.div 
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="inline-flex items-center gap-2.5 px-4.5 py-2.5 rounded-full bg-purple-100/90 border border-purple-300 text-purple-950 font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-sm"
                   >
-                    Get Free Kundli
-                  </button>
+                    <Sparkles size={16} className="text-purple-700 animate-pulse shrink-0" /> AI-POWERED ASTROLOGICAL CONSULTANCY • PRECISION GUIDANCE THROUGH ADVANCED SOFTWARE
+                  </motion.div>
+                  <motion.h1 
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-serif font-black text-stone-900 leading-[1.15] tracking-tight drop-shadow-sm"
+                  >
+                    {activeBanners[currentBanner].title.includes(' ') ? (
+                      <>
+                        {activeBanners[currentBanner].title.split(' ').slice(0, -2).join(' ')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-800 via-indigo-700 to-amber-700 font-black">{activeBanners[currentBanner].title.split(' ').slice(-2).join(' ')}</span>
+                      </>
+                    ) : activeBanners[currentBanner].title}
+                  </motion.h1>
+                  <p className="text-stone-700 text-base sm:text-lg lg:text-xl leading-relaxed font-medium max-w-xl">
+                    {activeBanners[currentBanner].id === 0 
+                      ? "Consult India's top astrologers, get personalized Kundli insights, and navigate your life's journey with clarity."
+                      : (activeBanners[currentBanner] as any).description || "Your destiny is written in the stars. Explore your path with our expert guidance and personalized insights."}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-4 pt-4">
+                    <button 
+                      onClick={() => onOpenExpress && onOpenExpress()} 
+                      className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white px-8 py-4 rounded-2xl font-black shadow-lg shadow-orange-500/30 hover:shadow-xl transition-all transform hover:-translate-y-1 text-base sm:text-lg flex items-center gap-3 cursor-pointer border-2 border-amber-300"
+                    >
+                      <Sparkles size={20} className="text-amber-200 animate-pulse" /> Ask 3 Questions (₹50)
+                    </button>
+                    <button 
+                      onClick={() => onOpenKundli && onOpenKundli()}
+                      className="bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-700 hover:to-indigo-800 text-white px-8 py-4 rounded-2xl font-black shadow-lg shadow-purple-500/30 hover:shadow-xl transition-all transform hover:-translate-y-1 text-base sm:text-lg flex items-center gap-3 cursor-pointer border-2 border-purple-300"
+                    >
+                      <Cpu size={20} className="text-purple-200" /> Get Free Kundli
+                    </button>
+                    <button 
+                      onClick={() => onOpenExpress && onOpenExpress()} 
+                      className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white px-8 py-4 rounded-2xl font-black shadow-lg shadow-emerald-500/30 hover:shadow-xl transition-all transform hover:-translate-y-1 text-base sm:text-lg flex items-center gap-3 cursor-pointer border-2 border-emerald-300"
+                    >
+                      <Phone size={20} className="text-emerald-200" /> Live Consultations
+                    </button>
+                  </div>
                 </div>
+
+                {/* Right Column: Decorative Vedic Astrological Graphic Centerpiece */}
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="hidden lg:flex flex-col items-center justify-center w-5/12 shrink-0 space-y-6"
+                >
+                  <div className="relative w-full max-w-sm bg-white/90 backdrop-blur-xl p-6 rounded-[2.5rem] border-2 border-amber-300 shadow-2xl space-y-5 text-stone-800">
+                    <div className="flex items-center justify-between border-b border-amber-200/80 pb-3.5">
+                      <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse inline-block" />
+                        <span className="text-xs font-black uppercase tracking-wider text-amber-950">Live Planetary Engine</span>
+                      </div>
+                      <span className="text-[10px] bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 rounded-full font-extrabold">Vedic AI v4.2</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 text-center">
+                      <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-3.5 rounded-2xl border border-amber-200">
+                        <span className="text-[11px] font-bold text-stone-500 block">Surya (Sun) Transit</span>
+                        <strong className="text-base font-black text-amber-900 block mt-0.5">10th House • Exalted</strong>
+                      </div>
+                      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-3.5 rounded-2xl border border-purple-200">
+                        <span className="text-[11px] font-bold text-stone-500 block">Chandra (Moon)</span>
+                        <strong className="text-base font-black text-purple-900 block mt-0.5">Rohini Nakshatra</strong>
+                      </div>
+                    </div>
+
+                    <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200/80 space-y-2">
+                      <div className="flex items-center justify-between text-xs font-bold text-stone-700">
+                        <span>Horoscope Accuracy Index</span>
+                        <span className="text-emerald-600 font-extrabold">99.8% Certified</span>
+                      </div>
+                      <div className="w-full bg-stone-200 h-2 rounded-full overflow-hidden">
+                        <div className="bg-gradient-to-r from-amber-500 to-orange-500 h-full w-[99%]" />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1 text-xs text-stone-500 font-medium">
+                      <span className="flex items-center gap-1.5"><Shield size={14} className="text-amber-600" /> Lab-Tested Remedial Engine</span>
+                      <span className="text-amber-900 font-extrabold underline cursor-pointer">View Astrology Grid →</span>
+                    </div>
+                  </div>
+                </motion.div>
               </div>
             </div>
           </motion.div>
@@ -906,13 +965,13 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli 
           <>
             <button 
               onClick={() => setCurrentBanner(p => (p - 1 + activeBanners.length) % activeBanners.length)}
-              className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 backdrop-blur-md text-white rounded-full hover:bg-white/25 transition-all z-10 border border-white/20 cursor-pointer"
+              className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/80 hover:bg-white text-stone-800 rounded-full transition-all z-10 border border-amber-300 shadow-md cursor-pointer"
             >
               <ChevronLeft size={24} />
             </button>
             <button 
               onClick={() => setCurrentBanner(p => (p + 1) % activeBanners.length)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 backdrop-blur-md text-white rounded-full hover:bg-white/25 transition-all z-10 border border-white/20 cursor-pointer"
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/80 hover:bg-white text-stone-800 rounded-full transition-all z-10 border border-amber-300 shadow-md cursor-pointer"
             >
               <ChevronRight size={24} />
             </button>
@@ -921,7 +980,7 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli 
                 <button 
                   key={i} 
                   onClick={() => setCurrentBanner(i)}
-                  className={`h-2.5 rounded-full transition-all cursor-pointer ${currentBanner === i ? 'bg-amber-400 w-8 shadow-md' : 'bg-white/50 hover:bg-white w-2.5'}`}
+                  className={`h-2.5 rounded-full transition-all cursor-pointer ${currentBanner === i ? 'bg-amber-600 w-8 shadow-md' : 'bg-amber-300/80 hover:bg-amber-400 w-2.5'}`}
                 />
               ))}
             </div>
@@ -1029,8 +1088,8 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli 
             <div className="w-12 h-12 rounded-2xl bg-green-50 text-green-600 flex items-center justify-center font-bold text-xl group-hover:scale-110 transition-transform">
               <Award size={24} className="text-green-600" />
             </div>
-            <h3 className="font-bold text-lg text-deep-blue">100% Certified Samagri</h3>
-            <p className="text-xs text-slate-500 leading-relaxed">Gemstones and ritual items listed in our Astro Shop are 100% natural, lab-certified, and energized by authentic Vedic mantras.</p>
+            <h3 className="font-bold text-lg text-deep-blue">Verified Lab-Tested Suppliers</h3>
+            <p className="text-xs text-slate-500 leading-relaxed">We connect you to the best, authentic, lab-tested suppliers/vendors to enable you to get certified/quality Gemstones and ritual items.</p>
           </div>
 
           <div className="glass p-6 rounded-3xl border border-slate-200/80 hover:border-amber-400/60 transition-all shadow-sm hover:shadow-xl space-y-3 group">
@@ -5481,6 +5540,18 @@ function Shop({ user, onPurchase, onLogin, onRegisterVendor }: { user: UserType 
             <h2 className="text-4xl font-serif font-bold text-deep-blue">{selectedProduct.name}</h2>
             <p className="text-3xl font-bold text-saffron">₹{selectedProduct.price}</p>
             
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 p-4 rounded-2xl flex items-start gap-3.5 text-sm text-stone-800 shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                <Award size={20} className="text-amber-700" />
+              </div>
+              <div className="space-y-1">
+                <strong className="font-extrabold text-amber-950 block text-base">Verified Supplier & Quality Guarantee</strong>
+                <p className="text-xs text-stone-700 font-medium leading-relaxed">
+                  We connect you to the <strong className="text-amber-900 font-bold">best, authentic, lab-tested suppliers/vendors</strong> to enable you to get <strong className="text-amber-900 font-bold">certified/quality Gemstones and ritual items</strong>. Every item is government-lab tested and energized.
+                </p>
+              </div>
+            </div>
+            
             <div className="space-y-4">
               <div className="space-y-1">
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Product Details</h4>
@@ -5705,7 +5776,7 @@ function Shop({ user, onPurchase, onLogin, onRegisterVendor }: { user: UserType 
             <Sparkles size={14} /> Vedic Supplier & Dealer Partner
           </div>
           <h3 className="text-2xl md:text-3xl font-serif font-bold text-amber-200">Are you a Supplier, Manufacturer, or Dealer?</h3>
-          <p className="text-amber-100/80 text-sm max-w-xl">Register as a supplier or dealer of Gemstones, Vedic remedial items, Vastu products, or Tarot reading services. After verification by Admin, list your products at your listed rates.</p>
+          <p className="text-amber-100/80 text-sm max-w-xl">Register as a supplier or dealer of Gemstones, Vedic remedial items, Vastu products, or Tarot reading services. We connect you to millions of seekers looking for certified, quality Gemstones and ritual items.</p>
         </div>
         <button 
           onClick={onRegisterVendor}
@@ -5715,17 +5786,27 @@ function Shop({ user, onPurchase, onLogin, onRegisterVendor }: { user: UserType 
         </button>
       </div>
 
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-serif font-bold text-deep-blue">AstroShop</h2>
-        <div className="flex items-center gap-4">
-          {user && <span className="text-sm font-bold text-slate-500">Wallet: ₹{user.wallet_balance}</span>}
+      <div className="bg-gradient-to-r from-[#FFFDF9] via-[#FFEDD5] to-[#FEF3C7] border-2 border-amber-300 p-6 sm:p-8 rounded-[2.5rem] shadow-lg flex flex-col md:flex-row items-center justify-between gap-6 text-stone-900">
+        <div className="space-y-2 text-center md:text-left max-w-3xl">
+          <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-900 border border-amber-300 px-3.5 py-1 rounded-full text-xs font-black tracking-widest uppercase">
+            <Award size={14} className="text-amber-700" /> Verified Supplier Marketplace Guarantee
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-serif font-black text-stone-900 tracking-tight">
+            AstroShop — Certified Gemstones & Ritual Items
+          </h2>
+          <p className="text-stone-700 text-sm sm:text-base font-medium leading-relaxed">
+            We connect you to the <strong className="text-amber-900 font-extrabold underline decoration-amber-400 decoration-2">best, authentic, lab-tested suppliers/vendors</strong> to enable you to get <strong className="text-amber-900 font-extrabold">certified/quality Gemstones and ritual items</strong> directly from verified gemologists and temple artisans.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+          {user && <span className="text-sm font-bold text-stone-600 bg-white px-3 py-2 rounded-xl border border-amber-200">Wallet: ₹{user.wallet_balance}</span>}
           <button 
             onClick={() => setView('cart')}
-            className="flex items-center gap-2 bg-deep-blue text-white px-4 py-2 rounded-xl text-sm font-bold relative"
+            className="flex items-center gap-2 bg-deep-blue hover:bg-slate-800 text-white px-5 py-3 rounded-2xl text-sm font-bold relative shadow-md transition-all cursor-pointer"
           >
             <ShoppingBag size={18} /> Cart ({cart.reduce((sum, item) => sum + item.quantity, 0)})
             {cart.length > 0 && (
-              <span className="absolute -top-2 -right-2 bg-saffron text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">
+              <span className="absolute -top-2 -right-2 bg-saffron text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white font-black">
                 {cart.reduce((sum, item) => sum + item.quantity, 0)}
               </span>
             )}
@@ -5747,6 +5828,9 @@ function Shop({ user, onPurchase, onLogin, onRegisterVendor }: { user: UserType 
               />
             </div>
             <div className="p-4 space-y-2">
+              <div className="flex items-center gap-1.5 text-[10px] bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded-md font-extrabold w-fit">
+                <Award size={10} className="text-amber-700 shrink-0" /> Lab-Tested Supplier Guarantee
+              </div>
               <h3 className="font-bold text-sm h-10 line-clamp-2 cursor-pointer" onClick={() => {
                 setSelectedProduct(product);
                 setView('product-details');
@@ -6552,7 +6636,9 @@ function VendorRegistration({ user, onComplete, onLoginClick }: { user: UserType
           <Sparkles size={14} /> Gemstones & Vedic Remedial Supplier Registration
         </div>
         <h2 className="text-4xl font-serif font-bold text-deep-blue">Become an AstroWay Vendor / Supplier</h2>
-        <p className="text-slate-500">Register as a supplier/manufacturer/dealer of Gemstones, Astrological remedial items, Vastu Shastra items, or Tarot decks.</p>
+        <p className="text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          Partner with India's most trusted astrological marketplace. We connect seekers to the <strong className="text-amber-900 font-bold">best, authentic, lab-tested suppliers/vendors</strong> to enable them to get <strong className="text-amber-900 font-bold">certified/quality Gemstones and ritual items</strong>.
+        </p>
         <div className="flex items-center justify-center gap-2 pt-2">
           <p className="text-sm text-slate-500">Already an approved vendor?</p>
           <button 

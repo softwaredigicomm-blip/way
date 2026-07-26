@@ -134,7 +134,7 @@ export function UndertakingAcceptanceModal({
             )}
             {type === 'vendor' && (
               <p className="text-slate-300">
-                I hereby undertake and declare that all gemstones, rudrakshas, yantras, crystals, and remedial items supplied by my establishment are 100% natural, lab-certified, and free from undisclosed synthetic treatments, glass imitations, or chemical dyeing. I guarantee that all Vedic remedial items will be dispatched in clean, energized condition accompanied by valid laboratory certificates.
+                I hereby undertake and declare that all gemstones, rudrakshas, yantras, crystals, and remedial items supplied by my establishment are 100% natural, lab-certified, and free from undisclosed synthetic treatments, glass imitations, or chemical dyeing. I acknowledge that AstroWay connects seekers to the <strong className="text-amber-300">best, authentic, lab-tested suppliers/vendors</strong> to enable them to get <strong className="text-amber-300">certified/quality Gemstones and ritual items</strong>, and I guarantee that all Vedic remedial items will be dispatched in clean, energized condition accompanied by valid government laboratory certificates.
               </p>
             )}
           </div>
