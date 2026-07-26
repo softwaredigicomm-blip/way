@@ -462,7 +462,7 @@ export default function App() {
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-6">
-          <div className="bg-slate-950/60 hover:bg-slate-950/70 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-2xl transition-all duration-300 flex flex-col justify-between">
+          <div className="bg-gradient-to-br from-purple-950/85 via-indigo-950/80 to-slate-950/90 hover:from-purple-900/90 hover:to-indigo-900/90 backdrop-blur-lg p-6 rounded-3xl border-2 border-purple-400/60 hover:border-purple-300 shadow-2xl shadow-purple-500/20 hover:shadow-purple-500/40 transition-all duration-300 flex flex-col justify-between group">
             <div>
               <h3 className="text-2xl font-serif font-black mb-4 flex items-center gap-2 text-white drop-shadow-md">
                 <Sparkles className="text-amber-400 animate-pulse" /> AstroWay
@@ -472,13 +472,13 @@ export default function App() {
               </p>
             </div>
             <div className="pt-4">
-              <span className="inline-block bg-amber-400/20 text-amber-300 border border-amber-400/40 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+              <span className="inline-block bg-amber-400/20 text-amber-300 border border-amber-400/40 group-hover:border-amber-300 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
                 ✨ Vedic AI Certified
               </span>
             </div>
           </div>
 
-          <div className="bg-slate-950/60 hover:bg-slate-950/70 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-2xl transition-all duration-300 flex flex-col justify-between">
+          <div className="bg-gradient-to-br from-blue-950/85 via-cyan-950/80 to-slate-950/90 hover:from-blue-900/90 hover:to-cyan-900/90 backdrop-blur-lg p-6 rounded-3xl border-2 border-cyan-400/60 hover:border-cyan-300 shadow-2xl shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all duration-300 flex flex-col justify-between">
             <div>
               <h4 className="font-extrabold mb-3 text-amber-300 flex items-center gap-1.5 text-base drop-shadow-sm">
                 <Languages size={18} className="text-amber-400" /> Auto Translation
@@ -506,7 +506,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="bg-slate-950/60 hover:bg-slate-950/70 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-2xl transition-all duration-300 flex flex-col justify-between">
+          <div className="bg-gradient-to-br from-amber-950/85 via-orange-950/80 to-slate-950/90 hover:from-amber-900/90 hover:to-orange-900/90 backdrop-blur-lg p-6 rounded-3xl border-2 border-amber-400/60 hover:border-amber-300 shadow-2xl shadow-amber-500/20 hover:shadow-amber-500/40 transition-all duration-300 flex flex-col justify-between">
             <div>
               <h4 className="font-extrabold mb-4 text-amber-300 text-base drop-shadow-sm">Quick Links</h4>
               <ul className="space-y-2.5 text-sm text-slate-100 font-medium">
@@ -526,7 +526,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="bg-slate-950/60 hover:bg-slate-950/70 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-2xl transition-all duration-300 flex flex-col justify-between">
+          <div className="bg-gradient-to-br from-emerald-950/85 via-teal-950/80 to-slate-950/90 hover:from-emerald-900/90 hover:to-teal-900/90 backdrop-blur-lg p-6 rounded-3xl border-2 border-emerald-400/60 hover:border-emerald-300 shadow-2xl shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all duration-300 flex flex-col justify-between">
             <div>
               <h4 className="font-extrabold mb-4 text-amber-300 text-base drop-shadow-sm">Support</h4>
               <ul className="space-y-2.5 text-sm text-slate-100 font-medium">
@@ -543,7 +543,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="bg-slate-950/60 hover:bg-slate-950/70 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-2xl transition-all duration-300 flex flex-col justify-between">
+          <div className="bg-gradient-to-br from-rose-950/85 via-pink-950/80 to-slate-950/90 hover:from-rose-900/90 hover:to-pink-900/90 backdrop-blur-lg p-6 rounded-3xl border-2 border-rose-400/60 hover:border-rose-300 shadow-2xl shadow-rose-500/20 hover:shadow-rose-500/40 transition-all duration-300 flex flex-col justify-between">
             <div>
               <h4 className="font-extrabold mb-4 text-amber-300 text-base drop-shadow-sm">Newsletter</h4>
               <p className="text-xs text-slate-100 mb-3 font-medium">
@@ -564,8 +564,8 @@ export default function App() {
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto mt-12 pt-6 text-center">
-          <div className="inline-block bg-slate-950/60 backdrop-blur-md px-8 py-3 rounded-full border border-white/20 text-slate-100 text-xs font-semibold shadow-xl">
-            © 2026 AstroWay. All spiritual rights reserved. • Powered by Vedic AI & Planetary Science
+          <div className="inline-block bg-gradient-to-r from-purple-950/90 via-indigo-950/90 to-slate-950/90 backdrop-blur-md px-8 py-3.5 rounded-full border-2 border-amber-400/80 hover:border-amber-300 text-slate-100 text-xs sm:text-sm font-bold shadow-2xl shadow-amber-500/30 transition-all">
+            © 2026 AstroWay. All spiritual rights reserved. • <span className="text-amber-300 font-extrabold">Powered by Digital Communique</span>
           </div>
         </div>
       </footer>
