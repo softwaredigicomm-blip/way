@@ -896,8 +896,87 @@ function SoftwareFeaturesShowcase({ onOpenKundli, onOpenExpress }: { onOpenKundl
   );
 }
 
+const PLANETARY_ENGINES = [
+  {
+    leftLabel: 'Surya (Sun) Transit',
+    leftValue: '10th House • Exalted',
+    leftBg: 'from-amber-50 to-orange-50 border-amber-200 text-amber-900 group-hover:border-amber-400 group-hover:text-amber-700',
+    rightLabel: 'Chandra (Moon)',
+    rightValue: 'Rohini Nakshatra',
+    rightBg: 'from-purple-50 to-indigo-50 border-purple-200 text-purple-900 group-hover:border-purple-400 group-hover:text-purple-700',
+    accuracy: '99.8%',
+    version: 'Vedic AI v4.2'
+  },
+  {
+    leftLabel: 'Guru (Jupiter) Transit',
+    leftValue: '1st House • Hamsa Yoga',
+    leftBg: 'from-yellow-50 to-amber-50 border-yellow-300 text-amber-950 group-hover:border-amber-500 group-hover:text-amber-800',
+    rightLabel: 'Shukra (Venus)',
+    rightValue: 'Malavya Raj Yoga',
+    rightBg: 'from-pink-50 to-rose-50 border-pink-200 text-rose-900 group-hover:border-pink-400 group-hover:text-rose-700',
+    accuracy: '99.9%',
+    version: 'Vedic AI v4.3'
+  },
+  {
+    leftLabel: 'Shani (Saturn) Transit',
+    leftValue: '11th House • Mooltrikona',
+    leftBg: 'from-blue-50 to-indigo-50 border-blue-200 text-indigo-900 group-hover:border-blue-400 group-hover:text-indigo-700',
+    rightLabel: 'Chandra (Moon)',
+    rightValue: 'Pushya Nakshatra',
+    rightBg: 'from-cyan-50 to-teal-50 border-cyan-200 text-teal-900 group-hover:border-cyan-400 group-hover:text-teal-700',
+    accuracy: '99.7%',
+    version: 'Vedic AI v4.2'
+  },
+  {
+    leftLabel: 'Mangal (Mars) Transit',
+    leftValue: '3rd House • Ruchaka Yoga',
+    leftBg: 'from-red-50 to-orange-50 border-red-200 text-red-900 group-hover:border-red-400 group-hover:text-red-700',
+    rightLabel: 'Budha (Mercury)',
+    rightValue: 'Bhadra Raj Yoga',
+    rightBg: 'from-emerald-50 to-green-50 border-emerald-200 text-emerald-900 group-hover:border-emerald-400 group-hover:text-emerald-700',
+    accuracy: '99.9%',
+    version: 'Vedic AI v4.4'
+  },
+  {
+    leftLabel: 'Surya (Sun) Transit',
+    leftValue: '5th House • Trikona Raj',
+    leftBg: 'from-amber-50 to-yellow-50 border-amber-200 text-amber-900 group-hover:border-amber-400 group-hover:text-amber-700',
+    rightLabel: 'Chandra (Moon)',
+    rightValue: 'Shravana Nakshatra',
+    rightBg: 'from-violet-50 to-purple-50 border-violet-200 text-violet-900 group-hover:border-violet-400 group-hover:text-violet-700',
+    accuracy: '99.8%',
+    version: 'Vedic AI v4.2'
+  },
+  {
+    leftLabel: 'Rahu / Ketu Axis',
+    leftValue: '1st-7th House Karmic',
+    leftBg: 'from-slate-100 to-zinc-100 border-slate-300 text-slate-900 group-hover:border-slate-400 group-hover:text-slate-700',
+    rightLabel: 'Guru (Jupiter)',
+    rightValue: 'Bhagya Sthana • 9th',
+    rightBg: 'from-amber-50 to-orange-50 border-amber-300 text-orange-900 group-hover:border-amber-400 group-hover:text-orange-700',
+    accuracy: '99.9%',
+    version: 'Vedic AI v4.5'
+  }
+];
+
 function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli, onOpenAI, onOpenGrid, onOpenChat }: { astrologers: Astrologer[], testimonials: any[], banners: Banner[], onOpenExpress?: () => void, onOpenKundli?: () => void, onOpenAI?: () => void, onOpenGrid?: () => void, onOpenChat?: () => void }) {
   const [currentBanner, setCurrentBanner] = useState(0);
+  const [engineIdx, setEngineIdx] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setEngineIdx(prev => {
+        let next = Math.floor(Math.random() * PLANETARY_ENGINES.length);
+        while (next === prev && PLANETARY_ENGINES.length > 1) {
+          next = Math.floor(Math.random() * PLANETARY_ENGINES.length);
+        }
+        return next;
+      });
+    }, 3500);
+    return () => clearInterval(interval);
+  }, []);
+
+  const currentEngine = PLANETARY_ENGINES[engineIdx];
 
   useEffect(() => {
     if (banners && banners.length > 1) {
@@ -1074,24 +1153,35 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli,
                         <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse inline-block" />
                         <span className="text-xs font-black uppercase tracking-wider text-amber-950">Live Planetary Engine</span>
                       </div>
-                      <span className="text-[10px] bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 rounded-full font-extrabold group-hover:bg-amber-200 transition-colors">Vedic AI v4.2</span>
+                      <span className="text-[10px] bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 rounded-full font-extrabold group-hover:bg-amber-200 transition-colors">{currentEngine.version}</span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 text-center">
-                      <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-3.5 rounded-2xl border border-amber-200 group-hover:border-amber-400 transition-all">
-                        <span className="text-[11px] font-bold text-stone-500 block">Surya (Sun) Transit</span>
-                        <strong className="text-base font-black text-amber-900 block mt-0.5 group-hover:text-amber-700">10th House • Exalted</strong>
-                      </div>
-                      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-3.5 rounded-2xl border border-purple-200 group-hover:border-purple-400 transition-all">
-                        <span className="text-[11px] font-bold text-stone-500 block">Chandra (Moon)</span>
-                        <strong className="text-base font-black text-purple-900 block mt-0.5 group-hover:text-purple-700">Rohini Nakshatra</strong>
-                      </div>
+                    <div className="min-h-[92px] flex items-center justify-center">
+                      <AnimatePresence mode="wait">
+                        <motion.div 
+                          key={engineIdx}
+                          initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                          transition={{ duration: 0.3, ease: "easeOut" }}
+                          className="grid grid-cols-2 gap-3 text-center w-full"
+                        >
+                          <div className={`bg-gradient-to-br ${currentEngine.leftBg} p-3.5 rounded-2xl border transition-all shadow-sm flex flex-col justify-center`}>
+                            <span className="text-[11px] font-bold text-stone-500 block leading-tight">{currentEngine.leftLabel}</span>
+                            <strong className="text-base font-black block mt-1 leading-snug">{currentEngine.leftValue}</strong>
+                          </div>
+                          <div className={`bg-gradient-to-br ${currentEngine.rightBg} p-3.5 rounded-2xl border transition-all shadow-sm flex flex-col justify-center`}>
+                            <span className="text-[11px] font-bold text-stone-500 block leading-tight">{currentEngine.rightLabel}</span>
+                            <strong className="text-base font-black block mt-1 leading-snug">{currentEngine.rightValue}</strong>
+                          </div>
+                        </motion.div>
+                      </AnimatePresence>
                     </div>
 
                     <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200/80 group-hover:border-amber-300 space-y-2 transition-all">
                       <div className="flex items-center justify-between text-xs font-bold text-stone-700">
                         <span>Horoscope Accuracy Index</span>
-                        <span className="text-emerald-600 font-extrabold">99.8% Certified</span>
+                        <span className="text-emerald-600 font-extrabold">{currentEngine.accuracy} Certified</span>
                       </div>
                       <div className="w-full bg-stone-200 h-2 rounded-full overflow-hidden">
                         <div className="bg-gradient-to-r from-amber-500 to-orange-500 h-full w-[99%]" />
