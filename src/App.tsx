@@ -50,6 +50,7 @@ export default function App() {
   });
   const [astrologers, setAstrologers] = useState<Astrologer[]>([]);
   const [activeTab, setActiveTab] = useState('home');
+  const [aiPortalTab, setAiPortalTab] = useState<'chat' | 'ephemeris' | 'ledger' | 'remedies'>('chat');
   const [showExpressQuestions, setShowExpressQuestions] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentLang, setCurrentLang] = useState<LanguageOption>(() => {
@@ -173,7 +174,7 @@ export default function App() {
     }
 
     switch (activeTab) {
-      case 'home': return <Home astrologers={astrologers} testimonials={testimonials} banners={banners} onOpenExpress={() => setShowExpressQuestions(true)} onOpenKundli={() => setActiveTab('kundli')} />;
+      case 'home': return <Home astrologers={astrologers} testimonials={testimonials} banners={banners} onOpenExpress={() => setShowExpressQuestions(true)} onOpenKundli={() => setActiveTab('kundli')} onOpenAI={() => { setAiPortalTab('chat'); setActiveTab('ai'); }} onOpenGrid={() => { setAiPortalTab('ephemeris'); setActiveTab('ai'); }} onOpenChat={() => setActiveTab('chat')} />;
       case 'horoscope': return <Horoscope />;
       case 'kundli': return <Kundli user={user} onViewPackages={() => setActiveTab('packages')} />;
       case 'chat': return <Chat astrologers={astrologers} user={user} onRecharge={() => fetchUser(user?.email)} />;
@@ -184,7 +185,7 @@ export default function App() {
       }} />;
       case 'packages': return <AstroPackages user={user} onPurchase={() => fetchUser(user?.email)} onOpenExpress={() => setShowExpressQuestions(true)} />;
       case 'profile': return <UserProfile user={user} onUpdate={() => fetchUser(user?.email)} onLogout={handleLogout} onOpenExpress={() => setShowExpressQuestions(true)} localFetch={localFetch} />;
-      case 'ai': return <AIAstrologerPortal user={user} onRecharge={() => fetchUser(user?.email)} />;
+      case 'ai': return <AIAstrologerPortal user={user} onRecharge={() => fetchUser(user?.email)} initialTab={aiPortalTab} />;
       case 'pandit-register': return <PanditRegistration user={user} onComplete={() => fetchUser(user?.email)} onLoginClick={() => setActiveTab('puja')} />;
       case 'vendor-register': return <VendorRegistration user={user} onComplete={() => fetchUser(user?.email)} onLoginClick={() => setActiveTab('vendor-panel')} />;
       case 'vendor-panel': return <VendorPanel user={user} />;
@@ -214,7 +215,7 @@ export default function App() {
             onRegisterClick={() => setActiveTab('astrologer-register')}
           />
         );
-      default: return <Home astrologers={astrologers} testimonials={testimonials} banners={banners} onOpenExpress={() => setShowExpressQuestions(true)} onOpenKundli={() => setActiveTab('kundli')} />;
+      default: return <Home astrologers={astrologers} testimonials={testimonials} banners={banners} onOpenExpress={() => setShowExpressQuestions(true)} onOpenKundli={() => setActiveTab('kundli')} onOpenAI={() => { setAiPortalTab('chat'); setActiveTab('ai'); }} onOpenGrid={() => { setAiPortalTab('ephemeris'); setActiveTab('ai'); }} onOpenChat={() => setActiveTab('chat')} />;
     }
   };
 
@@ -811,7 +812,7 @@ function SoftwareFeaturesShowcase({ onOpenKundli, onOpenExpress }: { onOpenKundl
   );
 }
 
-function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli }: { astrologers: Astrologer[], testimonials: any[], banners: Banner[], onOpenExpress?: () => void, onOpenKundli?: () => void }) {
+function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli, onOpenAI, onOpenGrid, onOpenChat }: { astrologers: Astrologer[], testimonials: any[], banners: Banner[], onOpenExpress?: () => void, onOpenKundli?: () => void, onOpenAI?: () => void, onOpenGrid?: () => void, onOpenChat?: () => void }) {
   const [currentBanner, setCurrentBanner] = useState(0);
 
   useEffect(() => {
@@ -905,7 +906,7 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli 
                       <Cpu size={20} className="text-purple-200" /> Get Free Kundli
                     </button>
                     <button 
-                      onClick={() => onOpenExpress && onOpenExpress()} 
+                      onClick={() => onOpenChat ? onOpenChat() : (onOpenAI && onOpenAI())} 
                       className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white px-8 py-4 rounded-2xl font-black shadow-lg shadow-emerald-500/30 hover:shadow-xl transition-all transform hover:-translate-y-1 text-base sm:text-lg flex items-center gap-3 cursor-pointer border-2 border-emerald-300"
                     >
                       <Phone size={20} className="text-emerald-200" /> Live Consultations
@@ -913,34 +914,37 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli 
                   </div>
                 </div>
 
-                {/* Right Column: Decorative Vedic Astrological Graphic Centerpiece */}
+                {/* Right Column: Decorative Vedic Astrological Graphic Centerpiece - Fully Interactive */}
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.2 }}
                   className="hidden lg:flex flex-col items-center justify-center w-5/12 shrink-0 space-y-6"
                 >
-                  <div className="relative w-full max-w-sm bg-white/90 backdrop-blur-xl p-6 rounded-[2.5rem] border-2 border-amber-300 shadow-2xl space-y-5 text-stone-800">
+                  <div 
+                    onClick={() => onOpenGrid ? onOpenGrid() : (onOpenAI && onOpenAI())}
+                    className="relative w-full max-w-sm bg-white/90 backdrop-blur-xl p-6 rounded-[2.5rem] border-2 border-amber-300 hover:border-amber-500 shadow-2xl hover:shadow-amber-500/20 space-y-5 text-stone-800 cursor-pointer transition-all duration-300 group"
+                  >
                     <div className="flex items-center justify-between border-b border-amber-200/80 pb-3.5">
                       <div className="flex items-center gap-2">
                         <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse inline-block" />
                         <span className="text-xs font-black uppercase tracking-wider text-amber-950">Live Planetary Engine</span>
                       </div>
-                      <span className="text-[10px] bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 rounded-full font-extrabold">Vedic AI v4.2</span>
+                      <span className="text-[10px] bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 rounded-full font-extrabold group-hover:bg-amber-200 transition-colors">Vedic AI v4.2</span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 text-center">
-                      <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-3.5 rounded-2xl border border-amber-200">
+                      <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-3.5 rounded-2xl border border-amber-200 group-hover:border-amber-400 transition-all">
                         <span className="text-[11px] font-bold text-stone-500 block">Surya (Sun) Transit</span>
-                        <strong className="text-base font-black text-amber-900 block mt-0.5">10th House • Exalted</strong>
+                        <strong className="text-base font-black text-amber-900 block mt-0.5 group-hover:text-amber-700">10th House • Exalted</strong>
                       </div>
-                      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-3.5 rounded-2xl border border-purple-200">
+                      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-3.5 rounded-2xl border border-purple-200 group-hover:border-purple-400 transition-all">
                         <span className="text-[11px] font-bold text-stone-500 block">Chandra (Moon)</span>
-                        <strong className="text-base font-black text-purple-900 block mt-0.5">Rohini Nakshatra</strong>
+                        <strong className="text-base font-black text-purple-900 block mt-0.5 group-hover:text-purple-700">Rohini Nakshatra</strong>
                       </div>
                     </div>
 
-                    <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200/80 space-y-2">
+                    <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200/80 group-hover:border-amber-300 space-y-2 transition-all">
                       <div className="flex items-center justify-between text-xs font-bold text-stone-700">
                         <span>Horoscope Accuracy Index</span>
                         <span className="text-emerald-600 font-extrabold">99.8% Certified</span>
@@ -952,7 +956,19 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli 
 
                     <div className="flex items-center justify-between pt-1 text-xs text-stone-500 font-medium">
                       <span className="flex items-center gap-1.5"><Shield size={14} className="text-amber-600" /> Lab-Tested Remedial Engine</span>
-                      <span className="text-amber-900 font-extrabold underline cursor-pointer">View Astrology Grid →</span>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onOpenGrid) {
+                            onOpenGrid();
+                          } else if (onOpenAI) {
+                            onOpenAI();
+                          }
+                        }}
+                        className="text-amber-900 font-black underline hover:text-amber-700 transition-colors cursor-pointer flex items-center gap-1 focus:outline-none"
+                      >
+                        View Astrology Grid & Conversation →
+                      </button>
                     </div>
                   </div>
                 </motion.div>

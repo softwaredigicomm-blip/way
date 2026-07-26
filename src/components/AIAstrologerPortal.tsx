@@ -4,13 +4,14 @@ import {
   Sparkles, Star, Send, Wallet, Clock, History, Plus, 
   Upload, Image as ImageIcon, Camera, AlertCircle, CheckCircle2, 
   RefreshCw, Compass, Moon, Sun, Heart, Shield, BookOpen, 
-  User, Users, ChevronRight, X, Award, HelpCircle, FileText
+  User, Users, ChevronRight, X, Award, HelpCircle, FileText, MessageSquare
 } from 'lucide-react';
 import { User as UserType } from '../types';
 
 interface AIAstrologerPortalProps {
   user: UserType | null;
   onRecharge?: () => void;
+  initialTab?: 'chat' | 'ephemeris' | 'ledger' | 'remedies';
 }
 
 interface Message {
@@ -40,8 +41,14 @@ interface FamilyMember {
   place: string;
 }
 
-export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, onRecharge }) => {
-  const [activeTab, setActiveTab] = useState<'chat' | 'ephemeris' | 'ledger' | 'remedies'>('chat');
+export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, onRecharge, initialTab = 'chat' }) => {
+  const [activeTab, setActiveTab] = useState<'chat' | 'ephemeris' | 'ledger' | 'remedies'>(initialTab);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
   const [analysisMode, setAnalysisMode] = useState<string>('Vedic & Family Q&A');
   
   // Wallet & Duration State
@@ -759,6 +766,26 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                       </div>
                     </div>
                   )}
+
+                  <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-950 p-6 rounded-3xl text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 border border-purple-400/30">
+                    <div className="space-y-1 text-center sm:text-left">
+                      <h4 className="text-base sm:text-lg font-black flex items-center justify-center sm:justify-start gap-2 text-amber-300">
+                        <Sparkles size={20} className="animate-pulse shrink-0" /> Need a Deep Planetary Grid Conversation?
+                      </h4>
+                      <p className="text-xs text-purple-200 max-w-xl font-medium leading-relaxed">
+                        Our Vedic AI can instantly analyze this live planetary grid, explain Nakshatra Padas, calculate planetary aspects, and prescribe Lal Kitab remedies in a meaningful interactive conversation.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setInput("Please analyze my current Vedic planetary grid and panchang transit for today. Explain what these planetary dignities and nakshatra positions mean for my career, wealth, and destiny!");
+                        setActiveTab('chat');
+                      }}
+                      className="bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-500 hover:to-orange-500 text-stone-950 font-black px-6 py-3.5 rounded-2xl shadow-lg transition-all transform hover:-translate-y-0.5 text-xs sm:text-sm flex items-center gap-2 shrink-0 cursor-pointer border border-yellow-200"
+                    >
+                      <MessageSquare size={16} /> Start Grid AI Conversation →
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-12 text-slate-400 font-medium">
