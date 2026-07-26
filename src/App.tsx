@@ -15,6 +15,7 @@ import { PaymentGatewayModal, PaymentReceipt } from './components/PaymentGateway
 import { Express3QuestionModal } from './components/Express3QuestionModal';
 import { LanguageSwitcherModal, SUPPORTED_LANGUAGES, LanguageOption, initGoogleTranslate, triggerGoogleTranslate } from './components/LanguageSwitcherModal';
 import { UndertakingAcceptanceModal } from './components/UndertakingAcceptanceModal';
+import { VastuConsultancy } from './components/VastuConsultancy';
 
 // Initialize local storage with seed data
 initStorage();
@@ -174,7 +175,7 @@ export default function App() {
     }
 
     switch (activeTab) {
-      case 'home': return <Home astrologers={astrologers} testimonials={testimonials} banners={banners} onOpenExpress={() => setShowExpressQuestions(true)} onOpenKundli={() => setActiveTab('kundli')} onOpenAI={() => { setAiPortalTab('chat'); setActiveTab('ai'); }} onOpenGrid={() => { setAiPortalTab('ephemeris'); setActiveTab('ai'); }} onOpenChat={() => setActiveTab('chat')} />;
+      case 'home': return <Home astrologers={astrologers} testimonials={testimonials} banners={banners} onOpenExpress={() => setShowExpressQuestions(true)} onOpenKundli={() => setActiveTab('kundli')} onOpenAI={() => { setAiPortalTab('chat'); setActiveTab('ai'); }} onOpenGrid={() => { setAiPortalTab('ephemeris'); setActiveTab('ai'); }} onOpenChat={() => setActiveTab('chat')} onOpenVastu={() => setActiveTab('vastu')} />;
       case 'horoscope': return <Horoscope />;
       case 'kundli': return <Kundli user={user} onViewPackages={() => setActiveTab('packages')} />;
       case 'chat': return <Chat astrologers={astrologers} user={user} onRecharge={() => fetchUser(user?.email)} />;
@@ -186,6 +187,7 @@ export default function App() {
       case 'packages': return <AstroPackages user={user} onPurchase={() => fetchUser(user?.email)} onOpenExpress={() => setShowExpressQuestions(true)} />;
       case 'profile': return <UserProfile user={user} onUpdate={() => fetchUser(user?.email)} onLogout={handleLogout} onOpenExpress={() => setShowExpressQuestions(true)} localFetch={localFetch} />;
       case 'ai': return <AIAstrologerPortal user={user} onRecharge={() => fetchUser(user?.email)} initialTab={aiPortalTab} />;
+      case 'vastu': return <VastuConsultancy user={user} onRecharge={() => fetchUser(user?.email)} onOpenChat={() => setActiveTab('chat')} />;
       case 'pandit-register': return <PanditRegistration user={user} onComplete={() => fetchUser(user?.email)} onLoginClick={() => setActiveTab('puja')} />;
       case 'vendor-register': return <VendorRegistration user={user} onComplete={() => fetchUser(user?.email)} onLoginClick={() => setActiveTab('vendor-panel')} />;
       case 'vendor-panel': return <VendorPanel user={user} />;
@@ -215,7 +217,7 @@ export default function App() {
             onRegisterClick={() => setActiveTab('astrologer-register')}
           />
         );
-      default: return <Home astrologers={astrologers} testimonials={testimonials} banners={banners} onOpenExpress={() => setShowExpressQuestions(true)} onOpenKundli={() => setActiveTab('kundli')} onOpenAI={() => { setAiPortalTab('chat'); setActiveTab('ai'); }} onOpenGrid={() => { setAiPortalTab('ephemeris'); setActiveTab('ai'); }} onOpenChat={() => setActiveTab('chat')} />;
+      default: return <Home astrologers={astrologers} testimonials={testimonials} banners={banners} onOpenExpress={() => setShowExpressQuestions(true)} onOpenKundli={() => setActiveTab('kundli')} onOpenAI={() => { setAiPortalTab('chat'); setActiveTab('ai'); }} onOpenGrid={() => { setAiPortalTab('ephemeris'); setActiveTab('ai'); }} onOpenChat={() => setActiveTab('chat')} onOpenVastu={() => setActiveTab('vastu')} />;
     }
   };
 
@@ -256,7 +258,7 @@ export default function App() {
         </div>
 
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-          {['Home', 'Horoscope', 'Kundli', 'Chat', 'Puja', 'Shop', 'Packages', 'AI'].map((tab) => (
+          {['Home', 'Horoscope', 'Kundli', 'Chat', 'Puja', 'Shop', 'Packages', 'AI', 'Vastu'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab.toLowerCase())}
@@ -371,7 +373,7 @@ export default function App() {
               <Languages size={18} className="text-saffron" />
               <span>🌐 Auto Translation ({currentLang.nativeName})</span>
             </button>
-            {['Home', 'Horoscope', 'Kundli', 'Chat', 'Puja', 'Shop', 'Packages', 'AI'].map((tab) => (
+            {['Home', 'Horoscope', 'Kundli', 'Chat', 'Puja', 'Shop', 'Packages', 'AI', 'Vastu'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => {
@@ -521,6 +523,9 @@ export default function App() {
                 </li>
                 <li className="cursor-pointer hover:text-amber-300 transition-colors flex items-center gap-1.5" onClick={() => setActiveTab('shop')}>
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" /> AstroShop
+                </li>
+                <li className="cursor-pointer hover:text-amber-300 transition-colors flex items-center gap-1.5" onClick={() => setActiveTab('vastu')}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" /> Vastu Consultancy
                 </li>
               </ul>
             </div>
@@ -959,9 +964,69 @@ const PLANETARY_ENGINES = [
   }
 ];
 
-function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli, onOpenAI, onOpenGrid, onOpenChat }: { astrologers: Astrologer[], testimonials: any[], banners: Banner[], onOpenExpress?: () => void, onOpenKundli?: () => void, onOpenAI?: () => void, onOpenGrid?: () => void, onOpenChat?: () => void }) {
+const LIVE_CONSULTATION_SCENARIOS = [
+  {
+    queryTime: '10:42 AM',
+    userQuery: 'Is there any immediate Vedic remedy for my career hurdles? 🙏',
+    astrologerName: 'Acharya Shastri (Verified)',
+    replyTime: '10:43 AM',
+    astrologerReply: 'Yes! According to your Kundli, Jupiter transit is favorable. Wear a yellow sapphire (Pukhraj) and perform Guru Brihaspati mantra daily! 🌟',
+    predictionHighlight: '"Your 10th house indicates major professional promotion by next month!"'
+  },
+  {
+    queryTime: '11:15 AM',
+    userQuery: 'When will I get married? Will it be love or arranged according to my birth chart? 💍',
+    astrologerName: 'Dr. Meenakshi (Verified)',
+    replyTime: '11:16 AM',
+    astrologerReply: 'Your 7th Lord Venus is placed in the 5th house of romance! A strong yoga for a love marriage is forming between October and December this year. ❤️',
+    predictionHighlight: '"Venus transit brings an ideal, highly compatible life partner into your destiny very soon!"'
+  },
+  {
+    queryTime: '02:30 PM',
+    userQuery: 'We are buying a new home. Is a South-East facing main entrance auspicious for us? 🏡',
+    astrologerName: 'Vastu Master Sharma (Verified)',
+    replyTime: '02:31 PM',
+    astrologerReply: 'South-East (Agneya) represents Agni and financial liquidity. Install a copper Swastika and Pyra-Grid at the threshold to neutralize any dosha without structural changes! 📐',
+    predictionHighlight: '"This property will bring immense cash flow and business expansion once Vastu cures are activated!"'
+  },
+  {
+    queryTime: '04:18 PM',
+    userQuery: 'I am facing unexpected financial losses in business. Which planet is causing this? 📉',
+    astrologerName: 'Pt. Rajeshwar Varma (Verified)',
+    replyTime: '04:19 PM',
+    astrologerReply: 'Saturn (Shani) is currently transiting your 2nd house of accumulated wealth. Donate black sesame on Saturdays and chant the Shani Mahamrityunjaya Stotra! 🪔',
+    predictionHighlight: '"Your financial graph shows strong upward recovery and stability starting next quarter!"'
+  },
+  {
+    queryTime: '07:05 PM',
+    userQuery: 'Which gemstone should I wear for good health and mental peace? I feel constantly stressed. 🧘‍♂️',
+    astrologerName: 'Acharya Raghavendra (Verified)',
+    replyTime: '07:06 PM',
+    astrologerReply: 'Your Moon is afflicted by Rahu in the 4th house. Wear a flawless natural Pearl (Moti) in silver on your little finger on a Monday morning after Shiva Puja! 🌙',
+    predictionHighlight: '"Lunar alignment promises deep emotional calm, high energy, and rejuvenated vitality!"'
+  },
+  {
+    queryTime: '09:12 AM',
+    userQuery: 'Is there any foreign travel or settlement yoga in my horoscope for higher studies? ✈️',
+    astrologerName: 'Pt. Bhrigu Nandi (Verified)',
+    replyTime: '09:13 AM',
+    astrologerReply: 'Rahu in your 12th house along with Lord of 9th house creates a powerful Videsh Yoga! Prepare your visa documents; favorable Mahadasha starts next month! 🌍',
+    predictionHighlight: '"12th house planetary alignment strongly favors international success and global settlement!"'
+  },
+  {
+    queryTime: '03:45 PM',
+    userQuery: 'What is the best muhurat for starting my new tech venture this month? 🚀',
+    astrologerName: 'Acharya Shastri (Verified)',
+    replyTime: '03:46 PM',
+    astrologerReply: 'Upcoming Thursday during Abhijit Muhurat with Pushya Nakshatra is exceptionally auspicious for launching new digital and IT ventures! 💻',
+    predictionHighlight: '"Pushya Nakshatra launch guarantees rapid customer adoption and long-term brand authority!"'
+  }
+];
+
+function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli, onOpenAI, onOpenGrid, onOpenChat, onOpenVastu }: { astrologers: Astrologer[], testimonials: any[], banners: Banner[], onOpenExpress?: () => void, onOpenKundli?: () => void, onOpenAI?: () => void, onOpenGrid?: () => void, onOpenChat?: () => void, onOpenVastu?: () => void }) {
   const [currentBanner, setCurrentBanner] = useState(0);
   const [engineIdx, setEngineIdx] = useState(0);
+  const [consultIdx, setConsultIdx] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -976,7 +1041,21 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli,
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    const consultInterval = setInterval(() => {
+      setConsultIdx(prev => {
+        let next = Math.floor(Math.random() * LIVE_CONSULTATION_SCENARIOS.length);
+        while (next === prev && LIVE_CONSULTATION_SCENARIOS.length > 1) {
+          next = Math.floor(Math.random() * LIVE_CONSULTATION_SCENARIOS.length);
+        }
+        return next;
+      });
+    }, 4000);
+    return () => clearInterval(consultInterval);
+  }, []);
+
   const currentEngine = PLANETARY_ENGINES[engineIdx];
+  const currentConsult = LIVE_CONSULTATION_SCENARIOS[consultIdx];
 
   useEffect(() => {
     if (banners && banners.length > 1) {
@@ -1317,6 +1396,42 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli,
             </button>
           </div>
         </motion.div>
+
+        {/* Interlocking Slogan Bridge #3: Connecting Orange Banner to Vastu Banner without blank space */}
+        <div className="relative z-30 flex justify-center -mt-6 mb-[-1.25rem]">
+          <div className="bg-gradient-to-r from-emerald-900 via-teal-950 to-emerald-900 text-amber-300 px-6 py-2 rounded-full font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-xl border-2 border-emerald-400/80 flex items-center gap-2">
+            🏠 VASTU SHASTRA PROPERTY AUDIT • PHOTO & DIAGRAM UPLOADER 🏠
+          </div>
+        </div>
+
+        {/* 4. Vastu Consultancy & Media Upload Banner */}
+        <motion.div 
+          whileHover={{ y: -4 }}
+          className="bg-gradient-to-r from-emerald-800 via-teal-800 to-slate-900 rounded-3xl sm:rounded-[2.5rem] pt-12 pb-10 px-8 sm:px-10 text-white shadow-2xl relative overflow-hidden border border-emerald-400/50 flex flex-col lg:flex-row items-center justify-between gap-8"
+        >
+          <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-400/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
+          <div className="space-y-3 z-10 text-center lg:text-left flex-1">
+            <div className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-300 px-3.5 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-widest border border-emerald-400/30">
+              <Compass size={14} className="text-amber-300 animate-spin" /> Vedic 16-Zone & Pancha Bhuta Audit
+            </div>
+            <h3 className="text-3xl sm:text-4xl font-serif font-black tracking-tight leading-tight">Vastu Shastra Property Consultancy</h3>
+            <p className="text-sm sm:text-base text-emerald-100 max-w-xl leading-relaxed font-medium">
+              Harmonize your Residential House, Commercial Office, or Industrial Factory. Upload architectural diagrams, floor blueprints, photos, or 360° walkthrough videos for instant AI analysis and non-demolition cures!
+            </p>
+          </div>
+          <div className="z-10 shrink-0 flex flex-col sm:flex-row items-center gap-6">
+            <div className="text-center lg:text-right bg-black/20 px-5 py-2.5 rounded-2xl border border-white/15">
+              <span className="text-xs text-emerald-300 font-bold block uppercase tracking-wider">Non-Demolition</span>
+              <span className="text-2xl font-black tracking-tight text-amber-300">100% Vedic Cures</span>
+            </div>
+            <button
+              onClick={() => onOpenVastu && onOpenVastu()}
+              className="bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-green-950 font-black px-8 py-4 rounded-2xl shadow-xl hover:brightness-110 transition-all text-base flex items-center gap-2.5 shrink-0 cursor-pointer border border-yellow-200"
+            >
+              <Compass size={18} className="text-green-950" /> Launch Vastu Audit
+            </button>
+          </div>
+        </motion.div>
       </div>
 
       {/* 4 Pillars of Vedic Authenticity & Trust (New Sophisticated Section) */}
@@ -1453,45 +1568,57 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli,
             referrerPolicy="no-referrer"
           />
           <div className="relative z-10 w-full max-w-md space-y-4">
-            {/* Chat UI Mockup matching Vedic counseling */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              className="bg-white/95 text-slate-800 p-4 rounded-2xl shadow-xl border border-white/20 max-w-[85%] space-y-1.5"
-            >
-              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                <span className="text-xs font-bold text-slate-500">User Consultation Query</span>
-                <span className="text-[10px] text-slate-400">10:42 AM</span>
-              </div>
-              <p className="text-sm font-medium text-slate-800">Is there any immediate Vedic remedy for my career hurdles? 🙏</p>
-            </motion.div>
-
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-gradient-to-r from-amber-600 to-amber-700 p-4 rounded-2xl shadow-xl self-end ml-auto max-w-[85%] text-white space-y-1.5"
-            >
-              <div className="flex items-center justify-between border-b border-amber-500/40 pb-2">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
-                    <Sparkles size={11} />
+            {/* Chat UI Mockup matching Vedic counseling with live dynamic interval cycling */}
+            <AnimatePresence mode="wait">
+              <motion.div 
+                key={consultIdx}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                className="space-y-4"
+              >
+                <motion.div 
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, delay: 0.05 }}
+                  className="bg-white/95 text-slate-800 p-4 rounded-2xl shadow-xl border border-white/20 max-w-[85%] space-y-1.5"
+                >
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <span className="text-xs font-bold text-slate-500">User Consultation Query</span>
+                    <span className="text-[10px] text-slate-400">{currentConsult.queryTime}</span>
                   </div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider">Acharya Shastri (Verified)</span>
-                </div>
-                <span className="text-[10px] text-amber-100">10:43 AM</span>
-              </div>
-              <p className="text-sm font-medium leading-snug">Yes! According to your Kundli, Jupiter transit is favorable. Wear a yellow sapphire (Pukhraj) and perform Guru Brihaspati mantra daily! 🌟</p>
-            </motion.div>
+                  <p className="text-sm font-medium text-slate-800">{currentConsult.userQuery}</p>
+                </motion.div>
 
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4 }}
-              className="bg-emerald-950/90 backdrop-blur p-4 rounded-2xl shadow-xl border border-emerald-500/40 text-center"
-            >
-              <p className="text-emerald-200 font-serif font-bold italic text-sm">"Your 10th house indicates major professional promotion by next month!"</p>
-            </motion.div>
+                <motion.div 
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, delay: 0.15 }}
+                  className="bg-gradient-to-r from-amber-600 to-amber-700 p-4 rounded-2xl shadow-xl self-end ml-auto max-w-[85%] text-white space-y-1.5"
+                >
+                  <div className="flex items-center justify-between border-b border-amber-500/40 pb-2">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
+                        <Sparkles size={11} />
+                      </div>
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider">{currentConsult.astrologerName}</span>
+                    </div>
+                    <span className="text-[10px] text-amber-100">{currentConsult.replyTime}</span>
+                  </div>
+                  <p className="text-sm font-medium leading-snug">{currentConsult.astrologerReply}</p>
+                </motion.div>
+
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.35, delay: 0.25 }}
+                  className="bg-emerald-950/90 backdrop-blur p-4 rounded-2xl shadow-xl border border-emerald-500/40 text-center"
+                >
+                  <p className="text-emerald-200 font-serif font-bold italic text-sm">{currentConsult.predictionHighlight}</p>
+                </motion.div>
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
 
