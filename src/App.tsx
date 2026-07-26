@@ -543,13 +543,18 @@ const SHOWCASE_SLIDERS = [
     title: 'AI-Powered Astrological Software & Precision Vedic Intelligence',
     slogan: '100% Mathematical Accuracy for Kundli, Divisional Charts & Planetary Transits',
     description: 'Our proprietary software engine processes millions of astronomical ephemeris data points in milliseconds. Get instant D1 to D60 charts, accurate Vimshottari Dasha calculations, and real-time transit alerts.',
-    bgGradient: 'from-purple-950 via-indigo-950 to-slate-950',
-    accentColor: 'text-purple-300',
-    borderColor: 'border-purple-500/50',
-    tabActiveBg: 'bg-purple-600 text-white shadow-purple-500/30',
-    buttonColor: 'bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white shadow-purple-500/30',
+    bgGradient: 'from-[#FFFDF9] via-[#FEF8E2] to-[#FFEDD5]',
+    accentColor: 'text-purple-700 font-extrabold',
+    badgeStyle: 'bg-purple-100 text-purple-900 border-purple-300',
+    borderColor: 'border-amber-300/80',
+    tabActiveBg: 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-purple-500/30',
+    buttonColor: 'bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-700 hover:to-indigo-800 text-white font-black shadow-lg shadow-purple-500/30 border border-purple-400',
     buttonText: 'Generate Free AI Kundli Now',
     actionType: 'kundli',
+    cardStyle: 'bg-white/90 hover:bg-white text-stone-800 border-purple-200/80 shadow-md hover:shadow-xl',
+    cardTitleColor: 'text-stone-900 group-hover:text-purple-700',
+    cardSloganColor: 'text-purple-700 font-extrabold',
+    cardDetailColor: 'text-stone-600 font-medium',
     cards: [
       {
         icon: 'Cpu',
@@ -578,13 +583,18 @@ const SHOWCASE_SLIDERS = [
     title: 'Direct Access to India\'s Most Authentic Astrologers & Live Temple Anushthans',
     slogan: 'Legally Bound by Pre-Presence Declaration • Uncompromised Truth & Sanctity',
     description: 'Consult 24/7 with India\'s elite Vedic scholars, Nadi readers, and numerologists. Every astrologer undergoes rigorous background verification and adheres to sacred counseling ethics.',
-    bgGradient: 'from-emerald-950 via-teal-950 to-slate-950',
-    accentColor: 'text-emerald-300',
-    borderColor: 'border-emerald-500/50',
-    tabActiveBg: 'bg-emerald-600 text-white shadow-emerald-500/30',
-    buttonColor: 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-emerald-500/30',
+    bgGradient: 'from-[#FFFDF9] via-[#FEF3C7] to-[#FED7AA]',
+    accentColor: 'text-emerald-800 font-extrabold',
+    badgeStyle: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+    borderColor: 'border-amber-300/80',
+    tabActiveBg: 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-emerald-500/30',
+    buttonColor: 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black shadow-lg shadow-emerald-500/30 border border-emerald-400',
     buttonText: 'Ask 3 Express Questions (₹50)',
     actionType: 'express',
+    cardStyle: 'bg-white/90 hover:bg-white text-stone-800 border-emerald-200/80 shadow-md hover:shadow-xl',
+    cardTitleColor: 'text-stone-900 group-hover:text-emerald-800',
+    cardSloganColor: 'text-emerald-700 font-extrabold',
+    cardDetailColor: 'text-stone-600 font-medium',
     cards: [
       {
         icon: 'Phone',
@@ -613,13 +623,18 @@ const SHOWCASE_SLIDERS = [
     title: 'Authentic Astrological Gemstones, Rudrakshas & Energized Vedic Yantras',
     slogan: 'We Don\'t Just Sell Stones; We Deliver Awoken Vedic Remedies Shipped Worldwide',
     description: 'Every gemstone in our Astro Shop undergoes rigorous gemological lab testing and is awakened through authentic Vedic Shuddhikaran and Pran-Pratishtha rituals by verified Vedic brahmins.',
-    bgGradient: 'from-amber-950 via-orange-950 to-slate-950',
-    accentColor: 'text-amber-300',
-    borderColor: 'border-amber-500/50',
-    tabActiveBg: 'bg-amber-600 text-white shadow-amber-500/30',
-    buttonColor: 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-green-950 font-black hover:brightness-110 shadow-amber-400/30',
+    bgGradient: 'from-[#FFFDF9] via-[#FFEDD5] to-[#FDBA74]',
+    accentColor: 'text-amber-900 font-extrabold',
+    badgeStyle: 'bg-amber-100 text-amber-900 border-amber-300',
+    borderColor: 'border-amber-400/80',
+    tabActiveBg: 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-amber-500/30',
+    buttonColor: 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white font-black shadow-lg shadow-orange-500/30 border border-amber-300',
     buttonText: 'Explore Lab-Certified Gemstones Now',
     actionType: 'shop',
+    cardStyle: 'bg-white/90 hover:bg-white text-stone-800 border-amber-200/80 shadow-md hover:shadow-xl',
+    cardTitleColor: 'text-stone-900 group-hover:text-amber-900',
+    cardSloganColor: 'text-amber-800 font-extrabold',
+    cardDetailColor: 'text-stone-600 font-medium',
     cards: [
       {
         icon: 'Award',
@@ -659,16 +674,16 @@ function SoftwareFeaturesShowcase({ onOpenKundli, onOpenExpress }: { onOpenKundl
 
   const getIcon = (iconName: string) => {
     switch (iconName) {
-      case 'Cpu': return <Cpu className="w-5 h-5 text-purple-300 shrink-0" />;
-      case 'Activity': return <Activity className="w-5 h-5 text-indigo-300 shrink-0" />;
-      case 'Shield': return <Shield className="w-5 h-5 text-purple-200 shrink-0" />;
-      case 'Phone': return <Phone className="w-5 h-5 text-emerald-300 shrink-0" />;
-      case 'Flame': return <Flame className="w-5 h-5 text-amber-300 shrink-0" />;
-      case 'Zap': return <Zap className="w-5 h-5 text-yellow-300 shrink-0" />;
-      case 'Award': return <Award className="w-5 h-5 text-amber-300 shrink-0" />;
-      case 'Layers': return <Layers className="w-5 h-5 text-orange-300 shrink-0" />;
-      case 'Lock': return <Lock className="w-5 h-5 text-yellow-300 shrink-0" />;
-      default: return <Sparkles className="w-5 h-5 text-amber-300 shrink-0" />;
+      case 'Cpu': return <Cpu className="w-5 h-5 text-purple-700 shrink-0" />;
+      case 'Activity': return <Activity className="w-5 h-5 text-indigo-600 shrink-0" />;
+      case 'Shield': return <Shield className="w-5 h-5 text-purple-600 shrink-0" />;
+      case 'Phone': return <Phone className="w-5 h-5 text-emerald-700 shrink-0" />;
+      case 'Flame': return <Flame className="w-5 h-5 text-amber-600 shrink-0" />;
+      case 'Zap': return <Zap className="w-5 h-5 text-yellow-600 shrink-0" />;
+      case 'Award': return <Award className="w-5 h-5 text-amber-700 shrink-0" />;
+      case 'Layers': return <Layers className="w-5 h-5 text-orange-600 shrink-0" />;
+      case 'Lock': return <Lock className="w-5 h-5 text-amber-600 shrink-0" />;
+      default: return <Sparkles className="w-5 h-5 text-amber-600 shrink-0" />;
     }
   };
 
@@ -678,8 +693,8 @@ function SoftwareFeaturesShowcase({ onOpenKundli, onOpenExpress }: { onOpenKundl
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* Tab Switcher Bar - Innovative Overlapping Bridge */}
-      <div className="flex flex-wrap items-center justify-center gap-2 p-2.5 bg-slate-900/95 backdrop-blur-xl rounded-t-3xl border-t-2 border-x-2 border-amber-400/40 shadow-2xl max-w-4xl mx-auto">
+      {/* Tab Switcher Bar - Warm Autumn Sunlight Cream Bridge inspired by Image 2 */}
+      <div className="flex flex-wrap items-center justify-center gap-2 p-2.5 bg-gradient-to-r from-[#FFFDF9] via-[#FFFBEB] to-[#FFFDF9] backdrop-blur-xl rounded-t-3xl border-t-2 border-x-2 border-amber-300/80 shadow-xl max-w-4xl mx-auto">
         {SHOWCASE_SLIDERS.map((slider, idx) => {
           const isActive = activeTab === idx;
           return (
@@ -687,14 +702,14 @@ function SoftwareFeaturesShowcase({ onOpenKundli, onOpenExpress }: { onOpenKundl
               key={slider.id}
               onClick={() => setActiveTab(idx)}
               className={`flex items-center gap-2 px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all duration-300 cursor-pointer relative overflow-hidden ${
-                isActive ? slider.tabActiveBg + ' shadow-lg scale-105' : 'text-slate-300 hover:text-white hover:bg-white/10'
+                isActive ? slider.tabActiveBg + ' shadow-lg scale-105' : 'text-stone-700 hover:text-amber-950 hover:bg-amber-100/60 font-extrabold'
               }`}
             >
               <span>{slider.tabLabel}</span>
               {isActive && (
                 <motion.div 
                   layoutId="activeShowcaseTab"
-                  className="absolute bottom-0 left-0 right-0 h-1 bg-white/60 animate-pulse"
+                  className="absolute bottom-0 left-0 right-0 h-1 bg-white/80 animate-pulse"
                 />
               )}
             </button>
@@ -702,11 +717,14 @@ function SoftwareFeaturesShowcase({ onOpenKundli, onOpenExpress }: { onOpenKundl
         })}
       </div>
 
-      {/* Slider Content Box - Seamlessly connected to tabs above and banners below */}
-      <div className={`bg-gradient-to-br ${currentSlider.bgGradient} rounded-3xl rounded-t-none sm:rounded-t-3xl border-2 ${currentSlider.borderColor} p-6 sm:p-10 lg:p-12 text-white shadow-2xl relative overflow-hidden transition-all duration-500`}>
-        {/* Background Decorative Glows */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-white/5 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20" />
+      {/* Slider Content Box - Autumn Golden Sunlight Background */}
+      <div className={`bg-gradient-to-br ${currentSlider.bgGradient} rounded-3xl rounded-t-none sm:rounded-t-3xl border-2 ${currentSlider.borderColor} p-6 sm:p-10 lg:p-12 text-stone-900 shadow-2xl relative overflow-hidden transition-all duration-500`}>
+        {/* Background Decorative Glows - Warm sunlight autumn glow */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-400/15 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-orange-400/15 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20" />
+        
+        {/* Bottom Autumn Leaf Palette Accent Bar inspired by Image 2 */}
+        <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-red-500 via-orange-500 via-amber-400 via-yellow-500 to-emerald-500 opacity-90" />
 
         <AnimatePresence mode="wait">
           <motion.div
@@ -718,18 +736,18 @@ function SoftwareFeaturesShowcase({ onOpenKundli, onOpenExpress }: { onOpenKundl
             className="space-y-8 relative z-10"
           >
             {/* Top Header & Slogan Area */}
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-white/15 pb-8">
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-amber-200/80 pb-8">
               <div className="space-y-3 max-w-3xl">
-                <div className="inline-flex items-center gap-2 bg-white/15 px-3.5 py-1.5 rounded-full text-[11px] font-extrabold uppercase tracking-widest border border-white/20 backdrop-blur-md">
-                  <Sparkles size={14} className={currentSlider.accentColor} /> {currentSlider.badge}
+                <div className={`inline-flex items-center gap-2 ${currentSlider.badgeStyle} px-3.5 py-1.5 rounded-full text-[11px] font-extrabold uppercase tracking-widest border shadow-sm`}>
+                  <Sparkles size={14} className="shrink-0 animate-pulse" /> {currentSlider.badge}
                 </div>
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-black tracking-tight leading-snug">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-black text-stone-900 tracking-tight leading-snug">
                   {currentSlider.title}
                 </h2>
-                <p className={`text-base sm:text-lg font-bold ${currentSlider.accentColor} tracking-wide`}>
+                <p className={`text-base sm:text-lg ${currentSlider.accentColor} tracking-wide`}>
                   {currentSlider.slogan}
                 </p>
-                <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-2xl font-normal">
+                <p className="text-sm sm:text-base text-stone-700 leading-relaxed max-w-2xl font-normal">
                   {currentSlider.description}
                 </p>
               </div>
@@ -742,7 +760,7 @@ function SoftwareFeaturesShowcase({ onOpenKundli, onOpenExpress }: { onOpenKundl
                     if (currentSlider.actionType === 'express' && onOpenExpress) onOpenExpress();
                     if (currentSlider.actionType === 'chat' && onOpenExpress) onOpenExpress();
                   }}
-                  className={`${currentSlider.buttonColor} px-7 py-4 rounded-2xl font-extrabold text-sm sm:text-base shadow-xl transition-all transform hover:-translate-y-1 flex items-center gap-2.5 cursor-pointer border border-white/20`}
+                  className={`${currentSlider.buttonColor} px-7 py-4 rounded-2xl font-extrabold text-sm sm:text-base shadow-xl transition-all transform hover:-translate-y-1 flex items-center gap-2.5 cursor-pointer`}
                 >
                   <Sparkles size={18} /> {currentSlider.buttonText}
                 </button>
@@ -754,20 +772,20 @@ function SoftwareFeaturesShowcase({ onOpenKundli, onOpenExpress }: { onOpenKundl
               {currentSlider.cards.map((card, i) => (
                 <div 
                   key={i}
-                  className="bg-white/10 hover:bg-white/15 backdrop-blur-md p-6 rounded-2xl border border-white/15 transition-all duration-300 flex flex-col justify-between gap-4 group hover:-translate-y-1 shadow-lg"
+                  className={`${currentSlider.cardStyle} p-6 rounded-2xl transition-all duration-300 flex flex-col justify-between gap-4 group hover:-translate-y-1`}
                 >
                   <div className="space-y-2.5">
-                    <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center border border-white/20 group-hover:scale-110 transition-transform">
+                    <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center border border-amber-200 group-hover:scale-110 transition-transform shadow-sm">
                       {getIcon(card.icon)}
                     </div>
-                    <h3 className="font-bold text-base sm:text-lg text-white group-hover:text-amber-200 transition-colors">
+                    <h3 className={`font-bold text-base sm:text-lg ${currentSlider.cardTitleColor} transition-colors`}>
                       {card.title}
                     </h3>
-                    <div className={`text-xs font-black uppercase tracking-wider ${currentSlider.accentColor}`}>
+                    <div className={`text-xs font-black uppercase tracking-wider ${currentSlider.cardSloganColor}`}>
                       ⚡ {card.slogan}
                     </div>
                   </div>
-                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium pt-2 border-t border-white/10">
+                  <p className={`text-xs sm:text-sm ${currentSlider.cardDetailColor} leading-relaxed pt-2 border-t border-stone-200`}>
                     {card.detail}
                   </p>
                 </div>
@@ -777,13 +795,13 @@ function SoftwareFeaturesShowcase({ onOpenKundli, onOpenExpress }: { onOpenKundl
         </AnimatePresence>
 
         {/* Bottom Slide Indicators */}
-        <div className="flex items-center justify-center gap-2 pt-6">
+        <div className="flex items-center justify-center gap-2 pt-6 pb-2">
           {SHOWCASE_SLIDERS.map((_, idx) => (
             <button
               key={idx}
               onClick={() => setActiveTab(idx)}
               className={`h-2 rounded-full transition-all cursor-pointer ${
-                activeTab === idx ? 'bg-white w-8 shadow' : 'bg-white/30 hover:bg-white/60 w-2'
+                activeTab === idx ? 'bg-amber-600 w-8 shadow' : 'bg-amber-300/60 hover:bg-amber-400 w-2'
               }`}
             />
           ))}
