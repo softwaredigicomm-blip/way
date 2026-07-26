@@ -5,7 +5,7 @@ import {
   Wallet, User, ShoppingBag, BookOpen, LayoutDashboard,
   Sparkles, Compass, Heart, Calendar, Menu, X, Send,
   Download, CheckCircle2, AlertCircle, FileText,
-  ChevronLeft, ChevronRight, History, RefreshCw, Award, Shield, Lock, CreditCard, Smartphone, Building2, Languages, Globe
+  ChevronLeft, ChevronRight, History, RefreshCw, Award, Shield, Lock, CreditCard, Smartphone, Building2, Languages, Globe, Zap, Eye, Flame, Layers, Radio, Cpu, Activity
 } from 'lucide-react';
 import { jsPDF } from "jspdf";
 import { Astrologer, User as UserType, ZODIAC_SIGNS, Category, Vendor, Product, Package, Banner, PanditRegistration as PanditType, PujaBooking as PujaBookingType } from './types';
@@ -535,6 +535,264 @@ const ZODIAC_DATES: Record<string, string> = {
   Pisces: "Feb 19 - Mar 20",
 };
 
+const SHOWCASE_SLIDERS = [
+  {
+    id: 'ai_software',
+    tabLabel: '🔮 AI Software Suite',
+    badge: '✨ SWISS-EPHEMERIS COMPUTATIONAL ENGINE',
+    title: 'AI-Powered Astrological Software & Precision Vedic Intelligence',
+    slogan: '100% Mathematical Accuracy for Kundli, Divisional Charts & Planetary Transits',
+    description: 'Our proprietary software engine processes millions of astronomical ephemeris data points in milliseconds. Get instant D1 to D60 charts, accurate Vimshottari Dasha calculations, and real-time transit alerts.',
+    bgGradient: 'from-purple-950 via-indigo-950 to-slate-950',
+    accentColor: 'text-purple-300',
+    borderColor: 'border-purple-500/50',
+    tabActiveBg: 'bg-purple-600 text-white shadow-purple-500/30',
+    buttonColor: 'bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white shadow-purple-500/30',
+    buttonText: 'Generate Free AI Kundli Now',
+    actionType: 'kundli',
+    cards: [
+      {
+        icon: 'Cpu',
+        title: 'Swiss-Ephemeris Precision Engine',
+        slogan: 'Instant 16 Divisional Charts & Planetary Degrees',
+        detail: 'Calculates exact Nakshatras, Sub-lords, and Ashtakvarga points with zero manual human error.'
+      },
+      {
+        icon: 'Activity',
+        title: 'Real-Time Gochar & Sade Sati Tracker',
+        slogan: 'Live Planetary Transit Mapping & Alerts',
+        detail: 'Tracks Saturn (Shani), Rahu & Ketu movements dynamically against your natal Moon sign.'
+      },
+      {
+        icon: 'Shield',
+        title: 'AI Dosha Diagnostics & Remedies',
+        slogan: 'Automated Manglik, Kaal Sarp & Pitra Dosha Check',
+        detail: 'Instant identification of chart afflictions with exact gemological, mantra & Vedic puja remedies.'
+      }
+    ]
+  },
+  {
+    id: 'live_counseling',
+    tabLabel: '🕉️ Live Vedic Counselors & Pujas',
+    badge: '🛡️ 100% ADMIN-VERIFIED PRE-PRESENCE SCHOLARS',
+    title: 'Direct Access to India\'s Most Authentic Astrologers & Live Temple Anushthans',
+    slogan: 'Legally Bound by Pre-Presence Declaration • Uncompromised Truth & Sanctity',
+    description: 'Consult 24/7 with India\'s elite Vedic scholars, Nadi readers, and numerologists. Every astrologer undergoes rigorous background verification and adheres to sacred counseling ethics.',
+    bgGradient: 'from-emerald-950 via-teal-950 to-slate-950',
+    accentColor: 'text-emerald-300',
+    borderColor: 'border-emerald-500/50',
+    tabActiveBg: 'bg-emerald-600 text-white shadow-emerald-500/30',
+    buttonColor: 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-emerald-500/30',
+    buttonText: 'Ask 3 Express Questions (₹50)',
+    actionType: 'express',
+    cards: [
+      {
+        icon: 'Phone',
+        title: 'Instant Audio, Video & Chat Counseling',
+        slogan: 'Connect in 60 Seconds with 4.9★ Rated Experts',
+        detail: '100% private, encrypted, and confidential guidance on Career, Marriage, Wealth, and Health.'
+      },
+      {
+        icon: 'Flame',
+        title: 'Live Sankalp Video Puja Streaming',
+        slogan: 'Sacred Temple Anushthans at Your Doorstep',
+        detail: 'Watch your personalized Graha Shanti or Mahamrityunjaya havan streamed live with your Gotra sankalp.'
+      },
+      {
+        icon: 'Zap',
+        title: 'Express ₹50 Quick Guidance System',
+        slogan: 'Got Burning Questions? Get Answers in Minutes!',
+        detail: 'Frame any 3 questions (50 words each) and receive exact astrological remedies at a special ₹50 price.'
+      }
+    ]
+  },
+  {
+    id: 'astro_shop',
+    tabLabel: '💎 Lab-Certified Shop & Guarantee',
+    badge: '✨ 100% LAB-TESTED PURITY & ENERGIZATION',
+    title: 'Authentic Astrological Gemstones, Rudrakshas & Energized Vedic Yantras',
+    slogan: 'We Don\'t Just Sell Stones; We Deliver Awoken Vedic Remedies Shipped Worldwide',
+    description: 'Every gemstone in our Astro Shop undergoes rigorous gemological lab testing and is awakened through authentic Vedic Shuddhikaran and Pran-Pratishtha rituals by verified Vedic brahmins.',
+    bgGradient: 'from-amber-950 via-orange-950 to-slate-950',
+    accentColor: 'text-amber-300',
+    borderColor: 'border-amber-500/50',
+    tabActiveBg: 'bg-amber-600 text-white shadow-amber-500/30',
+    buttonColor: 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-green-950 font-black hover:brightness-110 shadow-amber-400/30',
+    buttonText: 'Explore Lab-Certified Gemstones Now',
+    actionType: 'shop',
+    cards: [
+      {
+        icon: 'Award',
+        title: '100% Natural, Unheated Gemstones',
+        slogan: 'Government-Approved Lab Certificates Included',
+        detail: 'Pukhraj, Neelam, Manik, and Panna—each crystal comes with guaranteed purity and refractive testing.'
+      },
+      {
+        icon: 'Layers',
+        title: 'Pran-Pratishtha Energized Yantras',
+        slogan: 'Sacred Geometric Instruments for Wealth & Shielding',
+        detail: 'Crafted in pure copper/gold and awakened during auspicious Siddhi muhurats for maximum cosmic resonance.'
+      },
+      {
+        icon: 'Lock',
+        title: 'Bank-Grade Security & Refund Guarantee',
+        slogan: 'No Hidden Charges • Transparent Per-Minute Billing',
+        detail: 'Instant wallet recharge, 25% bonus rewards, and 100% satisfaction guarantee or instant refund.'
+      }
+    ]
+  }
+];
+
+function SoftwareFeaturesShowcase({ onOpenKundli, onOpenExpress }: { onOpenKundli?: () => void, onOpenExpress?: () => void }) {
+  const [activeTab, setActiveTab] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  useEffect(() => {
+    if (isPaused) return;
+    const timer = setInterval(() => {
+      setActiveTab((prev) => (prev + 1) % SHOWCASE_SLIDERS.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [isPaused]);
+
+  const currentSlider = SHOWCASE_SLIDERS[activeTab];
+
+  const getIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'Cpu': return <Cpu className="w-5 h-5 text-purple-300 shrink-0" />;
+      case 'Activity': return <Activity className="w-5 h-5 text-indigo-300 shrink-0" />;
+      case 'Shield': return <Shield className="w-5 h-5 text-purple-200 shrink-0" />;
+      case 'Phone': return <Phone className="w-5 h-5 text-emerald-300 shrink-0" />;
+      case 'Flame': return <Flame className="w-5 h-5 text-amber-300 shrink-0" />;
+      case 'Zap': return <Zap className="w-5 h-5 text-yellow-300 shrink-0" />;
+      case 'Award': return <Award className="w-5 h-5 text-amber-300 shrink-0" />;
+      case 'Layers': return <Layers className="w-5 h-5 text-orange-300 shrink-0" />;
+      case 'Lock': return <Lock className="w-5 h-5 text-yellow-300 shrink-0" />;
+      default: return <Sparkles className="w-5 h-5 text-amber-300 shrink-0" />;
+    }
+  };
+
+  return (
+    <div 
+      className="-mt-12 sm:-mt-16 relative z-30 mx-2 sm:mx-6 lg:mx-8 transition-all duration-500"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      {/* Tab Switcher Bar - Innovative Overlapping Bridge */}
+      <div className="flex flex-wrap items-center justify-center gap-2 p-2.5 bg-slate-900/95 backdrop-blur-xl rounded-t-3xl border-t-2 border-x-2 border-amber-400/40 shadow-2xl max-w-4xl mx-auto">
+        {SHOWCASE_SLIDERS.map((slider, idx) => {
+          const isActive = activeTab === idx;
+          return (
+            <button
+              key={slider.id}
+              onClick={() => setActiveTab(idx)}
+              className={`flex items-center gap-2 px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all duration-300 cursor-pointer relative overflow-hidden ${
+                isActive ? slider.tabActiveBg + ' shadow-lg scale-105' : 'text-slate-300 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <span>{slider.tabLabel}</span>
+              {isActive && (
+                <motion.div 
+                  layoutId="activeShowcaseTab"
+                  className="absolute bottom-0 left-0 right-0 h-1 bg-white/60 animate-pulse"
+                />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Slider Content Box - Seamlessly connected to tabs above and banners below */}
+      <div className={`bg-gradient-to-br ${currentSlider.bgGradient} rounded-3xl rounded-t-none sm:rounded-t-3xl border-2 ${currentSlider.borderColor} p-6 sm:p-10 lg:p-12 text-white shadow-2xl relative overflow-hidden transition-all duration-500`}>
+        {/* Background Decorative Glows */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-white/5 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20" />
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentSlider.id}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.4 }}
+            className="space-y-8 relative z-10"
+          >
+            {/* Top Header & Slogan Area */}
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-white/15 pb-8">
+              <div className="space-y-3 max-w-3xl">
+                <div className="inline-flex items-center gap-2 bg-white/15 px-3.5 py-1.5 rounded-full text-[11px] font-extrabold uppercase tracking-widest border border-white/20 backdrop-blur-md">
+                  <Sparkles size={14} className={currentSlider.accentColor} /> {currentSlider.badge}
+                </div>
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-black tracking-tight leading-snug">
+                  {currentSlider.title}
+                </h2>
+                <p className={`text-base sm:text-lg font-bold ${currentSlider.accentColor} tracking-wide`}>
+                  {currentSlider.slogan}
+                </p>
+                <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-2xl font-normal">
+                  {currentSlider.description}
+                </p>
+              </div>
+
+              {/* Action Trigger Button */}
+              <div className="shrink-0 self-start lg:self-center">
+                <button
+                  onClick={() => {
+                    if (currentSlider.actionType === 'kundli' && onOpenKundli) onOpenKundli();
+                    if (currentSlider.actionType === 'express' && onOpenExpress) onOpenExpress();
+                    if (currentSlider.actionType === 'chat' && onOpenExpress) onOpenExpress();
+                  }}
+                  className={`${currentSlider.buttonColor} px-7 py-4 rounded-2xl font-extrabold text-sm sm:text-base shadow-xl transition-all transform hover:-translate-y-1 flex items-center gap-2.5 cursor-pointer border border-white/20`}
+                >
+                  <Sparkles size={18} /> {currentSlider.buttonText}
+                </button>
+              </div>
+            </div>
+
+            {/* 3 Interactive Feature Slogan & Graphic Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {currentSlider.cards.map((card, i) => (
+                <div 
+                  key={i}
+                  className="bg-white/10 hover:bg-white/15 backdrop-blur-md p-6 rounded-2xl border border-white/15 transition-all duration-300 flex flex-col justify-between gap-4 group hover:-translate-y-1 shadow-lg"
+                >
+                  <div className="space-y-2.5">
+                    <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center border border-white/20 group-hover:scale-110 transition-transform">
+                      {getIcon(card.icon)}
+                    </div>
+                    <h3 className="font-bold text-base sm:text-lg text-white group-hover:text-amber-200 transition-colors">
+                      {card.title}
+                    </h3>
+                    <div className={`text-xs font-black uppercase tracking-wider ${currentSlider.accentColor}`}>
+                      ⚡ {card.slogan}
+                    </div>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium pt-2 border-t border-white/10">
+                    {card.detail}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Bottom Slide Indicators */}
+        <div className="flex items-center justify-center gap-2 pt-6">
+          {SHOWCASE_SLIDERS.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setActiveTab(idx)}
+              className={`h-2 rounded-full transition-all cursor-pointer ${
+                activeTab === idx ? 'bg-white w-8 shadow' : 'bg-white/30 hover:bg-white/60 w-2'
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli }: { astrologers: Astrologer[], testimonials: any[], banners: Banner[], onOpenExpress?: () => void, onOpenKundli?: () => void }) {
   const [currentBanner, setCurrentBanner] = useState(0);
 
@@ -556,7 +814,7 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli 
   }];
 
   return (
-    <div className="space-y-16 lg:space-y-24 pb-12">
+    <div className="space-y-10 lg:space-y-14 pb-12">
       {/* Top Trust Strip */}
       <div className="bg-gradient-to-r from-purple-900 via-deep-blue to-purple-900 text-white py-2.5 px-4 rounded-2xl shadow-md border border-purple-400/30 flex flex-wrap items-center justify-center gap-4 text-xs sm:text-sm font-medium tracking-wide">
         <span className="flex items-center gap-2">
@@ -653,63 +911,86 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli 
         )}
       </section>
 
-      {/* AI Generated Astrological Consultancy Highlight Banner - Changed to Green Theme as per Image 2 */}
-      <motion.div 
-        initial={{ opacity: 0, y: 15 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        style={{ backgroundColor: '#008000' }}
-        className="bg-[#008000] bg-gradient-to-r from-[#005a00] via-[#008000] to-[#005a00] rounded-[2.5rem] p-8 sm:p-12 text-white border-2 border-amber-400/60 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden group"
-      >
-        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-400/15 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-700" />
-        <div className="space-y-4 z-10 text-center lg:text-left flex-1">
-          <div className="inline-flex items-center gap-2 bg-emerald-950/90 text-amber-300 px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-widest border border-amber-400/50 shadow-lg backdrop-blur-md">
-            <Sparkles size={14} className="text-amber-300 animate-spin" /> Next-Gen Astrological Technology
-          </div>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-black text-white tracking-tight leading-snug drop-shadow-md">
-            AI-Powered Astrological Consultancy • <span className="text-amber-300">Precision Guidance</span> Through Advanced Software
-          </h2>
-          <p className="text-sm sm:text-base text-emerald-100 max-w-2xl leading-relaxed font-medium">
-            Experience unparalleled precision with our advanced software algorithms. Generate comprehensive Kundli charts, check planetary alignments, and receive instant, personalized Vedic consultancy 24/7.
-          </p>
-        </div>
-        <div className="z-10 shrink-0 flex flex-col sm:flex-row items-center gap-4">
-          <button
-            onClick={() => onOpenKundli && onOpenKundli()}
-            className="bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-green-950 font-black px-8 py-4 rounded-2xl shadow-2xl hover:brightness-110 transition-all transform hover:-translate-y-1 text-sm sm:text-base flex items-center gap-2.5 cursor-pointer shrink-0 border border-yellow-200"
-          >
-            <Sparkles size={18} className="text-green-950" /> Get Free Kundli Now
-          </button>
-        </div>
-      </motion.div>
+      {/* =========================================================================
+          SEAMLESS MERGED SUPER-BLOCK: ELIMINATING ALL BLANK WHITE SPACES!
+          Combines 3 Feature Sliders + Green AI Consultancy + Orange Express ₹50
+         ========================================================================= */}
+      <div className="relative z-20 space-y-0 pb-6">
+        {/* 1. The 3 Attractive Feature Sliders (Overlapping Hero bottom with -mt-14) */}
+        <SoftwareFeaturesShowcase onOpenKundli={onOpenKundli} onOpenExpress={onOpenExpress} />
 
-      {/* Express ₹50 / 3-Question Special Offer Banner */}
-      <motion.div 
-        whileHover={{ y: -4 }}
-        className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 rounded-[2.5rem] p-8 sm:p-10 text-white shadow-2xl relative overflow-hidden border border-amber-300/40 flex flex-col lg:flex-row items-center justify-between gap-8"
-      >
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
-        <div className="space-y-3 z-10 text-center lg:text-left flex-1">
-          <div className="inline-flex items-center gap-2 bg-white/20 px-3.5 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-widest border border-white/30">
-            <Sparkles size={14} /> Most Popular Express Consultation
+        {/* Interlocking Slogan Bridge #1: Connecting Sliders to Green AI Banner without blank space */}
+        <div className="relative z-30 flex justify-center -mt-6 mb-[-1.25rem]">
+          <div className="bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-green-950 px-6 py-2 rounded-full font-black text-xs sm:text-sm uppercase tracking-widest shadow-xl border-2 border-green-900 flex items-center gap-2">
+            <Sparkles size={16} className="animate-spin" /> 100% Verified Software Algorithms & Vedic Purity <Sparkles size={16} />
           </div>
-          <h3 className="text-3xl sm:text-4xl font-serif font-black tracking-tight leading-tight">Ask 3 Questions for Just ₹50</h3>
-          <p className="text-sm sm:text-base text-white/90 max-w-xl leading-relaxed font-medium">
-            Have burning questions about your Career, Love Life, Marriage, Wealth, or Health? Frame any 3 questions (50 words each) and get instant Vedic Astrological insights!
-          </p>
         </div>
-        <div className="z-10 shrink-0 flex flex-col sm:flex-row items-center gap-6">
-          <div className="text-center lg:text-right bg-black/15 px-5 py-2.5 rounded-2xl border border-white/15">
-            <span className="text-xs text-amber-200 font-bold block uppercase tracking-wider">Special Offer</span>
-            <span className="text-4xl font-black tracking-tight">₹50</span>
+
+        {/* 2. Green AI Consultancy Banner (Merged directly without white gap!) */}
+        <motion.div 
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          style={{ backgroundColor: '#008000' }}
+          className="bg-[#008000] bg-gradient-to-r from-[#005a00] via-[#008000] to-[#005a00] rounded-3xl sm:rounded-[2.5rem] pt-12 pb-14 px-8 sm:px-12 text-white border-2 border-amber-400/60 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden group"
+        >
+          <div className="absolute top-0 right-0 w-96 h-96 bg-amber-400/15 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-700" />
+          <div className="space-y-4 z-10 text-center lg:text-left flex-1">
+            <div className="inline-flex items-center gap-2 bg-emerald-950/90 text-amber-300 px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-widest border border-amber-400/50 shadow-lg backdrop-blur-md">
+              <Sparkles size={14} className="text-amber-300 animate-spin" /> Next-Gen Astrological Technology
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-black text-white tracking-tight leading-snug drop-shadow-md">
+              AI-Powered Astrological Consultancy • <span className="text-amber-300">Precision Guidance</span> Through Advanced Software
+            </h2>
+            <p className="text-sm sm:text-base text-emerald-100 max-w-2xl leading-relaxed font-medium">
+              Experience unparalleled precision with our advanced software algorithms. Generate comprehensive Kundli charts, check planetary alignments, and receive instant, personalized Vedic consultancy 24/7.
+            </p>
           </div>
-          <button
-            onClick={() => onOpenExpress && onOpenExpress()}
-            className="bg-white text-deep-blue hover:bg-slate-50 font-black px-8 py-4 rounded-2xl shadow-xl transition-all text-base flex items-center gap-2.5 shrink-0 cursor-pointer border border-amber-100"
-          >
-            <Sparkles size={18} className="text-saffron" /> Ask 3 Questions Now
-          </button>
+          <div className="z-10 shrink-0 flex flex-col sm:flex-row items-center gap-4">
+            <button
+              onClick={() => onOpenKundli && onOpenKundli()}
+              className="bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-green-950 font-black px-8 py-4 rounded-2xl shadow-2xl hover:brightness-110 transition-all transform hover:-translate-y-1 text-sm sm:text-base flex items-center gap-2.5 cursor-pointer shrink-0 border border-yellow-200"
+            >
+              <Sparkles size={18} className="text-green-950" /> Get Free Kundli Now
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Interlocking Slogan Bridge #2: Connecting Green Banner to Orange Banner without blank space */}
+        <div className="relative z-30 flex justify-center -mt-6 mb-[-1.25rem]">
+          <div className="bg-gradient-to-r from-purple-900 via-slate-900 to-purple-900 text-amber-300 px-6 py-2 rounded-full font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-xl border-2 border-amber-400/80 flex items-center gap-2">
+            ⚡ INSTANT CONSULTATION MODULE • NO WAITING ROOM ⚡
+          </div>
         </div>
-      </motion.div>
+
+        {/* 3. Express ₹50 / 3-Question Special Offer Banner (Merged directly without white gap!) */}
+        <motion.div 
+          whileHover={{ y: -4 }}
+          className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 rounded-3xl sm:rounded-[2.5rem] pt-12 pb-10 px-8 sm:px-10 text-white shadow-2xl relative overflow-hidden border border-amber-300/40 flex flex-col lg:flex-row items-center justify-between gap-8"
+        >
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
+          <div className="space-y-3 z-10 text-center lg:text-left flex-1">
+            <div className="inline-flex items-center gap-2 bg-white/20 px-3.5 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-widest border border-white/30">
+              <Sparkles size={14} /> Most Popular Express Consultation
+            </div>
+            <h3 className="text-3xl sm:text-4xl font-serif font-black tracking-tight leading-tight">Ask 3 Questions for Just ₹50</h3>
+            <p className="text-sm sm:text-base text-white/90 max-w-xl leading-relaxed font-medium">
+              Have burning questions about your Career, Love Life, Marriage, Wealth, or Health? Frame any 3 questions (50 words each) and get instant Vedic Astrological insights!
+            </p>
+          </div>
+          <div className="z-10 shrink-0 flex flex-col sm:flex-row items-center gap-6">
+            <div className="text-center lg:text-right bg-black/15 px-5 py-2.5 rounded-2xl border border-white/15">
+              <span className="text-xs text-amber-200 font-bold block uppercase tracking-wider">Special Offer</span>
+              <span className="text-4xl font-black tracking-tight">₹50</span>
+            </div>
+            <button
+              onClick={() => onOpenExpress && onOpenExpress()}
+              className="bg-white text-deep-blue hover:bg-slate-50 font-black px-8 py-4 rounded-2xl shadow-xl transition-all text-base flex items-center gap-2.5 shrink-0 cursor-pointer border border-amber-100"
+            >
+              <Sparkles size={18} className="text-saffron" /> Ask 3 Questions Now
+            </button>
+          </div>
+        </motion.div>
+      </div>
 
       {/* 4 Pillars of Vedic Authenticity & Trust (New Sophisticated Section) */}
       <section className="space-y-8">
