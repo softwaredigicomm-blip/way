@@ -139,8 +139,257 @@ const VASTU_EXPERTS = [
   }
 ];
 
+export interface VastuPackage {
+  id: string;
+  name: string;
+  category: 'Residential' | 'Commercial' | 'Industrial' | 'Specialized';
+  badge?: string;
+  price: number;
+  originalPrice: number;
+  turnaround: string;
+  suitableFor: string;
+  consultantLevel: string;
+  deliverables: string[];
+  description: string;
+}
+
+const VASTU_CONSULTANCY_PACKAGES: VastuPackage[] = [
+  // Residential Packages
+  {
+    id: 'res-flat',
+    name: 'Apartment & Flat Harmony Pack',
+    category: 'Residential',
+    badge: 'Most Popular for Flats',
+    price: 3499,
+    originalPrice: 6000,
+    turnaround: '24 - 48 Hours',
+    suitableFor: '1, 2, 3, 4 BHK Apartments, Studios, Penthouses',
+    consultantLevel: 'Senior Vedic Acharya',
+    description: 'Specialized for multi-story apartments where structural renovation is prohibited. Harmonizes entrance direction, kitchen & toilet placement, and bedroom layout using elemental cures.',
+    deliverables: [
+      '16-Zone Grid Blueprint Mapping & Compass Overlay',
+      'Main Entrance Gate & Door Dosha Analysis',
+      'Kitchen & Toilet Non-Demolition Remedial Cures',
+      'Bedroom & Sleep Direction Optimization for Family Harmony',
+      'Custom Color Therapy & Mirror Placement Guide',
+      '30 Min One-on-One Live Video Walkthrough Consultation'
+    ]
+  },
+  {
+    id: 'res-villa',
+    name: 'Independent House & Villa Complete Audit',
+    category: 'Residential',
+    badge: 'Best for Villas & Bungalows',
+    price: 7499,
+    originalPrice: 12000,
+    turnaround: '3 Days Turnaround',
+    suitableFor: 'Independent Houses, Bungalows, Villas, Duplexes',
+    consultantLevel: 'Lead Vastu Architect & Vedic Scholar',
+    description: 'Comprehensive 360° audit for standalone properties. Analyzes plot boundary, underground/overhead water tanks, staircase direction, garden layout, and Pancha Bhuta energy balance.',
+    deliverables: [
+      'Plot Shape, Boundary & Gate Alignment Evaluation',
+      'Underground & Overhead Water Tank Position Optimization',
+      'Staircase, Septic Tank & Parking Area Dosha Correction',
+      'Pancha Bhuta Elemental Strip Remedies (Copper, Brass, Iron)',
+      'Garden, Fountain & Home Mandir Direction Setup',
+      '60 Min Live Video Walkthrough + Hardcopy Vedic Report'
+    ]
+  },
+  {
+    id: 'res-plot',
+    name: 'New Home Purchase & Plot Selection Pack',
+    category: 'Residential',
+    badge: 'Pre-Purchase Essential',
+    price: 4999,
+    originalPrice: 8500,
+    turnaround: 'Within 24 Hours (Fast Track)',
+    suitableFor: 'Prospective Homebuyers, Plot Seekers, Real Estate Investors',
+    consultantLevel: 'Senior Vedic Acharya',
+    description: 'Avoid buying problematic properties! Comparative Vastu assessment of up to 3 shortlisted plots or apartments before you sign any agreement or make token payments.',
+    deliverables: [
+      'Comparative Audit of up to 3 Shortlisted Properties or Plots',
+      'Vithi Shool (T-Junction / Road Intersection) & Slope Check',
+      'Soil Quality & Geopathic Stress Risk Evaluation',
+      'Auspicious Muhurat for Griha Pravesh & Bhoomi Puja',
+      'Clear Buy / Reject Recommendation with Risk Scorecard',
+      '30 Min Consultation to Review Floor Plans with Acharya'
+    ]
+  },
+  // Commercial Packages
+  {
+    id: 'com-retail',
+    name: 'Retail Shop & Showroom Revenue Booster',
+    category: 'Commercial',
+    badge: 'High ROI for Retail',
+    price: 8999,
+    originalPrice: 15000,
+    turnaround: '48 Hours Turnaround',
+    suitableFor: 'Retail Stores, Showrooms, Boutiques, Salons, Supermarkets',
+    consultantLevel: 'Business Vastu Specialist',
+    description: 'Designed to accelerate customer footfall, increase average order value, and clear inventory stagnation. Focuses on cash counter placement and brand energy alignment.',
+    deliverables: [
+      'Galla (Cash Counter) & Safe Locker Orientation for Daily Cash Flow',
+      'Customer Footfall Acceleration & Entrance Glass Branding Layout',
+      'Display Rack & Hot-Selling Merchandise Placement Grid',
+      'Commercial Lighting Frequency & Elemental Color Therapy',
+      'Staff & Salesperson Seating Harmony to Boost Conversion',
+      '45 Min Live Video Consultation with Business Vastu Master'
+    ]
+  },
+  {
+    id: 'com-office',
+    name: 'Corporate Office & Workplace Productivity Audit',
+    category: 'Commercial',
+    badge: 'Corporate Choice',
+    price: 14999,
+    originalPrice: 25000,
+    turnaround: '4 Days Turnaround',
+    suitableFor: 'IT Parks, Corporate Offices, Co-working Spaces, Branch Offices',
+    consultantLevel: 'Lead Vastu Architect & Corporate Consultant',
+    description: 'Optimize corporate cabins and workstation grids to enhance decision-making power, reduce employee attrition, resolve leadership conflicts, and attract high-value clients.',
+    deliverables: [
+      'MD / CEO / Director Cabin Power Orientation & Desk Setup',
+      'Conference Room & Negotiation Table Grid for Deal Closing',
+      'Employee Workstation Grid for High Focus & Low Attrition',
+      'Server Room, Electrical Panel & Pantry Agneya Alignment',
+      'Reception & Brand Logo Power Placement in Auspicious Zone',
+      '90 Min Complete Walkthrough + Comprehensive CAD Overlay'
+    ]
+  },
+  {
+    id: 'com-hospitality',
+    name: 'Restaurant, Hotel & Cafe Ambiance Pack',
+    category: 'Commercial',
+    badge: 'Hospitality Special',
+    price: 11999,
+    originalPrice: 20000,
+    turnaround: '3 Days Turnaround',
+    suitableFor: 'Restaurants, Cafes, Cloud Kitchens, Hotels, Resorts',
+    consultantLevel: 'Commercial Hospitality Vastu Expert',
+    description: 'Specialized for the food & hospitality industry. Balances the Agneya (Fire) zone in commercial kitchens to ensure delicious food quality, enthusiastic staff, and repeat guests.',
+    deliverables: [
+      'Commercial Kitchen, Burner & Oven Placement in South-East',
+      'Bar, Beverage Counter & Lounge Energy Flow Optimization',
+      'Billing Desk & Guest Seating Layout for Maximum Table Turnover',
+      'Waste Management, Exhaust & Deep Freezer Positioning',
+      'Harmonizing Ambiance & Background Frequency Recommendations',
+      '60 Min Live Walkthrough with Hospitality Specialist'
+    ]
+  },
+  // Industrial Packages
+  {
+    id: 'ind-factory',
+    name: 'Factory & Manufacturing Plant Vastu Audit',
+    category: 'Industrial',
+    badge: 'Industrial Powerhouse',
+    price: 24999,
+    originalPrice: 40000,
+    turnaround: '5 Days Turnaround',
+    suitableFor: 'Manufacturing Plants, Heavy Machinery Units, Processing Mills, Industrial Sheds',
+    consultantLevel: 'Senior Industrial Vastu Scientist',
+    description: 'Heavy industrial layout balancing. Ensures smooth machine operations without frequent breakdowns, optimizes raw material conversion, and maintains peaceful labor relations.',
+    deliverables: [
+      'Heavy Machinery Placement in South / West Weight Zones',
+      'Raw Material vs Finished Goods Storage Movement Grid',
+      'Boiler, Furnace, Transformer & Generator Agneya Alignment',
+      'Labor Quarters, Staff Canteen & Security Gate Harmony',
+      'Industrial Effluent & Waste Disposal Direction Correction',
+      '2-Hour Comprehensive Video Audit + Custom Auto-CAD Layout'
+    ]
+  },
+  {
+    id: 'ind-warehouse',
+    name: 'Warehouse, Godown & Logistics Speed Pack',
+    category: 'Industrial',
+    badge: 'Fast Stock Turnover',
+    price: 16999,
+    originalPrice: 28000,
+    turnaround: '3 Days Turnaround',
+    suitableFor: 'Warehouses, Godowns, Logistics Hubs, Cold Storage Plants',
+    consultantLevel: 'Industrial Logistics Specialist',
+    description: 'Eliminate dead stock and supply chain delays! Balances North-West (Vayavya) air energy for rapid inventory dispatch and protects stored goods from fire or moisture damage.',
+    deliverables: [
+      'Inventory Rotation Acceleration Grid (North-West Vayavya Setup)',
+      'Loading & Unloading Dock Orientation for Smooth Logistics',
+      'Security Cabin, Weighbridge & Administrative Office Layout',
+      'Fire Safety Hazard & Electrical Panel Mitigation',
+      'Moisture & Spoilage Prevention Zone Mapping',
+      '60 Min Video Consultation + Blueprint Overlay'
+    ]
+  },
+  // Specialized Packages
+  {
+    id: 'spec-nondemo',
+    name: '100% Non-Demolition Elemental Cure Pack',
+    category: 'Specialized',
+    badge: 'Zero Demolition Guarantee',
+    price: 6499,
+    originalPrice: 11000,
+    turnaround: '48 Hours Turnaround',
+    suitableFor: 'Any Built Property with Existing Defects (Wrong Entrance, SW Toilet, NE Kitchen)',
+    consultantLevel: 'Master Remedial Specialist',
+    description: 'Already built your house or office with severe Vastu defects? Do not break walls! Our Acharyas install metallic strip grids, energy pyramids, and color frequencies to neutralize negative doshas.',
+    deliverables: [
+      'Specialized Elemental Strip Cures (Copper, Brass, Iron, Aluminum)',
+      'Pyramid Grid & Energy Helix Placements for Toilet/Kitchen Doshas',
+      'Custom Color Skirting Treatments & Mirror Placement Therapy',
+      'Virtual Installation Guidance via Live Video Call with Acharya',
+      'Energy Shielding against External T-Junctions & High Voltage Lines',
+      'Lifetime Remedial Support & Quarterly Energy Checkup'
+    ]
+  },
+  {
+    id: 'spec-geopathic',
+    name: 'Geopathic Stress & Bio-Energy Scanning Audit',
+    category: 'Specialized',
+    badge: 'Scientific Vedic Bio-Energy',
+    price: 18999,
+    originalPrice: 32000,
+    turnaround: '4 Days Turnaround',
+    suitableFor: 'Properties with Chronic Illness, Unexplained Financial Blockages, or Sleep Disorders',
+    consultantLevel: 'Vedic Bio-Energy Scientist (Lecher Antenna Certified)',
+    description: 'Advanced scientific investigation of subterranean earth radiation, underground water veins, and Hartmann/Curry grid lines that drain human vitality and cause persistent sickness.',
+    deliverables: [
+      'Remote Satellite & Lecher Antenna Bio-Energy Frequency Scanning',
+      'Hartmann & Curry Grid Earth Radiation Mapping & Neutralization',
+      'Underground Water Vein & Geological Fault Line Detection',
+      'Installation of Universal Neutralizer Pyramids & Copper Earth Rods',
+      'Chakra & Aura Energy Balancing for Property Residents',
+      '60 Min Deep-Dive Scientist Consultation + Energy Heatmap Report'
+    ]
+  },
+  {
+    id: 'spec-retainer',
+    name: 'Annual Vastu Retainer for Developers & Builders',
+    category: 'Specialized',
+    badge: 'Real Estate VIP Retainer',
+    price: 49999,
+    originalPrice: 85000,
+    turnaround: 'Immediate / Ongoing 1-Year Support',
+    suitableFor: 'Real Estate Developers, Builders, Architect Firms, Multi-Property Owners',
+    consultantLevel: 'Panel of 3 Senior Vastu Acharyas & Scientists',
+    description: 'Year-round Vastu partnership for builders and growing businesses. Have our senior Vedic scholars review every architectural blueprint, layout revision, and marketing floor plan.',
+    deliverables: [
+      'Year-Round Vastu Oversight for New Projects & Floor Plans',
+      'Quarterly On-Site or Remote Bio-Energy Audits & Layout Reviews',
+      'Priority 24/7 Direct WhatsApp & Phone Access to Senior Acharyas',
+      'Muhurat Selection for Project Launches, Bhoomi Puja & Excavations',
+      'Up to 10 Complete Property/Unit Audits Included in Annual Pass',
+      'Co-Branded Vastu Compliant Certificate for Marketing to Buyers'
+    ]
+  }
+];
+
 export function VastuConsultancy({ user, onRecharge, onOpenChat }: VastuConsultancyProps) {
-  const [activeSubTab, setActiveSubTab] = useState<'audit' | 'consultants' | 'compass'>('audit');
+  const [activeSubTab, setActiveSubTab] = useState<'audit' | 'consultants' | 'compass' | 'packages'>('audit');
+  const [packageCategoryFilter, setPackageCategoryFilter] = useState<'All' | 'Residential' | 'Commercial' | 'Industrial' | 'Specialized'>('All');
+  const [selectedPackageForBooking, setSelectedPackageForBooking] = useState<VastuPackage | null>(null);
+  const [packageBookingPhone, setPackageBookingPhone] = useState('');
+  const [packageBookingTimeSlot, setPackageBookingTimeSlot] = useState('Tomorrow 11:00 AM');
+  const [packagePropertyType, setPackagePropertyType] = useState('3 BHK Apartment');
+  const [packageAreaSize, setPackageAreaSize] = useState('1500 - 2500 Sq. Ft.');
+  const [packageLanguage, setPackageLanguage] = useState('Hindi & English');
+  const [packageAttachMedia, setPackageAttachMedia] = useState(true);
   
   // Property Form State
   const [selectedCategory, setSelectedCategory] = useState('Residential');
@@ -350,52 +599,72 @@ export function VastuConsultancy({ user, onRecharge, onOpenChat }: VastuConsulta
             </div>
             <h3 className="font-bold text-lg text-white">Need Urgent Audit?</h3>
             <p className="text-xs text-slate-300 mt-1 mb-4">Connect instantly with senior Vastu Acharyas for video walkthrough analysis.</p>
-            <button 
-              onClick={() => setActiveSubTab('consultants')}
-              className="w-full bg-gradient-to-r from-amber-400 to-yellow-400 text-green-950 font-black py-3 rounded-xl shadow-lg hover:brightness-110 transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
-            >
-              <PhoneCall size={16} /> Book Live Consultant
-            </button>
+            <div className="flex flex-col gap-2">
+              <button 
+                onClick={() => setActiveSubTab('consultants')}
+                className="w-full bg-gradient-to-r from-amber-400 to-yellow-400 text-green-950 font-black py-2.5 rounded-xl shadow-lg hover:brightness-110 transition-all flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer"
+              >
+                <PhoneCall size={15} /> Book Live Consultant
+              </button>
+              <button 
+                onClick={() => setActiveSubTab('packages')}
+                className="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-2 rounded-xl border border-emerald-500/50 transition-all flex items-center justify-center gap-2 text-xs cursor-pointer shadow-md"
+              >
+                <Award size={14} className="text-amber-300" /> View Vastu Packages
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* 2. Navigation Sub-Tabs */}
-      <div className="flex flex-wrap justify-center gap-3 bg-stone-100 p-2 rounded-2xl border border-stone-200 shadow-sm max-w-3xl mx-auto">
+      <div className="flex flex-wrap justify-center gap-2.5 bg-stone-100 p-2 rounded-2xl border border-stone-200 shadow-sm max-w-5xl mx-auto">
         <button
           onClick={() => setActiveSubTab('audit')}
-          className={`flex-1 min-w-[200px] py-3.5 px-6 rounded-xl font-black text-sm flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
+          className={`flex-1 min-w-[180px] py-3.5 px-4 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
             activeSubTab === 'audit'
               ? 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-lg scale-[1.02]'
               : 'text-stone-600 hover:bg-white hover:text-stone-900'
           }`}
         >
-          <Upload size={18} className={activeSubTab === 'audit' ? 'text-amber-300' : ''} />
+          <Upload size={17} className={activeSubTab === 'audit' ? 'text-amber-300' : ''} />
           1. AI Audit & Media Uploader
         </button>
         
         <button
           onClick={() => setActiveSubTab('consultants')}
-          className={`flex-1 min-w-[200px] py-3.5 px-6 rounded-xl font-black text-sm flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
+          className={`flex-1 min-w-[180px] py-3.5 px-4 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
             activeSubTab === 'consultants'
               ? 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-lg scale-[1.02]'
               : 'text-stone-600 hover:bg-white hover:text-stone-900'
           }`}
         >
-          <User size={18} className={activeSubTab === 'consultants' ? 'text-amber-300' : ''} />
+          <User size={17} className={activeSubTab === 'consultants' ? 'text-amber-300' : ''} />
           2. Live Vastu Acharyas
         </button>
 
         <button
           onClick={() => setActiveSubTab('compass')}
-          className={`flex-1 min-w-[200px] py-3.5 px-6 rounded-xl font-black text-sm flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
+          className={`flex-1 min-w-[180px] py-3.5 px-4 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
             activeSubTab === 'compass'
               ? 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-lg scale-[1.02]'
               : 'text-stone-600 hover:bg-white hover:text-stone-900'
           }`}
         >
-          <Compass size={18} className={activeSubTab === 'compass' ? 'text-amber-300' : ''} />
+          <Compass size={17} className={activeSubTab === 'compass' ? 'text-amber-300' : ''} />
           3. Interactive Vastu Guide
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab('packages')}
+          className={`flex-1 min-w-[180px] py-3.5 px-4 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            activeSubTab === 'packages'
+              ? 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-lg scale-[1.02]'
+              : 'text-stone-600 hover:bg-white hover:text-stone-900'
+          }`}
+        >
+          <Award size={17} className={activeSubTab === 'packages' ? 'text-amber-300' : ''} />
+          4. Vastu Packages
         </button>
       </div>
 
@@ -1098,6 +1367,220 @@ export function VastuConsultancy({ user, onRecharge, onOpenChat }: VastuConsulta
         </div>
       )}
 
+      {/* TAB 4: VASTU CONSULTANCY PACKAGES */}
+      {activeSubTab === 'packages' && (
+        <div className="space-y-10 animate-fadeIn">
+          {/* Header */}
+          <div className="text-center space-y-3 max-w-3xl mx-auto">
+            <span className="bg-emerald-100 text-emerald-800 text-xs font-black px-3.5 py-1.5 rounded-full uppercase tracking-wider inline-block">
+              Vedic Energy Audits & Non-Demolition Cures
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-serif font-black text-stone-900 tracking-tight">
+              Vastu Consultancy Packages for Every Property Type
+            </h2>
+            <p className="text-stone-600 text-sm sm:text-base font-medium leading-relaxed">
+              Select tailored Vastu packages for Residential homes, Commercial spaces, Industrial plants, and 100% Non-Demolition remedial cures conducted by certified Vedic Acharyas and Bio-Energy Scientists.
+            </p>
+          </div>
+
+          {/* Category Filter Pills */}
+          <div className="flex flex-wrap items-center justify-center gap-2 max-w-3xl mx-auto bg-stone-100 p-1.5 rounded-2xl border border-stone-200">
+            {(['All', 'Residential', 'Commercial', 'Industrial', 'Specialized'] as const).map((cat) => {
+              const count = cat === 'All' 
+                ? VASTU_CONSULTANCY_PACKAGES.length 
+                : VASTU_CONSULTANCY_PACKAGES.filter(p => p.category === cat).length;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setPackageCategoryFilter(cat)}
+                  className={`py-2 px-5 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 cursor-pointer ${
+                    packageCategoryFilter === cat
+                      ? 'bg-gradient-to-r from-stone-900 to-stone-800 text-white shadow-md'
+                      : 'text-stone-600 hover:bg-white hover:text-stone-900'
+                  }`}
+                >
+                  {cat === 'All' && '🌟 All Packages'}
+                  {cat === 'Residential' && '🏠 Residential'}
+                  {cat === 'Commercial' && '🏢 Commercial'}
+                  {cat === 'Industrial' && '🏭 Industrial'}
+                  {cat === 'Specialized' && '✨ Specialized Cures'}
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                    packageCategoryFilter === cat ? 'bg-amber-400 text-green-950' : 'bg-stone-200 text-stone-700'
+                  }`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Packages Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {VASTU_CONSULTANCY_PACKAGES.filter(p => packageCategoryFilter === 'All' || p.category === packageCategoryFilter).map((pkg) => {
+              const discountPercent = Math.round(((pkg.originalPrice - pkg.price) / pkg.originalPrice) * 100);
+              return (
+                <motion.div
+                  key={pkg.id}
+                  whileHover={{ y: -6 }}
+                  className="bg-white rounded-3xl border border-stone-200 shadow-lg hover:shadow-2xl transition-all flex flex-col justify-between overflow-hidden relative group"
+                >
+                  {/* Top Bar / Badge */}
+                  <div className="p-6 pb-4 space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={`text-[11px] font-extrabold uppercase px-3 py-1 rounded-full border ${
+                        pkg.category === 'Residential' ? 'bg-amber-50 text-amber-900 border-amber-200' :
+                        pkg.category === 'Commercial' ? 'bg-blue-50 text-blue-900 border-blue-200' :
+                        pkg.category === 'Industrial' ? 'bg-purple-50 text-purple-900 border-purple-200' :
+                        'bg-emerald-50 text-emerald-900 border-emerald-200'
+                      }`}>
+                        {pkg.category} Audit
+                      </span>
+                      {pkg.badge && (
+                        <span className="bg-gradient-to-r from-amber-400 to-orange-400 text-green-950 font-black text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                          {pkg.badge}
+                        </span>
+                      )}
+                    </div>
+
+                    <div>
+                      <h3 className="font-serif font-black text-xl text-stone-900 group-hover:text-emerald-700 transition-colors">
+                        {pkg.name}
+                      </h3>
+                      <p className="text-xs text-emerald-700 font-bold mt-1">
+                        Suitable for: {pkg.suitableFor}
+                      </p>
+                    </div>
+
+                    {/* Price Row */}
+                    <div className="bg-stone-50 p-3.5 rounded-2xl border border-stone-200/80 flex items-center justify-between">
+                      <div>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-2xl font-black text-stone-900">₹{pkg.price.toLocaleString()}</span>
+                          <span className="text-xs text-stone-400 line-through font-semibold">₹{pkg.originalPrice.toLocaleString()}</span>
+                          <span className="bg-red-100 text-red-700 text-[10px] font-black px-1.5 py-0.5 rounded">
+                            {discountPercent}% OFF
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-stone-500 font-medium block">All inclusive taxes & consultation</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] font-bold text-stone-600 block uppercase tracking-wider">Turnaround</span>
+                        <span className="text-xs font-black text-emerald-700 flex items-center gap-1 justify-end">
+                          <Clock size={12} /> {pkg.turnaround}
+                        </span>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-stone-600 leading-relaxed font-medium">
+                      {pkg.description}
+                    </p>
+
+                    {/* Deliverables Checklist */}
+                    <div className="space-y-2 pt-2 border-t border-stone-100">
+                      <span className="text-[11px] font-bold text-stone-900 uppercase tracking-wider block">What's Included:</span>
+                      <ul className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                        {pkg.deliverables.map((item, idx) => (
+                          <li key={idx} className="text-xs text-stone-700 flex items-start gap-2 font-medium">
+                            <CheckCircle2 size={14} className="text-emerald-600 shrink-0 mt-0.5" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Footer Button & Consultant Level */}
+                  <div className="p-6 pt-0 space-y-3 bg-stone-50/50 mt-4">
+                    <div className="flex items-center gap-1.5 text-[11px] text-stone-600 font-bold justify-center py-1">
+                      <Award size={14} className="text-amber-500" />
+                      <span>Conducted by: <strong className="text-stone-900">{pkg.consultantLevel}</strong></span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setSelectedPackageForBooking(pkg);
+                        if (pkg.category === 'Residential') setPackagePropertyType('3 BHK Apartment');
+                        else if (pkg.category === 'Commercial') setPackagePropertyType('Retail Showroom');
+                        else if (pkg.category === 'Industrial') setPackagePropertyType('Manufacturing Plant');
+                        else setPackagePropertyType('Existing Property (Non-Demolition)');
+                      }}
+                      className="w-full bg-gradient-to-r from-stone-900 via-stone-800 to-stone-900 text-amber-300 hover:text-white font-black py-3.5 rounded-2xl shadow-md hover:shadow-xl transition-all flex items-center justify-center gap-2 text-sm cursor-pointer border border-stone-700"
+                    >
+                      <span>Select & Book Package</span>
+                      <ArrowRight size={16} />
+                    </button>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* 100% Non-Demolition Guarantee Banner */}
+          <div className="bg-gradient-to-r from-emerald-900 via-teal-900 to-stone-900 rounded-3xl p-8 text-white shadow-xl border border-emerald-500/40 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="space-y-2 text-center md:text-left">
+              <div className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest border border-emerald-400/30">
+                <Shield size={14} className="text-amber-300" /> Vedic Architectural Pledge
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-serif font-black">Worried About Breaking Walls or Renovation Costs?</h3>
+              <p className="text-emerald-100 text-sm sm:text-base max-w-2xl leading-relaxed">
+                Our certified Vastu Acharyas strictly practice <strong>100% Non-Demolition Vastu</strong>. By utilizing elemental metallic strips (Copper, Brass, Iron, Aluminum), energy pyramids, crystal grids, and color frequencies, we neutralize 99% of architectural doshas without breaking a single brick!
+              </p>
+            </div>
+            <div className="shrink-0 text-center bg-black/30 p-5 rounded-2xl border border-white/10 space-y-2">
+              <span className="text-amber-300 font-black text-3xl block">0% Demolition</span>
+              <span className="text-xs text-emerald-200 font-bold uppercase tracking-wider block">100% Elemental Cures</span>
+            </div>
+          </div>
+
+          {/* Vastu Packages FAQ Section */}
+          <div className="bg-white rounded-3xl p-8 border border-stone-200 shadow-sm space-y-6">
+            <div className="text-center max-w-2xl mx-auto space-y-1">
+              <h3 className="font-serif font-black text-2xl text-stone-900 flex items-center justify-center gap-2">
+                <HelpCircle className="text-amber-500" /> Frequently Asked Questions on Vastu Packages
+              </h3>
+              <p className="text-xs sm:text-sm text-stone-500 font-medium">Everything you need to know about our property audits and remedies.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+              <div className="bg-stone-50 p-5 rounded-2xl border border-stone-200/80 space-y-2">
+                <h4 className="font-bold text-sm text-stone-900 flex items-start gap-2">
+                  <span className="text-emerald-600">Q.</span> Will I be asked to break walls or do expensive civil work?
+                </h4>
+                <p className="text-xs text-stone-600 leading-relaxed font-medium pl-5">
+                  No! Our Vastu Acharyas specialize in 100% Non-Demolition cures. We use elemental metallic strips inserted in floor skirting, pyramid grids, color therapy, and mirror placements to correct entrance, kitchen, and toilet defects without civil work.
+                </p>
+              </div>
+
+              <div className="bg-stone-50 p-5 rounded-2xl border border-stone-200/80 space-y-2">
+                <h4 className="font-bold text-sm text-stone-900 flex items-start gap-2">
+                  <span className="text-emerald-600">Q.</span> How do I share my property blueprint or photos after booking?
+                </h4>
+                <p className="text-xs text-stone-600 leading-relaxed font-medium pl-5">
+                  Once you select a package, our AI Audit & Media Uploader unlocks your secure project dashboard. You can upload CAD drawings, PDF floor plans, room photos, or 360° walkthrough videos which are reviewed by your assigned Acharya before the session.
+                </p>
+              </div>
+
+              <div className="bg-stone-50 p-5 rounded-2xl border border-stone-200/80 space-y-2">
+                <h4 className="font-bold text-sm text-stone-900 flex items-start gap-2">
+                  <span className="text-emerald-600">Q.</span> Can I get pre-purchase evaluation before buying a plot or flat?
+                </h4>
+                <p className="text-xs text-stone-600 leading-relaxed font-medium pl-5">
+                  Yes! Our 'New Home Purchase & Plot Selection Pack' is specifically crafted for homebuyers and investors. We compare up to 3 shortlisted properties, checking road intersections (Vithi Shool), soil quality, and energy flow before you pay token money.
+                </p>
+              </div>
+
+              <div className="bg-stone-50 p-5 rounded-2xl border border-stone-200/80 space-y-2">
+                <h4 className="font-bold text-sm text-stone-900 flex items-start gap-2">
+                  <span className="text-emerald-600">Q.</span> What is Geopathic Stress and Bio-Energy Scanning?
+                </h4>
+                <p className="text-xs text-stone-600 leading-relaxed font-medium pl-5">
+                  It is an advanced scientific audit using Lecher Antennas and Thermo-Scanners to detect subterranean earth radiation and underground water veins. These hidden frequencies often cause unexplained chronic illnesses or financial stagnation in homes and factories.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* BOOKING MODAL FOR LIVE CONSULTANT */}
       <AnimatePresence>
         {selectedConsultantForBooking && (
@@ -1196,6 +1679,171 @@ export function VastuConsultancy({ user, onRecharge, onOpenChat }: VastuConsulta
                   className="w-2/3 bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-bold py-3.5 rounded-xl text-sm shadow-lg hover:brightness-110 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Check size={16} /> Confirm & Pay Now
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* BOOKING MODAL FOR VASTU PACKAGE */}
+      <AnimatePresence>
+        {selectedPackageForBooking && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-stone-200 relative space-y-5 max-h-[90vh] overflow-y-auto"
+            >
+              <button 
+                onClick={() => setSelectedPackageForBooking(null)}
+                className="absolute top-5 right-5 text-stone-400 hover:text-stone-600 bg-stone-100 p-2 rounded-full cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-amber-300 flex items-center justify-center font-black shadow-md shrink-0">
+                  <Award size={24} />
+                </div>
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">
+                    {selectedPackageForBooking.category} Consultancy Package
+                  </span>
+                  <h3 className="font-serif font-bold text-lg text-stone-900 mt-0.5">{selectedPackageForBooking.name}</h3>
+                </div>
+              </div>
+
+              <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200 flex items-center justify-between text-xs">
+                <div>
+                  <span className="text-stone-500 font-medium block">Special Package Price</span>
+                  <div className="flex items-baseline gap-2 mt-0.5">
+                    <span className="text-xl font-black text-stone-900">₹{selectedPackageForBooking.price.toLocaleString()}</span>
+                    <span className="text-xs text-stone-400 line-through">₹{selectedPackageForBooking.originalPrice.toLocaleString()}</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-stone-500 font-medium block">Turnaround Time</span>
+                  <span className="text-xs font-bold text-emerald-700 flex items-center gap-1 justify-end mt-0.5">
+                    <Clock size={12} /> {selectedPackageForBooking.turnaround}
+                  </span>
+                </div>
+              </div>
+
+              {/* Customization Fields */}
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-stone-600 block">Property Type & Specification:</label>
+                  <input
+                    type="text"
+                    value={packagePropertyType}
+                    onChange={(e) => setPackagePropertyType(e.target.value)}
+                    placeholder="e.g. 3 BHK Flat, Retail Showroom, Garment Factory"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-xs font-bold text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-stone-600 block">Approx. Area Size:</label>
+                    <select
+                      value={packageAreaSize}
+                      onChange={(e) => setPackageAreaSize(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-xl border border-stone-300 text-xs font-bold text-stone-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="Under 1,000 Sq. Ft.">Under 1,000 Sq. Ft.</option>
+                      <option value="1,000 - 2,000 Sq. Ft.">1,000 - 2,000 Sq. Ft.</option>
+                      <option value="2,000 - 5,000 Sq. Ft.">2,000 - 5,000 Sq. Ft.</option>
+                      <option value="Above 5,000 Sq. Ft.">Above 5,000 Sq. Ft.</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-stone-600 block">Preferred Language:</label>
+                    <select
+                      value={packageLanguage}
+                      onChange={(e) => setPackageLanguage(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-xl border border-stone-300 text-xs font-bold text-stone-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="Hindi & English">Hindi & English</option>
+                      <option value="English Only">English Only</option>
+                      <option value="Hindi Only">Hindi Only</option>
+                      <option value="Tamil / Telugu / Kannada">South Indian (Tamil/Telugu)</option>
+                      <option value="Gujarati / Marathi">West Indian (Gujarati/Marathi)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-stone-600 block">WhatsApp / Contact Phone:</label>
+                  <input
+                    type="tel"
+                    value={packageBookingPhone}
+                    onChange={(e) => setPackageBookingPhone(e.target.value)}
+                    placeholder="+91 98765 43210"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-xs font-bold text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+
+                <div className="space-y-2 pt-1">
+                  <label className="text-xs font-bold uppercase tracking-wider text-stone-600 block">Blueprint & Photo Files:</label>
+                  <div className="flex items-center gap-3 p-3 bg-stone-100 rounded-xl border border-stone-200">
+                    <input
+                      type="checkbox"
+                      id="attachMedia"
+                      checked={packageAttachMedia}
+                      onChange={(e) => setPackageAttachMedia(e.target.checked)}
+                      className="w-4 h-4 text-emerald-600 rounded cursor-pointer"
+                    />
+                    <label htmlFor="attachMedia" className="text-xs font-medium text-stone-700 cursor-pointer">
+                      Attach currently uploaded files from Media Uploader ({uploadedMedia.length} files available)
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-amber-50 p-3 rounded-xl border border-amber-200 text-[11px] text-amber-900 font-medium flex items-start gap-2">
+                <Shield size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                <span>
+                  Your audit will be conducted by <strong>{selectedPackageForBooking.consultantLevel}</strong> with 100% Non-Demolition remedies guarantee.
+                </span>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setSelectedPackageForBooking(null)}
+                  className="w-1/3 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold py-3.5 rounded-xl text-xs cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (!user) {
+                      alert("Please login or register to purchase this Vastu package.");
+                      setSelectedPackageForBooking(null);
+                      return;
+                    }
+                    if (!packageBookingPhone) {
+                      alert("Please enter a valid WhatsApp or contact number for appointment coordination.");
+                      return;
+                    }
+                    if (onRecharge && (user.wallet_balance || 0) < selectedPackageForBooking.price) {
+                      alert(`Insufficient wallet balance (₹${user.wallet_balance || 0}). Please recharge your wallet with ₹${selectedPackageForBooking.price - (user.wallet_balance || 0)} or more.`);
+                      onRecharge();
+                    } else {
+                      alert(`🎉 Success! You have booked the '${selectedPackageForBooking.name}' for ₹${selectedPackageForBooking.price}. Your assigned ${selectedPackageForBooking.consultantLevel} will contact you on ${packageBookingPhone} shortly!`);
+                      setSelectedPackageForBooking(null);
+                    }
+                  }}
+                  className="w-2/3 bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-bold py-3.5 rounded-xl text-sm shadow-lg hover:brightness-110 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Check size={16} /> Pay ₹{selectedPackageForBooking.price.toLocaleString()} & Book
                 </button>
               </div>
             </motion.div>
