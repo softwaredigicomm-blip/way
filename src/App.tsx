@@ -16,6 +16,7 @@ import { Express3QuestionModal } from './components/Express3QuestionModal';
 import { LanguageSwitcherModal, SUPPORTED_LANGUAGES, LanguageOption, initGoogleTranslate, triggerGoogleTranslate } from './components/LanguageSwitcherModal';
 import { UndertakingAcceptanceModal } from './components/UndertakingAcceptanceModal';
 import { VastuConsultancy } from './components/VastuConsultancy';
+import { AIAstrologersSection } from './components/AIAstrologersSection';
 
 // Initialize local storage with seed data
 initStorage();
@@ -2248,6 +2249,7 @@ function CallInterface({ session, onEnd, isAstrologer, userBalance }: { session:
 }
 
 function Chat({ astrologers, user, onRecharge }: { astrologers: Astrologer[], user: UserType | null, onRecharge: () => void }) {
+  const [chatType, setChatType] = useState<'ai' | 'human'>('ai');
   const [showRecharge, setShowRecharge] = useState(false);
   const [rechargeAmount, setRechargeAmount] = useState(100);
   const [showReviewModal, setShowReviewModal] = useState<{ astroId: number, callId?: number } | null>(null);
@@ -2464,14 +2466,33 @@ function Chat({ astrologers, user, onRecharge }: { astrologers: Astrologer[], us
           </button>
         </div>
       )}
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-serif font-bold text-deep-blue">Consult Astrologers</h2>
-        <button 
-          onClick={() => setShowRecharge(true)}
-          className="bg-saffron text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2"
-        >
-          <Wallet size={16} /> Recharge Wallet
-        </button>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-serif font-bold text-deep-blue">Consult Astrologers</h2>
+          <p className="text-xs text-slate-500 mt-1">Select from our specialized AI Astrologers or Live Human Experts</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="bg-slate-100 p-1.5 rounded-2xl flex items-center border border-slate-200">
+            <button
+              onClick={() => setChatType('ai')}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${chatType === 'ai' ? 'bg-gradient-to-r from-deep-blue to-indigo-900 text-amber-300 shadow-md scale-[1.02]' : 'text-slate-600 hover:text-slate-900'}`}
+            >
+              <span>🤖 AI Specialists (10 Branches)</span>
+            </button>
+            <button
+              onClick={() => setChatType('human')}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${chatType === 'human' ? 'bg-gradient-to-r from-deep-blue to-indigo-900 text-amber-300 shadow-md scale-[1.02]' : 'text-slate-600 hover:text-slate-900'}`}
+            >
+              <span>🧑‍🏫 Live Human Experts</span>
+            </button>
+          </div>
+          <button 
+            onClick={() => setShowRecharge(true)}
+            className="bg-saffron text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-md hover:bg-red-600 transition-colors shrink-0 cursor-pointer"
+          >
+            <Wallet size={16} /> Recharge Wallet
+          </button>
+        </div>
       </div>
 
       {showRecharge && (
@@ -2544,8 +2565,16 @@ function Chat({ astrologers, user, onRecharge }: { astrologers: Astrologer[], us
         />
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {astrologers.map(astro => (
+      {chatType === 'ai' ? (
+        <AIAstrologersSection user={user} onRecharge={() => setShowRecharge(true)} />
+      ) : (
+        <div className="space-y-6 animate-fadeIn">
+          <div className="flex items-center justify-between bg-amber-50 p-4 rounded-2xl border border-amber-200 text-xs font-bold text-amber-900">
+            <span>🧑‍🏫 Live Verified Human Astrologers ({astrologers.length} available online & offline)</span>
+            <span className="text-[11px] text-amber-700">Rates from ₹15/min</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {astrologers.map(astro => (
           <div key={astro.id} className="glass p-6 rounded-3xl space-y-4 hover:shadow-2xl transition-all">
             <div className="flex gap-4">
               <img src={astro.image_url} className="w-20 h-20 rounded-2xl object-cover" referrerPolicy="no-referrer" />
@@ -2614,7 +2643,9 @@ function Chat({ astrologers, user, onRecharge }: { astrologers: Astrologer[], us
             )}
           </div>
         ))}
-      </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
