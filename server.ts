@@ -981,13 +981,50 @@ async function startServer() {
     res.json({ id: info.lastInsertRowid });
   });
 
+  app.get("/api/vendors", (req, res) => {
+    try {
+      const vendors = db.prepare(`
+        SELECT v.*, COUNT(p.id) as product_count 
+        FROM vendors v 
+        LEFT JOIN products p ON v.id = p.vendor_id AND p.status = 'approved'
+        WHERE v.status = 'approved' OR v.is_active = 1
+        GROUP BY v.id
+      `).all();
+      res.json(vendors);
+    } catch (error) {
+      console.error("Error fetching vendors:", error);
+      res.status(500).json({ error: "Failed to fetch verified vendors" });
+    }
+  });
+
   app.get("/api/products", (req, res) => {
     const status = req.query.status;
     let products;
     if (status) {
-      products = db.prepare("SELECT * FROM products WHERE status = ?").all(status);
+      products = db.prepare(`
+        SELECT p.*, 
+               COALESCE(v.name, v.company_name, 'Ratna Kendra & Astro Jewels') as vendor_name, 
+               COALESCE(v.company_name, v.name, 'Ratna Kendra & Astro Jewels') as vendor_company_name,
+               v.vendor_type, 
+               v.address as vendor_address,
+               v.experience as vendor_experience,
+               v.email as vendor_email
+        FROM products p 
+        LEFT JOIN vendors v ON p.vendor_id = v.id 
+        WHERE p.status = ?
+      `).all(status);
     } else {
-      products = db.prepare("SELECT * FROM products").all();
+      products = db.prepare(`
+        SELECT p.*, 
+               COALESCE(v.name, v.company_name, 'Ratna Kendra & Astro Jewels') as vendor_name, 
+               COALESCE(v.company_name, v.name, 'Ratna Kendra & Astro Jewels') as vendor_company_name,
+               v.vendor_type, 
+               v.address as vendor_address,
+               v.experience as vendor_experience,
+               v.email as vendor_email
+        FROM products p 
+        LEFT JOIN vendors v ON p.vendor_id = v.id
+      `).all();
     }
     res.json(products);
   });

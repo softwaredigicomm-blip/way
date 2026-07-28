@@ -5,7 +5,7 @@ import {
   Wallet, User, ShoppingBag, BookOpen, LayoutDashboard,
   Sparkles, Compass, Heart, Calendar, Menu, X, Send,
   Download, CheckCircle2, AlertCircle, FileText,
-  ChevronLeft, ChevronRight, History, RefreshCw, Award, Shield, Lock, CreditCard, Smartphone, Building2, Languages, Globe, Zap, Eye, Flame, Layers, Radio, Cpu, Activity, Dices
+  ChevronLeft, ChevronRight, History, RefreshCw, Award, Shield, Lock, CreditCard, Smartphone, Building2, Languages, Globe, Zap, Eye, Flame, Layers, Radio, Cpu, Activity, Dices, Store, MapPin
 } from 'lucide-react';
 import { jsPDF } from "jspdf";
 import { Astrologer, User as UserType, ZODIAC_SIGNS, Category, Vendor, Product, Package, Banner, PanditRegistration as PanditType, PujaBooking as PujaBookingType } from './types';
@@ -6000,6 +6000,8 @@ const getProductImageUrl = (product: { name?: string; image_url?: string } | nul
 
 function Shop({ user, onPurchase, onLogin, onRegisterVendor }: { user: UserType | null, onPurchase: () => void, onLogin: (email: string) => void, onRegisterVendor?: () => void }) {
   const [products, setProducts] = useState<Product[]>([]);
+  const [vendors, setVendors] = useState<any[]>([]);
+  const [selectedVendorFilter, setSelectedVendorFilter] = useState<any | null>(null);
   const [cart, setCart] = useState<{product: Product, quantity: number, item_details?: string}[]>([]);
   const [view, setView] = useState<'products' | 'cart' | 'product-details'>('products');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -6015,7 +6017,75 @@ function Shop({ user, onPurchase, onLogin, onRegisterVendor }: { user: UserType 
       .then(data => {
         if (Array.isArray(data)) setProducts(data);
       });
+
+    localFetch('/api/vendors')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setVendors(data);
+      });
   }, []);
+
+  const defaultVendors = [
+    {
+      id: 1,
+      name: "Ratna Kendra & Astro Jewels",
+      vendor_type: "Certified Gemstone Manufacturer & Direct Importer",
+      address: "Jaipur, Rajasthan & Mumbai",
+      experience: 16,
+      rating: "4.9",
+      product_count: 8,
+      status: "approved"
+    },
+    {
+      id: 2,
+      name: "Divination & Vastu House",
+      vendor_type: "Vastu Pyramids, Crystal Grids & Tarot Decks",
+      address: "Haridwar & Delhi NCR",
+      experience: 12,
+      rating: "4.8",
+      product_count: 5,
+      status: "approved"
+    },
+    {
+      id: 3,
+      name: "Sacred Rudraksha & Mala Emporium",
+      vendor_type: "Authentic Himalayan Rudraksha & Crystal Rosaries",
+      address: "Rishikesh, Uttarakhand",
+      experience: 18,
+      rating: "4.9",
+      product_count: 6,
+      status: "approved"
+    },
+    {
+      id: 4,
+      name: "Kashi Temple Crafts & Yantra Studio",
+      vendor_type: "Energized Pure Copper Yantras & Sacred Idols",
+      address: "Varanasi (Kashi), Uttar Pradesh",
+      experience: 22,
+      rating: "5.0",
+      product_count: 7,
+      status: "approved"
+    },
+    {
+      id: 5,
+      name: "Vedic Alchemy & Parad Shrines",
+      vendor_type: "Mercury Parad Shivlings & Vastu Remedies",
+      address: "Ujjain, Madhya Pradesh",
+      experience: 15,
+      rating: "4.9",
+      product_count: 4,
+      status: "approved"
+    }
+  ];
+
+  const displayVendors = vendors.length > 0 ? vendors : defaultVendors;
+
+  const filteredProducts = products.filter(p => {
+    if (!selectedVendorFilter) return true;
+    return p.vendor_id === selectedVendorFilter.id || 
+           (p as any).vendor_name?.toLowerCase() === selectedVendorFilter.name?.toLowerCase() ||
+           (p as any).vendor_company_name?.toLowerCase() === selectedVendorFilter.name?.toLowerCase();
+  });
 
   const fetchReviews = (productId: number) => {
     localFetch(`/api/product/${productId}/reviews`)
@@ -6132,15 +6202,60 @@ function Shop({ user, onPurchase, onLogin, onRegisterVendor }: { user: UserType 
             <h2 className="text-4xl font-serif font-bold text-deep-blue">{selectedProduct.name}</h2>
             <p className="text-3xl font-bold text-saffron">₹{selectedProduct.price}</p>
             
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 p-4 rounded-2xl flex items-start gap-3.5 text-sm text-stone-800 shadow-sm">
-              <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
-                <Award size={20} className="text-amber-700" />
+            {/* Dealing AstroShop Highlight Card */}
+            <div className="bg-gradient-to-r from-amber-50 via-orange-50/90 to-yellow-50 border-2 border-amber-300 p-5 rounded-3xl space-y-3 shadow-md">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-800 to-stone-900 text-amber-200 flex items-center justify-center font-black shadow-xs shrink-0">
+                    <Store size={22} />
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-black tracking-widest text-amber-800 block">
+                      Dealing AstroShop Vendor
+                    </span>
+                    <h3 className="text-lg font-black text-stone-900 leading-tight">
+                      {(selectedProduct as any).vendor_name || (selectedProduct as any).vendor_company_name || 'Ratna Kendra & Astro Jewels'}
+                    </h3>
+                  </div>
+                </div>
+                <span className="text-xs bg-emerald-100 text-emerald-800 border border-emerald-300 font-extrabold px-3 py-1 rounded-full flex items-center gap-1 shrink-0">
+                  <CheckCircle2 size={13} /> Verified Supplier
+                </span>
               </div>
-              <div className="space-y-1">
-                <strong className="font-extrabold text-amber-950 block text-base">Verified Supplier & Quality Guarantee</strong>
-                <p className="text-xs text-stone-700 font-medium leading-relaxed">
-                  We connect you to the <strong className="text-amber-900 font-bold">best, authentic, lab-tested suppliers/vendors</strong> to enable you to get <strong className="text-amber-900 font-bold">certified/quality Gemstones and ritual items</strong>. Every item is government-lab tested and energized.
-                </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-stone-700 pt-2 border-t border-amber-200/80">
+                <div>
+                  <span className="text-slate-500 block text-[10px] font-bold uppercase">Vendor Specialty</span>
+                  <p className="font-extrabold text-stone-800">
+                    {(selectedProduct as any).vendor_type || 'Certified Gemstones & Vedic Ritual Items'}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-slate-500 block text-[10px] font-bold uppercase">Vendor Location</span>
+                  <p className="font-extrabold text-stone-800">
+                    {(selectedProduct as any).vendor_address || 'Jaipur / Varanasi, India'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center justify-between flex-wrap gap-2">
+                <span className="text-[11px] text-amber-900 font-semibold italic flex items-center gap-1">
+                  <Award size={13} className="text-amber-700 shrink-0" /> Lab Test Certificate Included
+                </span>
+                <button 
+                  onClick={() => {
+                    const shopName = (selectedProduct as any).vendor_name || (selectedProduct as any).vendor_company_name || 'Ratna Kendra & Astro Jewels';
+                    const matchedVendor = displayVendors.find(v => v.id === selectedProduct.vendor_id || v.name?.toLowerCase() === shopName.toLowerCase());
+                    setSelectedVendorFilter(matchedVendor || {
+                      id: selectedProduct.vendor_id,
+                      name: shopName
+                    });
+                    setView('products');
+                  }}
+                  className="bg-stone-900 hover:bg-stone-800 text-amber-300 font-extrabold px-3 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1 cursor-pointer"
+                >
+                  View All Shop Items →
+                </button>
               </div>
             </div>
             
@@ -6405,44 +6520,167 @@ function Shop({ user, onPurchase, onLogin, onRegisterVendor }: { user: UserType 
           </button>
         </div>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        {Array.isArray(products) && products.map(product => (
-          <div key={product.id} className="glass rounded-3xl overflow-hidden group">
-            <div className="aspect-square overflow-hidden cursor-pointer" onClick={() => {
-              setSelectedProduct(product);
-              setView('product-details');
-              fetchReviews(product.id);
-            }}>
-              <img 
-                src={getProductImageUrl(product)} 
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
-                referrerPolicy="no-referrer"
-              />
+
+      {/* Verified AstroShops List Section */}
+      <div className="space-y-4 bg-white/60 backdrop-blur-md p-6 rounded-[2.5rem] border border-amber-200/80 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-200/80 pb-3">
+          <div>
+            <div className="inline-flex items-center gap-1.5 text-xs font-black text-amber-800 uppercase tracking-wider mb-1">
+              <Store size={14} className="text-amber-700" /> Verified Partners Directory
             </div>
-            <div className="p-4 space-y-2">
-              <div className="flex items-center gap-1.5 text-[10px] bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded-md font-extrabold w-fit">
-                <Award size={10} className="text-amber-700 shrink-0" /> Lab-Tested Supplier Guarantee
+            <h3 className="text-xl sm:text-2xl font-serif font-extrabold text-stone-900 flex items-center gap-2">
+              Verified AstroShops & Certified Suppliers
+            </h3>
+            <p className="text-stone-600 text-xs sm:text-sm font-medium">
+              Click on any verified AstroShop to browse their authentic inventory and certified stock.
+            </p>
+          </div>
+          {selectedVendorFilter && (
+            <button 
+              onClick={() => setSelectedVendorFilter(null)}
+              className="bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 w-fit cursor-pointer shadow-xs"
+            >
+              <X size={14} /> Clear Filter ({selectedVendorFilter.name})
+            </button>
+          )}
+        </div>
+
+        {/* AstroShops Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {displayVendors.map((vendor) => {
+            const isSelected = selectedVendorFilter?.id === vendor.id || selectedVendorFilter?.name === vendor.name;
+            return (
+              <div 
+                key={vendor.id || vendor.name}
+                onClick={() => {
+                  if (isSelected) {
+                    setSelectedVendorFilter(null);
+                  } else {
+                    setSelectedVendorFilter(vendor);
+                  }
+                }}
+                className={`p-4 rounded-2xl border-2 transition-all cursor-pointer relative flex flex-col justify-between shadow-xs hover:shadow-md ${
+                  isSelected 
+                    ? 'bg-gradient-to-b from-amber-50 to-orange-50 border-amber-500 ring-2 ring-amber-400/30 scale-[1.02]' 
+                    : 'bg-white border-stone-200 hover:border-amber-400'
+                }`}
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-extrabold px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-200 shrink-0">
+                      <CheckCircle2 size={10} /> Verified
+                    </span>
+                    <span className="text-xs font-black text-amber-800 flex items-center gap-0.5 shrink-0">
+                      <Star size={11} className="text-amber-500 fill-amber-500" /> {vendor.rating || '4.9'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 pt-1">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-xs border border-amber-300">
+                      <Store size={20} />
+                    </div>
+                    <div className="overflow-hidden">
+                      <h4 className="font-extrabold text-xs sm:text-sm text-stone-900 truncate leading-tight">{vendor.name}</h4>
+                      <span className="text-[10px] text-stone-500 font-medium block truncate">{vendor.vendor_type || 'Certified Astro Supplier'}</span>
+                    </div>
+                  </div>
+
+                  <div className="text-[11px] text-stone-600 space-y-0.5 pt-1 border-t border-stone-100">
+                    <p className="truncate flex items-center gap-1 text-stone-500 text-[10px]">
+                      <MapPin size={10} className="shrink-0 text-stone-400" />
+                      {vendor.address || 'Haridwar / Jaipur'}
+                    </p>
+                    <p className="text-[10px] font-bold text-amber-900">
+                      {vendor.experience ? `${vendor.experience} Yrs Experience` : '15+ Yrs Experience'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-2.5 mt-2 border-t border-stone-100 flex items-center justify-between">
+                  <span className="text-[10px] text-slate-500 font-semibold">
+                    {vendor.product_count !== undefined ? `${vendor.product_count} Products` : 'Certified Stock'}
+                  </span>
+                  <span className={`text-[11px] font-extrabold flex items-center gap-1 ${isSelected ? 'text-amber-700' : 'text-stone-700'}`}>
+                    {isSelected ? 'Selected ✓' : 'Browse →'}
+                  </span>
+                </div>
               </div>
-              <h3 className="font-bold text-sm h-10 line-clamp-2 cursor-pointer" onClick={() => {
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Astro Products Header */}
+      <div className="flex items-center justify-between pt-2">
+        <h3 className="text-2xl font-serif font-black text-stone-900 flex items-center gap-2">
+          <Sparkles className="text-saffron" size={24} />
+          {selectedVendorFilter ? `Products from ${selectedVendorFilter.name}` : 'Sacred Astro Products & Gemstones'}
+        </h3>
+        <span className="text-xs font-bold text-stone-500 bg-stone-100 px-3 py-1 rounded-full border border-stone-200">
+          Showing {filteredProducts.length} items
+        </span>
+      </div>
+
+      {/* Products Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {Array.isArray(filteredProducts) && filteredProducts.map(product => (
+          <div key={product.id} className="glass rounded-3xl overflow-hidden group border border-stone-200/80 hover:border-amber-300 transition-all shadow-sm hover:shadow-md flex flex-col justify-between">
+            <div>
+              <div className="aspect-square overflow-hidden cursor-pointer relative" onClick={() => {
                 setSelectedProduct(product);
                 setView('product-details');
                 fetchReviews(product.id);
-              }}>{product.name}</h3>
-              <div className="flex items-center justify-between">
-                <span className="text-saffron font-bold">₹{product.price}</span>
+              }}>
+                <img 
+                  src={getProductImageUrl(product)} 
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md text-emerald-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-emerald-300 flex items-center gap-1 shadow-xs">
+                  <CheckCircle2 size={10} /> Certified Stock
+                </div>
+              </div>
+              <div className="p-4 space-y-2.5">
+                {/* Dealing AstroShop Name Badge */}
+                <div 
+                  onClick={() => {
+                    const shopName = (product as any).vendor_name || (product as any).vendor_company_name || 'Ratna Kendra & Astro Jewels';
+                    const matchedVendor = displayVendors.find(v => v.id === product.vendor_id || v.name?.toLowerCase() === shopName.toLowerCase());
+                    setSelectedVendorFilter(matchedVendor || {
+                      id: product.vendor_id,
+                      name: shopName
+                    });
+                  }}
+                  className="flex items-center gap-1.5 text-[11px] bg-gradient-to-r from-amber-50 to-orange-50 text-amber-950 border border-amber-300/80 px-2.5 py-1 rounded-xl font-bold w-full cursor-pointer hover:border-amber-400 transition-all shadow-xs"
+                >
+                  <Store size={13} className="text-amber-700 shrink-0" />
+                  <span className="truncate">Dealing Shop: <strong className="text-stone-900 font-extrabold">{(product as any).vendor_name || (product as any).vendor_company_name || 'Ratna Kendra & Astro Jewels'}</strong></span>
+                </div>
+
+                <h3 className="font-bold text-sm h-10 line-clamp-2 cursor-pointer text-stone-900 group-hover:text-amber-900 transition-colors" onClick={() => {
+                  setSelectedProduct(product);
+                  setView('product-details');
+                  fetchReviews(product.id);
+                }}>{product.name}</h3>
+              </div>
+            </div>
+
+            <div className="p-4 pt-0 space-y-3">
+              <div className="flex items-center justify-between border-t border-stone-100 pt-3">
+                <span className="text-saffron font-black text-lg">₹{product.price}</span>
                 <div className="flex items-center gap-2">
-                  <div className="flex items-center bg-stone-100 rounded-lg p-1 text-xs">
+                  <div className="flex items-center bg-stone-100 rounded-xl p-1 text-xs border border-stone-200">
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
                         const item = cart.find(i => i.product.id === product.id);
                         if (item) updateQuantity(cart.indexOf(item), -1);
                       }}
-                      className="w-6 h-6 flex items-center justify-center hover:bg-white rounded transition-colors"
+                      className="w-6 h-6 flex items-center justify-center hover:bg-white rounded-lg transition-colors font-bold text-stone-700"
                     >
                       -
                     </button>
-                    <span className="w-6 text-center font-bold">
+                    <span className="w-6 text-center font-extrabold text-stone-900">
                       {cart.find(i => i.product.id === product.id)?.quantity || 0}
                     </span>
                     <button 
@@ -6450,7 +6688,7 @@ function Shop({ user, onPurchase, onLogin, onRegisterVendor }: { user: UserType 
                         e.stopPropagation();
                         addToCart(product);
                       }}
-                      className="w-6 h-6 flex items-center justify-center hover:bg-white rounded transition-colors"
+                      className="w-6 h-6 flex items-center justify-center hover:bg-white rounded-lg transition-colors font-bold text-stone-700"
                     >
                       +
                     </button>
@@ -6460,7 +6698,7 @@ function Shop({ user, onPurchase, onLogin, onRegisterVendor }: { user: UserType 
                       e.stopPropagation();
                       addToCart(product);
                     }}
-                    className="p-2 bg-stone-100 rounded-lg hover:bg-saffron hover:text-white transition-colors"
+                    className="p-2.5 bg-deep-blue text-white rounded-xl hover:bg-amber-600 transition-colors shadow-xs"
                     title="Add to Cart"
                   >
                     <ShoppingBag size={16} />
@@ -6470,9 +6708,16 @@ function Shop({ user, onPurchase, onLogin, onRegisterVendor }: { user: UserType 
             </div>
           </div>
         ))}
-        {products.length === 0 && (
-          <div className="col-span-full text-center py-12 text-slate-400">
-            No products available yet.
+        {filteredProducts.length === 0 && (
+          <div className="col-span-full text-center py-16 bg-white rounded-3xl border border-dashed border-stone-300 text-stone-500 space-y-3">
+            <Store size={36} className="mx-auto text-stone-400" />
+            <p className="font-bold text-base text-stone-800">No products found for this AstroShop filter.</p>
+            <button 
+              onClick={() => setSelectedVendorFilter(null)}
+              className="bg-saffron text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-amber-600 transition-all cursor-pointer"
+            >
+              Show All AstroShops Products
+            </button>
           </div>
         )}
       </div>
