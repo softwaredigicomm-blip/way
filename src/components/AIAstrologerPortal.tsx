@@ -252,6 +252,9 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
   const [btrKeyEvents, setBtrKeyEvents] = useState<string>('Marriage on 15 Oct 2018, Joined First Corporate Job on 01 Jun 2015, Car Accident in July 2021');
   const [btrPhysicalTraits, setBtrPhysicalTraits] = useState<string>('Tall build, energetic speech, fair skin, oval face structure');
 
+  // Extended Clear Reading View Mode State
+  const [extendedReadingView, setExtendedReadingView] = useState<boolean>(true);
+
   // Ephemeris State
   const [ephemDate, setEphemDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [ephemTime, setEphemTime] = useState<string>('12:00');
@@ -514,24 +517,55 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
     setShowAddFamily(false);
   };
 
-  // Simple formatter for AI markdown responses
+  // Enhanced formatter for AI prediction responses with rich reading typography & bold support
   const renderFormattedText = (text: string) => {
+    const parseInlineBold = (str: string) => {
+      const parts = str.split(/(\*\*.*?\*\*|\*.*?\*)/g);
+      return parts.map((part, index) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return <strong key={index} className="font-extrabold text-slate-900">{part.slice(2, -2)}</strong>;
+        } else if (part.startsWith('*') && part.endsWith('*')) {
+          return <em key={index} className="italic text-slate-800">{part.slice(1, -1)}</em>;
+        }
+        return part;
+      });
+    };
+
     return text.split('\n').map((line, i) => {
-      if (line.startsWith('### ') || line.startsWith('## ')) {
-        return <h4 key={i} className="font-bold text-base text-deep-blue mt-3 mb-1">{line.replace(/^#+\s*/, '')}</h4>;
-      }
-      if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
+      const trimmed = line.trim();
+      if (line.startsWith('### ') || line.startsWith('## ') || line.startsWith('# ')) {
         return (
-          <div key={i} className="flex items-start gap-2 ml-2 my-1">
-            <span className="text-saffron font-bold">•</span>
-            <span>{line.replace(/^[-*]\s*/, '')}</span>
+          <h4 key={i} className="font-extrabold text-base sm:text-lg text-deep-blue mt-4 mb-2 pb-1 border-b border-amber-200/60 flex items-center gap-2">
+            {parseInlineBold(line.replace(/^#+\s*/, ''))}
+          </h4>
+        );
+      }
+      if (/^\d+\.\s/.test(trimmed)) {
+        return (
+          <div key={i} className="font-bold text-sm sm:text-base text-amber-950 mt-3 mb-1.5 flex items-center gap-2 bg-amber-50/80 p-2.5 rounded-xl border border-amber-200/80">
+            <span>{parseInlineBold(line)}</span>
           </div>
         );
       }
-      if (line.trim() === '') {
+      if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+        return (
+          <div key={i} className="flex items-start gap-2 ml-2 my-1.5 text-sm sm:text-[15px] leading-relaxed text-slate-800">
+            <span className="text-saffron font-black text-base shrink-0 mt-0.5">•</span>
+            <span className="flex-1">{parseInlineBold(line.replace(/^[-*]\s*/, ''))}</span>
+          </div>
+        );
+      }
+      if (trimmed === '---' || trimmed === '___') {
+        return <hr key={i} className="my-3 border-amber-200" />;
+      }
+      if (trimmed === '') {
         return <div key={i} className="h-2" />;
       }
-      return <p key={i} className="my-1 leading-relaxed">{line}</p>;
+      return (
+        <p key={i} className="my-1.5 text-sm sm:text-[15px] leading-relaxed text-slate-800 font-normal">
+          {parseInlineBold(line)}
+        </p>
+      );
     });
   };
 
@@ -852,9 +886,11 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
 
           {/* TAB 1: CHAT ARENA */}
           {activeTab === 'chat' && (
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 flex flex-col h-[740px] overflow-hidden">
+            <div className={`bg-white rounded-3xl shadow-sm border border-slate-200 flex flex-col transition-all duration-300 overflow-hidden ${
+              extendedReadingView ? 'min-h-[1050px] lg:h-[1250px]' : 'h-[780px]'
+            }`}>
               {/* Chat Arena Header */}
-              <div className="p-4 bg-stone-50 border-b border-slate-200 flex items-center justify-between">
+              <div className="p-4 bg-stone-50 border-b border-slate-200 flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-3">
                   <span className="w-3 h-3 bg-emerald-500 rounded-full animate-ping" />
                   <div>
@@ -869,6 +905,18 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                 </div>
 
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setExtendedReadingView(prev => !prev)}
+                    className={`text-xs font-extrabold px-3 py-1.5 rounded-full border transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs ${
+                      extendedReadingView 
+                        ? 'bg-amber-500 text-white border-amber-600 shadow-amber-200/50' 
+                        : 'bg-white text-slate-700 hover:bg-stone-100 border-slate-300'
+                    }`}
+                    title="Toggle Extended Clear Reading View for long AI prediction reports"
+                  >
+                    <span>{extendedReadingView ? '📖 Extended Reading View: Active' : '📖 Expand Reading View'}</span>
+                  </button>
+
                   {analysisMode === 'Palm Line Analysis' && (
                     <span className="text-[11px] font-bold text-saffron bg-amber-50 border border-amber-200 px-3 py-1 rounded-full flex items-center gap-1">
                       <Camera size={14} /> Upload Palm Photo below
@@ -1664,10 +1712,10 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                         <Sparkles size={18} />
                       </div>
                     )}
-                    <div className={`max-w-[82%] rounded-3xl p-5 shadow-xs ${
+                    <div className={`max-w-[96%] sm:max-w-[92%] rounded-3xl p-5 sm:p-6 shadow-xs ${
                       msg.role === 'user'
-                        ? 'bg-gradient-to-br from-saffron to-orange-600 text-white rounded-tr-none'
-                        : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none'
+                        ? 'bg-gradient-to-br from-saffron to-orange-600 text-white rounded-tr-none max-w-[85%]'
+                        : 'bg-white text-slate-800 border border-slate-200/90 rounded-tl-none shadow-stone-100/80'
                     }`}>
                       {msg.imageUrl && (
                         <div className="mb-3 rounded-2xl overflow-hidden border border-white/20 shadow-sm max-w-sm">
