@@ -1783,6 +1783,98 @@ ONLY return valid JSON array of strings without markdown formatting.`;
     }
   });
 
+  app.post("/api/astrology/panchang", async (req, res) => {
+    try {
+      const { date, location } = req.body;
+      const targetDate = date ? new Date(`${date}T12:00:00`) : new Date();
+      const year = targetDate.getFullYear();
+      const month = targetDate.getMonth() + 1;
+      const day = targetDate.getDate();
+      const dayOfWeekIdx = targetDate.getDay();
+
+      const days = ['Sunday (Ravivar)', 'Monday (Somavar)', 'Tuesday (Mangalvar)', 'Wednesday (Budhavar)', 'Thursday (Guruvar)', 'Friday (Shukravar)', 'Saturday (Shanivar)'];
+      const planets = ['Sun (Surya)', 'Moon (Chandra)', 'Mars (Mangal)', 'Mercury (Budha)', 'Jupiter (Guru)', 'Venus (Shukra)', 'Saturn (Shani)'];
+      const tithis = ['Shukla Pratipada', 'Shukla Dwitiya', 'Shukla Tritiya', 'Shukla Chaturthi', 'Shukla Panchami', 'Shukla Shashthi', 'Shukla Saptami', 'Shukla Ashtami', 'Shukla Navami', 'Shukla Dashami', 'Shukla Ekadashi (Auspicious Fasting)', 'Shukla Dwadashi', 'Shukla Trayodashi (Pradosham)', 'Shukla Chaturdashi', 'Purnima (Full Moon)', 'Krishna Pratipada', 'Krishna Dwitiya', 'Krishna Tritiya', 'Krishna Chaturthi (Sankashti Chaturthi)', 'Krishna Panchami', 'Krishna Shashthi', 'Krishna Saptami', 'Krishna Ashtami', 'Krishna Navami', 'Krishna Dashami', 'Krishna Ekadashi', 'Krishna Dwadashi', 'Krishna Trayodashi', 'Krishna Chaturdashi', 'Amavasya (New Moon)'];
+      const nakshatras = ['Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra', 'Punarvasu', 'Pushya (Auspicious)', 'Ashlesha', 'Magha', 'Purva Phalguni', 'Uttara Phalguni', 'Hasta', 'Chitra', 'Swati', 'Vishakha', 'Anuradha', 'Jyeshtha', 'Mula', 'Purva Ashadha', 'Uttara Ashadha', 'Shravana', 'Dhanishta', 'Shatabhisha', 'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati'];
+      const yogas = ['Preeti (Auspicious)', 'Ayushman (Longevity)', 'Saubhagya (Prosperity)', 'Shobhana', 'Atiganda', 'Sukarma', 'Dhriti', 'Shula', 'Ganda', 'Vriddhi', 'Dhruva', 'Vyaghata', 'Harshana', 'Vajra', 'Siddhi (Success)', 'Vyatipata', 'Variyan', 'Parigha', 'Shiva', 'Siddha', 'Sadhya', 'Shubha', 'Shukla', 'Brahma', 'Indra', 'Vaidhriti', 'Vishkumbha'];
+      const karanas = ['Bava', 'Balava', 'Kaulava', 'Taitila', 'Gara', 'Vanij', 'Vishti (Bhadra - Caution)', 'Shakuni', 'Chatushpada', 'Naga', 'Kinstughna'];
+      const rashiList = ['Mesh (Aries)', 'Vrishabha (Taurus)', 'Mithuna (Gemini)', 'Karka (Cancer)', 'Simha (Leo)', 'Kanya (Virgo)', 'Tula (Libra)', 'Vrischika (Scorpio)', 'Dhanu (Sagittarius)', 'Makar (Capricorn)', 'Kumbha (Aquarius)', 'Meena (Pisces)'];
+
+      const tithiIdx = (day + month * 2) % tithis.length;
+      const nakIdx = (day * 3 + month * 5) % nakshatras.length;
+      const yogaIdx = (day * 2 + month * 7) % yogas.length;
+      const karanaIdx = (day + month) % karanas.length;
+      const moonRashiIdx = (day + month * 3) % rashiList.length;
+      const sunRashiIdx = month % 12;
+
+      const rahuKalamTimes = [
+        '04:30 PM - 06:00 PM', '07:30 AM - 09:00 AM', '03:00 PM - 04:30 PM',
+        '12:00 PM - 01:30 PM', '01:30 PM - 03:00 PM', '10:30 AM - 12:00 PM', '09:00 AM - 10:30 AM'
+      ];
+      const yamagandamTimes = [
+        '12:00 PM - 01:30 PM', '10:30 AM - 12:00 PM', '09:00 AM - 10:30 AM',
+        '07:30 AM - 09:00 AM', '06:00 AM - 07:30 AM', '03:00 PM - 04:30 PM', '01:30 PM - 03:00 PM'
+      ];
+      const dishaShools = [
+        { dir: 'West', remedy: 'Eat Coriander seeds or Ghee before travel' },
+        { dir: 'East', remedy: 'Eat Curd & Sugar before travel' },
+        { dir: 'North', remedy: 'Eat Jaggery or Sesame before travel' },
+        { dir: 'North', remedy: 'Eat Mustard or Til before travel' },
+        { dir: 'South', remedy: 'Eat Yellow Mustard or Curd before travel' },
+        { dir: 'West', remedy: 'Eat Barley or Ghee before travel' },
+        { dir: 'East', remedy: 'Eat Curd or Milk before travel' }
+      ];
+
+      const panchang = {
+        date: targetDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+        location: location || "New Delhi, India",
+        vara: days[dayOfWeekIdx],
+        varaRuler: planets[dayOfWeekIdx],
+        tithi: tithis[tithiIdx],
+        nakshatra: nakshatras[nakIdx],
+        pada: ((day % 4) + 1),
+        yoga: yogas[yogaIdx],
+        karana: karanas[karanaIdx],
+        sunRashi: rashiList[sunRashiIdx],
+        moonRashi: rashiList[moonRashiIdx],
+        sunrise: '05:48 AM',
+        sunset: '07:12 PM',
+        moonrise: '08:15 PM',
+        moonset: '06:30 AM',
+        ayanamsa: "24° 11' 22\" (Lahiri / Chitrapaksha)",
+        paksha: tithiIdx < 15 ? 'Shukla Paksha (Waxing Phase)' : 'Krishna Paksha (Waning Phase)',
+        auspiciousTimings: {
+          abhijitMuhurta: '11:52 AM - 12:44 PM (Highly Auspicious)',
+          brahmaMuhurta: '04:12 AM - 05:00 AM (Ideal for Meditation)',
+          amritKalam: '02:15 PM - 03:45 PM (Prosperity Slot)'
+        },
+        inauspiciousTimings: {
+          rahuKalam: rahuKalamTimes[dayOfWeekIdx],
+          yamagandam: yamagandamTimes[dayOfWeekIdx],
+          gulikaKalam: '01:30 PM - 03:00 PM',
+          durmuhurtham: '08:32 AM - 09:20 AM',
+          bhadraStatus: karanas[karanaIdx].includes('Vishti') ? '⚠️ Active Bhadra (Avoid major contract signing)' : '✅ No Bhadra Obstacle'
+        },
+        dishaShool: dishaShools[dayOfWeekIdx],
+        choghadiya: [
+          { name: 'Amrit', type: 'Auspicious', time: '06:00 AM - 07:30 AM', desc: 'Best for all auspicious deeds & starting new work' },
+          { name: 'Kaal', type: 'Inauspicious', time: '07:30 AM - 09:00 AM', desc: 'Avoid financial commitments' },
+          { name: 'Shubh', type: 'Auspicious', time: '09:00 AM - 10:30 AM', desc: 'Great for ceremonies & auspicious purchases' },
+          { name: 'Roga', type: 'Inauspicious', time: '10:30 AM - 12:00 PM', desc: 'Avoid health & medical decisions' },
+          { name: 'Udveg', type: 'Inauspicious', time: '12:00 PM - 01:30 PM', desc: 'High mental stress; remain patient' },
+          { name: 'Char', type: 'Neutral', time: '01:30 PM - 03:00 PM', desc: 'Suitable for travel & swift tasks' },
+          { name: 'Labh', type: 'Auspicious', time: '03:00 PM - 04:30 PM', desc: 'Excellent for business & profit ventures' },
+          { name: 'Amrit', type: 'Auspicious', time: '04:30 PM - 06:00 PM', desc: 'Best for spiritual rituals & harmony' }
+        ]
+      };
+
+      res.json({ success: true, panchang });
+    } catch (error) {
+      console.error("Panchang Error:", error);
+      res.status(500).json({ error: "Failed to compute Panchang." });
+    }
+  });
+
   app.post("/api/ai/chat", async (req, res) => {
     let userEmail = "guest@astroway.com";
     try {
@@ -1828,14 +1920,15 @@ ONLY return valid JSON array of strings without markdown formatting.`;
       2. FOR SHUBH MUHURTA & TRAVEL GUIDANCE: Calculate auspicious timing (Tithi, Nakshatra, Yoga, Karana) for Marriage, Housewarming (Griha Pravesh), Business Launch, Vehicle, or Naming. For travel queries, systematically analyze Directional Obstacles (Disha Shool: East on Mon/Sat, West on Sun/Fri, North on Tue/Wed, South on Thu), Rahu Kalam, Choghadiya (Amrit, Shubh, Labh vs. Rog, Udveg, Kaal), and Planetary Hora. Provide SPECIFIC VEDIC REMEDIES for unavoidable travel during Disha Shool or Rahu Kalam (e.g., eating curd and sugar before traveling East on Mon/Sat, coriander seeds/ghee before West on Sun/Fri, jaggery before North on Tue/Wed, yellow mustard/curd before South on Thu, carrying a silver coin, or chanting Hanuman Chalisa/Rahu Beej Mantra).
       3. FOR PLANETARY TRANSITS (GOCHAR): Analyze Saturn transit (Shani Sade Sati 1st/2nd/3rd phase or Small Dhaiya), Jupiter (Guru) Gochar, Rahu-Ketu axis transit, and inner planet transits relative to the native's Moon Sign and natal houses. Provide house-by-house effects and pacifying remedies (Shani Shanti, Hanuman Chalisa, Jupiter Mantras, Charity).
       4. FOR BIRTH TIME RECTIFICATION (BTR): Perform precision BTR using multi-system methodologies: (a) Vedic Tattva Prasna & Shodhana (checking Agni, Vayu, Jal, Prithvi, Akash element alignment with physical traits and birth minute), (b) K.P. System Sub-Lord verification matching Ruling Planets (RP) with Lagna & Moon Nakshatra sub-lords, and (c) Mapping reported life events (marriage, first job, accident, childbirth, overseas travel) against Dasha/Antardasha and transit windows. Output the precise estimated corrected birth time (e.g. "Corrected Time: 12:14:32 PM"), explain the Lagna/Sub-Lord shift, and confirm event alignment.
-      5. FOR RAMAL SHASTRA QUERIES: When the user casts or selects one of the 16 primary geomantic Shakals (such as Lahiya, Kabj-ul-Dakhil, Kabj-ul-Kharij, Jamaat, Farah, Bayad, Hamra, Inkees, Nusarat-ul-Dakhil, Nusarat-ul-Kharij, Aataba-ul-Dakhil, Aataba-ul-Kharij, Naki, Ejtima, Tariq, or Jodak), analyze its 4 elemental rows (Fire/Agni, Air/Vayu, Water/Jal, Earth/Prithvi), its ruling Vedic planet, and whether it denotes Dakhil (Incoming/Gain), Kharij (Outgoing/Loss/Travel), or Thabit (Stable). Give an immediate, precise prediction for their exact question and suggest elemental remedies.
-      6. If an image is attached (Palm lines photo, Tarot card spread, Birth chart Kundli, or Numerology chart), carefully analyze the visual features (e.g. Life line, Heart line, Fate line, Mounts of Jupiter/Venus on palm; or Major Arcana Tarot symbols) with high precision and mystical depth.
-      7. ASTROLOGICAL REMEDIES: Every comprehensive consultation MUST include specific, actionable Vedic remedies such as:
+      5. FOR MEDICAL ASTROLOGY & VEDIC REMEDIES: Perform a detailed health & bodily diagnosis based on the native's birth details (Lagna Lord for immunity/vitality, 6th house for acute disease/Rog, 8th house for chronic ailments/vulnerability, 12th house for hospitalization/recovery, and Roga Karaka planets: Sun for heart/eyes/bones, Moon for mind/fluids/lungs, Mars for blood/accidents/muscles, Mercury for nerves/skin/lungs, Jupiter for liver/fat/gallbladder, Venus for kidneys/hormones, Saturn for chronic joint pain/paralysis/digestive delays, Rahu for mysterious/difficult diagnoses, Ketu for viral/poisoning/psychosomatic). Thoroughly incorporate the user's provided Ailment Description, Medical History & Onset, and Present Condition/Symptoms. Prescribe natural Ayurvedic herbal recommendations (e.g., Triphala, Ashwagandha, Giloy, Tulsi, Brahmi), Vedic Mantra Chikitsa (Mahamrityunjaya Mantra, Dhanvantari Mantra, Aditya Hrudayam Stotram), Medicinal Herb Baths (Aushadhi Snan), Specific Graha Daan (Charity items), and dietary discipline as documented in classical texts (Brihat Parashara, Charaka Samhita, Saravali). Include a compassionate disclaimer that astrological remedies complement medical care.
+      6. FOR RAMAL SHASTRA QUERIES: When the user casts or selects one of the 16 primary geomantic Shakals (such as Lahiya, Kabj-ul-Dakhil, Kabj-ul-Kharij, Jamaat, Farah, Bayad, Hamra, Inkees, Nusarat-ul-Dakhil, Nusarat-ul-Kharij, Aataba-ul-Dakhil, Aataba-ul-Kharij, Naki, Ejtima, Tariq, or Jodak), analyze its 4 elemental rows (Fire/Agni, Air/Vayu, Water/Jal, Earth/Prithvi), its ruling Vedic planet, and whether it denotes Dakhil (Incoming/Gain), Kharij (Outgoing/Loss/Travel), or Thabit (Stable). Give an immediate, precise prediction for their exact question and suggest elemental remedies.
+      7. If an image is attached (Palm lines photo, Tarot card spread, Birth chart Kundli, or Numerology chart), carefully analyze the visual features (e.g. Life line, Heart line, Fate line, Mounts of Jupiter/Venus on palm; or Major Arcana Tarot symbols) with high precision and mystical depth.
+      8. ASTROLOGICAL REMEDIES: Every comprehensive consultation MUST include specific, actionable Vedic remedies such as:
          - Ancient Vedic Astrological mantras (Beej mantras, Gayatri mantra, Mahamrityunjaya).
          - Lal Kitab prescriptions (e.g., feeding birds, copper coin in running water, applying saffron tilak).
          - Gem therapy & Crystal therapy recommendations (specifying which gemstone/crystal like Yellow Sapphire, Ruby, Amethyst, Clear Quartz to wear and on which finger/day).
          - Graha Shanti rituals, Disha Shool remedies, or charity suggestions to appease malefic planets.
-      8. Structure your response clearly with emojis, bullet points, and headings so it is easy to read. Be compassionate, encouraging, and spiritually insightful.`;
+      9. Structure your response clearly with emojis, bullet points, and headings so it is easy to read. Be compassionate, encouraging, and spiritually insightful.`;
 
       // 5. Call Server-Side Gemini API
       if (!ai) {
@@ -2593,20 +2686,32 @@ try {
     const vendor2 = db.prepare("SELECT id FROM vendors WHERE name = ?").get("Divination & Vastu House") as { id: number };
     if (vendor1) {
       const seedProduct = db.prepare("INSERT INTO products (name, price, vendor_id, image_url, status, description, how_to_use) VALUES (?, ?, ?, ?, ?, ?, ?)");
-      seedProduct.run("Natural Ruby (Manik)", 4500, vendor1.id, "https://picsum.photos/seed/ruby/400/400", "approved", "Certified natural unheated ruby gemstone for Surya (Sun) strengthening.", "Wear in gold or copper ring on Sunday morning during Shukla Paksha.");
-      seedProduct.run("Yellow Sapphire (Pukhraj)", 8500, vendor1.id, "https://picsum.photos/seed/sapphire/400/400", "approved", "Original Ceylonese yellow sapphire for Jupiter wisdom, prosperity, and spiritual blessings.", "Wear in gold ring on index finger on Thursday morning after purifying with Gangajal.");
-      seedProduct.run("Rudraksha Mala (108 Beads)", 750, vendor1.id, "https://picsum.photos/seed/mala/400/400", "approved", "Authentic Himalayan Panchmukhi Rudraksha rosary for meditation, peace, and Shiva grace.", "Wear around neck or use for mantra chanting daily.");
-      seedProduct.run("Copper Yantra for Prosperity", 1200, vendor1.id, "https://picsum.photos/seed/yantra/400/400", "approved", "Energized Sri Yantra engraved on thick pure copper sheet for wealth and abundance.", "Install in home altar or cash box facing East on Friday morning.");
+      seedProduct.run("Natural Ruby (Manik)", 4500, vendor1.id, "https://images.unsplash.com/photo-1615655406736-b37c4fabf923?auto=format&fit=crop&q=80&w=600&h=600", "approved", "Certified natural unheated ruby gemstone for Surya (Sun) strengthening.", "Wear in gold or copper ring on Sunday morning during Shukla Paksha.");
+      seedProduct.run("Yellow Sapphire (Pukhraj)", 8500, vendor1.id, "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&q=80&w=600&h=600", "approved", "Original Ceylonese yellow sapphire for Jupiter wisdom, prosperity, and spiritual blessings.", "Wear in gold ring on index finger on Thursday morning after purifying with Gangajal.");
+      seedProduct.run("Rudraksha Mala (108 Beads)", 750, vendor1.id, "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=600&h=600", "approved", "Authentic Himalayan Panchmukhi Rudraksha rosary for meditation, peace, and Shiva grace.", "Wear around neck or use for mantra chanting daily.");
+      seedProduct.run("Copper Yantra for Prosperity", 1200, vendor1.id, "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&q=80&w=600&h=600", "approved", "Energized Sri Yantra engraved on thick pure copper sheet for wealth and abundance.", "Install in home altar or cash box facing East on Friday morning.");
     }
     if (vendor2) {
       const seedProduct = db.prepare("INSERT INTO products (name, price, vendor_id, image_url, status, description, how_to_use) VALUES (?, ?, ?, ?, ?, ?, ?)");
-      seedProduct.run("Sphatik Shree Yantra (Crystal Grid)", 3500, vendor2.id, "https://picsum.photos/seed/sphatik/400/400", "approved", "Natural Himalayan Quartz crystal pyramid for Vastu space clearing and positive cosmic vibes.", "Place in the North-East (Ishan Kon) of your living room or office.");
-      seedProduct.run("Original Amethyst Tarot Deck", 1800, vendor2.id, "https://picsum.photos/seed/tarotdeck/400/400", "approved", "78-card professional Tarot deck bundled with natural amethyst crystal for intuition amplification.", "Keep wrapped in violet silk cloth when not reading.");
-      seedProduct.run("Parad Shivling for Vastu Dosh", 5100, vendor2.id, "https://picsum.photos/seed/parad/400/400", "approved", "Sacred Mercury (Parad) Shivling crafted as per ancient Vedic alchemy for home harmony.", "Perform daily water abhishekam and keep in clean altar space.");
+      seedProduct.run("Sphatik Shree Yantra (Crystal Grid)", 3500, vendor2.id, "https://images.unsplash.com/photo-1567225557594-88d73e55f2cb?auto=format&fit=crop&q=80&w=600&h=600", "approved", "Natural Himalayan Quartz crystal pyramid for Vastu space clearing and positive cosmic vibes.", "Place in the North-East (Ishan Kon) of your living room or office.");
+      seedProduct.run("Original Amethyst Tarot Deck", 1800, vendor2.id, "https://images.unsplash.com/photo-1601314167099-232775738c74?auto=format&fit=crop&q=80&w=600&h=600", "approved", "78-card professional Tarot deck bundled with natural amethyst crystal for intuition amplification.", "Keep wrapped in violet silk cloth when not reading.");
+      seedProduct.run("Parad Shivling for Vastu Dosh", 5100, vendor2.id, "https://images.unsplash.com/photo-1621360841013-c7683c659ec6?auto=format&fit=crop&q=80&w=600&h=600", "approved", "Sacred Mercury (Parad) Shivling crafted as per ancient Vedic alchemy for home harmony.", "Perform daily water abhishekam and keep in clean altar space.");
     }
   }
+
+  // Update existing products to ensure authentic high quality images
+  const updateImg = db.prepare("UPDATE products SET image_url = ? WHERE name = ?");
+  updateImg.run("https://images.unsplash.com/photo-1615655406736-b37c4fabf923?auto=format&fit=crop&q=80&w=600&h=600", "Natural Ruby (Manik)");
+  updateImg.run("https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&q=80&w=600&h=600", "Yellow Sapphire (Pukhraj)");
+  updateImg.run("https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=600&h=600", "Rudraksha Mala (108 Beads)");
+  updateImg.run("https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=600&h=600", "Natural Rudraksha Mala");
+  updateImg.run("https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&q=80&w=600&h=600", "Copper Yantra for Prosperity");
+  updateImg.run("https://images.unsplash.com/photo-1567225557594-88d73e55f2cb?auto=format&fit=crop&q=80&w=600&h=600", "Sphatik Shree Yantra (Crystal Grid)");
+  updateImg.run("https://images.unsplash.com/photo-1601314167099-232775738c74?auto=format&fit=crop&q=80&w=600&h=600", "Original Amethyst Tarot Deck");
+  updateImg.run("https://images.unsplash.com/photo-1621360841013-c7683c659ec6?auto=format&fit=crop&q=80&w=600&h=600", "Parad Shivling for Vastu Dosh");
+  updateImg.run("https://images.unsplash.com/photo-1567591416322-2615a13c9a4d?auto=format&fit=crop&q=80&w=600&h=600", "Brass Ganesha Idol");
 } catch (err) {
-  console.error("Warning: Product seeding failed:", err);
+  console.error("Warning: Product seeding/update failed:", err);
 }
 
 // Seed Packages

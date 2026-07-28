@@ -5,7 +5,7 @@ import {
   Upload, Image as ImageIcon, Camera, AlertCircle, CheckCircle2, 
   RefreshCw, Compass, Moon, Sun, Heart, Shield, BookOpen, 
   User, Users, ChevronRight, X, Award, HelpCircle, FileText, MessageSquare, Edit2, Dices,
-  Calendar, Globe
+  Calendar, Globe, HeartPulse, Activity, ShieldAlert
 } from 'lucide-react';
 import { User as UserType } from '../types';
 import { NumerologyStudio } from './NumerologyStudio';
@@ -89,6 +89,13 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
       {
         role: 'ai',
         text: "🙏 **Namaste! Welcome to Vedic Astrology & Family Q&A Studio.**\n\nI am your divine Vedic astrological counselor. I can guide you on general horoscopes, career transitions, marriage timing, and family harmony.\n\n✨ **What would you like to explore today?** Ask about yourself or any saved family member below!",
+        timestamp: new Date().toLocaleTimeString()
+      }
+    ],
+    'Medical Astrology & Vedic Remedies': [
+      {
+        role: 'ai',
+        text: "🩺 **Welcome to Medical Astrology & Vedic Natural Remedies Studio.**\n\nI specialize in analyzing planetary influences on health, 6th/8th/12th houses, Roga Karaka planets (Sun, Mars, Saturn, Rahu-Ketu), and prescribing authentic Vedic & Natural Remedies (Ayurvedic Herbs, Mantras, Gemstones, Aushadhi Snan & Graha Daan) as documented in Classical Vedic Texts (Brihat Parashara, Charaka Samhita, Saravali).\n\n✨ **Provide your Ailment Description, Medical History, and Present Condition above or select a quick prompt to analyze your birth chart health indicators!**",
         timestamp: new Date().toLocaleTimeString()
       }
     ],
@@ -252,6 +259,13 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
   const [btrKeyEvents, setBtrKeyEvents] = useState<string>('Marriage on 15 Oct 2018, Joined First Corporate Job on 01 Jun 2015, Car Accident in July 2021');
   const [btrPhysicalTraits, setBtrPhysicalTraits] = useState<string>('Tall build, energetic speech, fair skin, oval face structure');
 
+  // Medical Astrology & Vedic Remedies State
+  const [medicalAilmentDesc, setMedicalAilmentDesc] = useState<string>('');
+  const [medicalHistory, setMedicalHistory] = useState<string>('');
+  const [medicalPresentCondition, setMedicalPresentCondition] = useState<string>('');
+  const [medicalBodySystem, setMedicalBodySystem] = useState<string>('General Health & Lagna Vitality');
+  const [medicalRemedyType, setMedicalRemedyType] = useState<string>('All Vedic & Natural Remedies (Herbs, Mantras, Daan, Gemstones)');
+
   // Extended Clear Reading View Mode State
   const [extendedReadingView, setExtendedReadingView] = useState<boolean>(true);
 
@@ -391,6 +405,12 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
         uncertaintyWindow: btrUncertaintyWindow,
         lifeEventsTimeline: btrKeyEvents,
         physicalTraits: btrPhysicalTraits
+      } : analysisMode === 'Medical Astrology & Vedic Remedies' ? {
+        ailmentDescription: medicalAilmentDesc || 'General health evaluation',
+        ailmentHistory: medicalHistory || 'Not specified',
+        presentCondition: medicalPresentCondition || 'Not specified',
+        bodySystemFocus: medicalBodySystem,
+        remedyTypePreference: medicalRemedyType
       } : undefined
     };
 
@@ -571,6 +591,7 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
 
   const analysisModes = [
     { name: 'Vedic & Family Q&A', icon: Star, desc: 'General horoscope, career, family harmony & marriage' },
+    { name: 'Medical Astrology & Vedic Remedies', icon: HeartPulse, desc: 'Health analysis, ailment history, 6th/8th house malefic lords & natural Ayurvedic remedies as per Vedic texts' },
     { name: 'Shubh Muhurta & Travel Guidance', icon: Calendar, desc: 'Auspicious dates for Marriage, Griha Pravesh, Business, Disha Shool & travel remedies' },
     { name: 'Planetary Transits (Gochar Effects)', icon: Globe, desc: 'Shani Sade Sati & Dhaiya, Guru Transit, Rahu-Ketu axis, Gochar house impacts & remedies' },
     { name: 'Birth Time Rectification (BTR)', icon: Clock, desc: 'Precision BTR using Vedic Tattva Prasna, K.P. Sub-Lords & life event timeline mapping' },
@@ -584,6 +605,12 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
   ];
 
   const quickPromptsByMode: Record<string, Array<{ label: string; prompt: string }>> = {
+    'Medical Astrology & Vedic Remedies': [
+      { label: '🩺 Complete Medical Astrology Birth Chart Diagnosis', prompt: 'Perform a comprehensive Medical Astrology analysis based on my birth details. Identify 6th/8th/12th house planetary afflictions, Roga Karaka planets, current Dasha influences, and recommend natural Vedic remedies.' },
+      { label: '🌿 Natural Ayurvedic & Herbal Remedies', prompt: 'What natural Ayurvedic herbs, dietary adjustments, and lifestyle changes are prescribed according to classical Vedic texts for pacifying my currently afflicted health planets?' },
+      { label: '💎 Gemstone, Metal & Stotram Healing', prompt: 'Which Graha Mantras, Stotrams, metal rings (Copper, Silver, Iron), or ratna gemstones are recommended to strengthen my Lagna Lord and alleviate my physical ailment?' },
+      { label: '🔥 Aushadhi Snan & Graha Shanti Daan', prompt: 'Provide specific Graha Shanti rituals, medicinal herb baths (Aushadhi Snan), and Daan (charity items) to pacify malefic planetary influences affecting my health.' }
+    ],
     'Shubh Muhurta & Travel Guidance': [
       { label: '📅 Auspicious Marriage & Ceremony Date', prompt: 'Find the best Vedic Shubh Muhurta for marriage (Vivah) or ring engagement in the upcoming months based on planetary Nakshatras and Tithi.' },
       { label: '🚗 Travel Guidance & Disha Shool', prompt: 'I am planning a travel. Please calculate the Disha Shool effect, Rahu Kalam time, Choghadiya, and give remedies for safe travel.' },
@@ -1591,6 +1618,121 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                     >
                       <Clock size={14} />
                       <span>⚡ Run Precision AI Birth Time Rectification</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {analysisMode === 'Medical Astrology & Vedic Remedies' && (
+                <div className="p-3.5 bg-gradient-to-r from-red-50 via-rose-50/70 to-amber-50 border-b border-red-200 shrink-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <HeartPulse size={17} className="text-red-700 animate-pulse" />
+                      <h4 className="text-xs font-extrabold uppercase tracking-wider text-red-950">
+                        🩺 Medical Astrology & Vedic Natural Remedies Studio (चिकित्सा ज्योतिष)
+                      </h4>
+                    </div>
+                    <span className="text-[10px] bg-red-200 text-red-900 font-bold px-2 py-0.5 rounded">
+                      Birth Details Based • Classical Vedic & Ayurvedic Texts
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">
+                        Ailment Description (अस्वस्थता / रोग विवरण)
+                      </label>
+                      <input
+                        type="text"
+                        value={medicalAilmentDesc}
+                        onChange={(e) => setMedicalAilmentDesc(e.target.value)}
+                        placeholder="e.g. Chronic digestive discomfort, acid reflux, lower back pain, anxiety, skin allergy..."
+                        className="w-full bg-white border border-red-300 rounded-xl px-2.5 py-1.5 text-xs font-medium text-stone-800 placeholder:text-slate-400 focus:outline-none focus:border-red-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">
+                        Ailment History & Onset (रोग का इतिहास एवं समय)
+                      </label>
+                      <input
+                        type="text"
+                        value={medicalHistory}
+                        onChange={(e) => setMedicalHistory(e.target.value)}
+                        placeholder="e.g. Started 1.5 years ago during Saturn Mahadasha; seasonal flare-ups..."
+                        className="w-full bg-white border border-red-300 rounded-xl px-2.5 py-1.5 text-xs font-medium text-stone-800 placeholder:text-slate-400 focus:outline-none focus:border-red-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-2.5">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">
+                        Present Condition & Symptoms (वर्तमान स्थिति एवं लक्षण)
+                      </label>
+                      <input
+                        type="text"
+                        value={medicalPresentCondition}
+                        onChange={(e) => setMedicalPresentCondition(e.target.value)}
+                        placeholder="e.g. Acute fatigue, severe pain after meals, disturbed sleep..."
+                        className="w-full bg-white border border-red-300 rounded-xl px-2.5 py-1.5 text-xs font-medium text-stone-800 placeholder:text-slate-400 focus:outline-none focus:border-red-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">
+                        Primary Body System Focus
+                      </label>
+                      <select
+                        value={medicalBodySystem}
+                        onChange={(e) => setMedicalBodySystem(e.target.value)}
+                        className="w-full bg-white border border-red-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-stone-800 cursor-pointer focus:outline-none focus:border-red-500"
+                      >
+                        <option value="General Health & Lagna Vitality">General Health & Lagna Vitality (1st House)</option>
+                        <option value="Digestive & Stomach (Sun/Jupiter)">Digestive & Stomach (Sun/Jupiter - 5th/6th House)</option>
+                        <option value="Bones, Joints & Teeth (Saturn/Sun)">Bones, Joints & Teeth (Saturn/Sun - 10th House)</option>
+                        <option value="Nervous System & Mental Stress (Mercury/Rahu)">Nervous System & Mental Stress (Mercury/Rahu)</option>
+                        <option value="Heart & Blood Circulation (Sun/Mars)">Heart & Blood Circulation (Sun/Mars - 4th House)</option>
+                        <option value="Respiratory & Lungs (Moon/Mercury)">Respiratory & Lungs (Moon/Mercury - 3rd/4th House)</option>
+                        <option value="Skin & Hormonal Balance (Venus/Mercury)">Skin & Hormonal Balance (Venus/Mercury)</option>
+                        <option value="Kidneys & Reproductive (Venus/Mars)">Kidneys & Reproductive (Venus/Mars - 7th/8th House)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">
+                        Preferred Remedy Type
+                      </label>
+                      <select
+                        value={medicalRemedyType}
+                        onChange={(e) => setMedicalRemedyType(e.target.value)}
+                        className="w-full bg-white border border-red-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-stone-800 cursor-pointer focus:outline-none focus:border-red-500"
+                      >
+                        <option value="All Vedic & Natural Remedies">All Vedic & Natural Remedies (Herbs, Mantras, Daan, Gemstones)</option>
+                        <option value="Ayurvedic Herbs & Dietary Discipline">Ayurvedic Herbs & Dietary Discipline (Aushadhi)</option>
+                        <option value="Vedic Stotram & Graha Mantras">Vedic Stotram & Graha Mantras (Mantra Chikitsa)</option>
+                        <option value="Aushadhi Snan & Graha Daan">Aushadhi Snan (Herb Bath) & Graha Daan (Charity)</option>
+                        <option value="Ratna & Metal Ring Vibration">Ratna (Gemstones) & Metal Ring Vibration</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-2 bg-red-100/80 p-2.5 rounded-xl border border-red-200">
+                    <div className="flex items-center gap-1.5 text-[11px] text-red-950 font-semibold">
+                      <ShieldAlert size={14} className="text-red-700 shrink-0" />
+                      <span>Analyzes 6th/8th/12th Houses, Dasha, Roga Karaka Planets & Classical Texts.</span>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        const activeNative = familyMembers.find(f => f.id === activeProfile);
+                        const prompt = `Perform a Medical Astrology and Vedic Natural Remedies analysis based on the birth details of ${activeNative?.name || 'Native'} (DOB: ${activeNative?.dob || '1992-08-15'}, Time: ${activeNative?.time || '10:30'}, Place: ${activeNative?.place || 'Delhi'}).\n\nHealth Information:\n- Ailment Description: ${medicalAilmentDesc || 'Not specifically detailed (General medical astrology check)'}\n- Ailment History & Onset: ${medicalHistory || 'Not specified'}\n- Present Condition & Symptoms: ${medicalPresentCondition || 'Not specified'}\n- Primary Body System Focus: ${medicalBodySystem}\n- Preferred Remedy Focus: ${medicalRemedyType}\n\nPlease analyze 6th house (diseases), 8th house (chronic ailments), 12th house (hospitalization/recovery), Roga Karaka planets, current Dasha period, and prescribe authentic Vedic and Natural Ayurvedic remedies as per classical astrological texts.`;
+                        handleSendMessage(prompt);
+                      }}
+                      className="bg-red-700 hover:bg-red-800 text-white font-black px-4 py-1.5 rounded-xl text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                    >
+                      <Activity size={14} />
+                      <span>Analyze Health & Prescribe Vedic Remedies</span>
                     </button>
                   </div>
                 </div>

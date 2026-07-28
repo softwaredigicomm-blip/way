@@ -17,6 +17,7 @@ import { LanguageSwitcherModal, SUPPORTED_LANGUAGES, LanguageOption, initGoogleT
 import { UndertakingAcceptanceModal } from './components/UndertakingAcceptanceModal';
 import { VastuConsultancy } from './components/VastuConsultancy';
 import { AIAstrologersSection } from './components/AIAstrologersSection';
+import { DailyPanchang } from './components/DailyPanchang';
 
 // Initialize local storage with seed data
 initStorage();
@@ -177,6 +178,8 @@ export default function App() {
 
     switch (activeTab) {
       case 'home': return <Home astrologers={astrologers} testimonials={testimonials} banners={banners} onOpenExpress={() => setShowExpressQuestions(true)} onOpenKundli={() => setActiveTab('kundli')} onOpenAI={() => { setAiPortalTab('chat'); setActiveTab('ai'); }} onOpenGrid={() => { setAiPortalTab('ephemeris'); setActiveTab('ai'); }} onOpenChat={() => setActiveTab('chat')} onOpenVastu={() => setActiveTab('vastu')} />;
+      case 'daily panchang':
+      case 'panchang': return <DailyPanchang user={user} onOpenAI={() => { setAiPortalTab('chat'); setActiveTab('ai'); }} />;
       case 'horoscope': return <Horoscope />;
       case 'kundli': return <Kundli user={user} onViewPackages={() => setActiveTab('packages')} />;
       case 'chat': return <Chat astrologers={astrologers} user={user} onRecharge={() => fetchUser(user?.email)} />;
@@ -258,8 +261,8 @@ export default function App() {
           <span className="text-2xl font-serif font-bold text-deep-blue tracking-tight">AstroWay</span>
         </div>
 
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-          {['Home', 'Horoscope', 'Kundli', 'Chat', 'Puja', 'Shop', 'Packages', 'AI', 'Vastu'].map((tab) => (
+        <div className="hidden md:flex items-center gap-6 lg:gap-7 text-xs lg:text-sm font-medium text-slate-600">
+          {['Home', 'Daily Panchang', 'Horoscope', 'Kundli', 'Chat', 'Puja', 'Shop', 'Packages', 'AI', 'Vastu'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab.toLowerCase())}
@@ -374,7 +377,7 @@ export default function App() {
               <Languages size={18} className="text-saffron" />
               <span>🌐 Auto Translation ({currentLang.nativeName})</span>
             </button>
-            {['Home', 'Horoscope', 'Kundli', 'Chat', 'Puja', 'Shop', 'Packages', 'AI', 'Vastu'].map((tab) => (
+            {['Home', 'Daily Panchang', 'Horoscope', 'Kundli', 'Chat', 'Puja', 'Shop', 'Packages', 'AI', 'Vastu'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => {
@@ -513,6 +516,9 @@ export default function App() {
             <div>
               <h4 className="font-extrabold mb-4 text-amber-300 text-base drop-shadow-sm">Quick Links</h4>
               <ul className="space-y-2.5 text-sm text-slate-100 font-medium">
+                <li className="cursor-pointer hover:text-amber-300 transition-colors flex items-center gap-1.5" onClick={() => setActiveTab('daily panchang')}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" /> Daily Panchang
+                </li>
                 <li className="cursor-pointer hover:text-amber-300 transition-colors flex items-center gap-1.5" onClick={() => setActiveTab('horoscope')}>
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" /> Daily Horoscope
                 </li>
@@ -3817,7 +3823,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
               <button onClick={() => { setShowModal(null); setSelectedProduct(null); }} className="text-slate-400 hover:text-slate-600"><X size={24} /></button>
             </div>
             <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl">
-              <img src={selectedProduct.image_url} className="w-16 h-16 rounded-xl object-cover" referrerPolicy="no-referrer" />
+              <img src={getProductImageUrl(selectedProduct)} className="w-16 h-16 rounded-xl object-cover" referrerPolicy="no-referrer" />
               <div>
                 <h4 className="font-bold text-deep-blue">{selectedProduct.name}</h4>
                 <p className="text-xs text-slate-500">₹{selectedProduct.price}</p>
@@ -4068,7 +4074,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {Array.isArray(products) && products.map(prod => (
               <div key={prod.id} className="glass rounded-2xl overflow-hidden">
-                <img src={prod.image_url} className="w-full h-32 object-cover" referrerPolicy="no-referrer" />
+                <img src={getProductImageUrl(prod)} className="w-full h-32 object-cover" referrerPolicy="no-referrer" />
                 <div className="p-4">
                   <h4 className="font-bold text-sm">{prod.name}</h4>
                   <p className="text-saffron font-bold">₹{prod.price}</p>
@@ -4499,7 +4505,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
               {pendingProducts.map(p => (
                 <div key={p.id} className="glass p-6 rounded-3xl space-y-4 border-b-4 border-saffron">
                   <div className="relative h-48 overflow-hidden rounded-2xl">
-                    <img src={p.image_url} className="w-full h-full object-cover transition-transform hover:scale-110" referrerPolicy="no-referrer" />
+                    <img src={getProductImageUrl(p)} className="w-full h-full object-cover transition-transform hover:scale-110" referrerPolicy="no-referrer" />
                   </div>
                   <div className="space-y-1">
                     <h4 className="font-bold text-lg text-deep-blue">{p.name}</h4>
@@ -5957,6 +5963,41 @@ function AstrologerPanel({ profile, onUpdate, onLogout }: { profile: any, onUpda
   );
 }
 
+const getProductImageUrl = (product: { name?: string; image_url?: string } | null | undefined): string => {
+  if (!product) return 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=600&h=600';
+  const nameLower = (product.name || '').toLowerCase();
+  
+  if (nameLower.includes('ruby') || nameLower.includes('manik')) {
+    return 'https://images.unsplash.com/photo-1615655406736-b37c4fabf923?auto=format&fit=crop&q=80&w=600&h=600';
+  }
+  if (nameLower.includes('sapphire') || nameLower.includes('pukhraj')) {
+    return 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&q=80&w=600&h=600';
+  }
+  if (nameLower.includes('rudraksha') || nameLower.includes('mala')) {
+    return 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=600&h=600';
+  }
+  if (nameLower.includes('copper yantra') || nameLower.includes('yantra for prosperity')) {
+    return 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&q=80&w=600&h=600';
+  }
+  if (nameLower.includes('sphatik') || nameLower.includes('crystal grid') || nameLower.includes('shree yantra')) {
+    return 'https://images.unsplash.com/photo-1567225557594-88d73e55f2cb?auto=format&fit=crop&q=80&w=600&h=600';
+  }
+  if (nameLower.includes('tarot') || nameLower.includes('amethyst')) {
+    return 'https://images.unsplash.com/photo-1601314167099-232775738c74?auto=format&fit=crop&q=80&w=600&h=600';
+  }
+  if (nameLower.includes('parad') || nameLower.includes('shivling')) {
+    return 'https://images.unsplash.com/photo-1621360841013-c7683c659ec6?auto=format&fit=crop&q=80&w=600&h=600';
+  }
+  if (nameLower.includes('ganesha') || nameLower.includes('idol')) {
+    return 'https://images.unsplash.com/photo-1567591416322-2615a13c9a4d?auto=format&fit=crop&q=80&w=600&h=600';
+  }
+
+  if (!product.image_url || product.image_url.includes('picsum.photos')) {
+    return 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=600&h=600';
+  }
+  return product.image_url;
+};
+
 function Shop({ user, onPurchase, onLogin, onRegisterVendor }: { user: UserType | null, onPurchase: () => void, onLogin: (email: string) => void, onRegisterVendor?: () => void }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<{product: Product, quantity: number, item_details?: string}[]>([]);
@@ -6085,7 +6126,7 @@ function Shop({ user, onPurchase, onLogin, onRegisterVendor }: { user: UserType 
         </button>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
           <div className="glass rounded-[3rem] overflow-hidden">
-            <img src={selectedProduct.image_url} className="w-full aspect-square object-cover" referrerPolicy="no-referrer" />
+            <img src={getProductImageUrl(selectedProduct)} className="w-full aspect-square object-cover" referrerPolicy="no-referrer" />
           </div>
           <div className="space-y-6">
             <h2 className="text-4xl font-serif font-bold text-deep-blue">{selectedProduct.name}</h2>
@@ -6195,7 +6236,7 @@ function Shop({ user, onPurchase, onLogin, onRegisterVendor }: { user: UserType 
                   {cart.map((item, i) => (
                     <div key={i} className="py-4 flex items-center justify-between">
                       <div className="flex items-center gap-4 flex-1">
-                        <img src={item.product.image_url} className="w-16 h-16 rounded-xl object-cover" referrerPolicy="no-referrer" />
+                        <img src={getProductImageUrl(item.product)} className="w-16 h-16 rounded-xl object-cover" referrerPolicy="no-referrer" />
                         <div className="flex-1 mr-4">
                           <p className="font-bold">{item.product.name}</p>
                           <p className="text-saffron font-bold">₹{item.product.price} <span className="text-[10px] text-slate-400 font-normal">({item.product.vendor_name || 'Verified Vendor'})</span></p>
@@ -6373,7 +6414,7 @@ function Shop({ user, onPurchase, onLogin, onRegisterVendor }: { user: UserType 
               fetchReviews(product.id);
             }}>
               <img 
-                src={product.image_url} 
+                src={getProductImageUrl(product)} 
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
                 referrerPolicy="no-referrer"
               />
@@ -7365,7 +7406,7 @@ function VendorPanel({ user }: { user: UserType | null }) {
             {Array.isArray(products) && products.map(p => (
               <div key={p.id} className="glass rounded-3xl overflow-hidden group">
                 <div className="relative h-48">
-                  <img src={p.image_url} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <img src={getProductImageUrl(p)} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
                     p.status === 'approved' ? 'bg-green-500 text-white' : 
                     p.status === 'pending' ? 'bg-saffron text-white' : 'bg-red-500 text-white'

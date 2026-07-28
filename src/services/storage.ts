@@ -130,8 +130,8 @@ const SEED_DATA = {
     { id: 2, name: "Priya Singh", role: "Software Engineer", content: "Acharya Sunita's numerology reading changed my perspective on my career path.", rating: 5, image_url: "", is_active: 1 }
   ],
   products: [
-    { id: 1, vendor_id: 1, name: "Natural Rudraksha Mala", description: "Authentic 108 beads Panchmukhi Rudraksha mala for meditation and peace.", price: 299, category: "Spiritual Items", status: "approved", image_url: "https://picsum.photos/seed/mala/400/400" },
-    { id: 2, vendor_id: 1, name: "Brass Ganesha Idol", description: "Beautifully crafted brass Ganesha idol for your home altar or office desk.", price: 899, category: "Idols", status: "approved", image_url: "https://picsum.photos/seed/ganesha/400/400" }
+    { id: 1, vendor_id: 1, name: "Natural Rudraksha Mala", description: "Authentic 108 beads Panchmukhi Rudraksha mala for meditation and peace.", price: 299, category: "Spiritual Items", status: "approved", image_url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=600&h=600" },
+    { id: 2, vendor_id: 1, name: "Brass Ganesha Idol", description: "Beautifully crafted brass Ganesha idol for your home altar or office desk.", price: 899, category: "Idols", status: "approved", image_url: "https://images.unsplash.com/photo-1567591416322-2615a13c9a4d?auto=format&fit=crop&q=80&w=600&h=600" }
   ]
 };
 
