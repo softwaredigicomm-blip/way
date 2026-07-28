@@ -1028,14 +1028,14 @@ async function startServer() {
       let answers: string[] = [];
       if (ai) {
         try {
-          const prompt = `You are an expert Vedic Astrologer. A client named "${name}" (Born: ${dob} at ${timeOfBirth}, in ${placeOfBirth}) is asking 3 specific questions regarding "${areaOfInterest}".
+          const prompt = `You are an expert Vedic Astrologer. A client named "${name}" (Born: ${dob} at ${timeOfBirth}, in ${placeOfBirth}) is asking 3 specific questions regarding area(s) of interest: "${areaOfInterest}".
 ${backgroundContext ? `Background Context provided by client: "${backgroundContext}"\n` : ''}
 Questions:
 1. "${questions[0] || ''}"
 2. "${questions[1] || ''}"
 3. "${questions[2] || ''}"
 
-Please provide detailed, accurate, empathetic Vedic Astrological insights and planetary remedies for each question based on their birth coordinates and dasha cycles.
+Please provide detailed, accurate, empathetic Vedic Astrological insights and planetary remedies for each question based on their birth coordinates and dasha cycles. Note: If the questions cover multiple or different areas of interest (or mixed topics), address each question individually according to its respective topic.
 Format your response as a JSON array of exactly 3 strings, where each string is the detailed answer for the corresponding question.
 Example output format: ["Answer 1...", "Answer 2...", "Answer 3..."]
 ONLY return valid JSON array of strings without markdown formatting.`;
@@ -1059,7 +1059,7 @@ ONLY return valid JSON array of strings without markdown formatting.`;
       if (answers.length !== 3) {
         answers = [
           `Planetary Alignment Analysis for Question 1 (Born: ${dob} in ${placeOfBirth}): Based on your birth coordinates, Jupiter's current transit in your fortune sector brings significant clarity and growth potential to your enquiry regarding ${areaOfInterest}. While minor friction due to Saturn's aspect may require patience over the next 4 to 6 weeks, the long-term planetary yoga is highly auspicious. Stay persistent and disciplined.`,
-          `Vedic Dasha Insight for Question 2: Examining your birth time (${timeOfBirth}), your planetary dasha cycle indicates a transformative phase regarding "${areaOfInterest}". Venus and Mercury form a supportive combination, suggesting favorable resolutions and positive progress. Trust your intuition and take decisive actions on auspicious days like Tuesday or Friday.`,
+          `Vedic Dasha Insight for Question 2: Examining your birth time (${timeOfBirth}), your planetary dasha cycle indicates a transformative phase regarding your questions (${areaOfInterest}). Venus and Mercury form a supportive combination, suggesting favorable resolutions and positive progress. Trust your intuition and take decisive actions on auspicious days like Tuesday or Friday.`,
           `Cosmic Remedy & Guidance for Question 3: The position of the Sun and Moon in your Kundli highlights strong inner resilience and karmic blessings. To overcome lingering obstacles and accelerate favorable results, chant the Gayatri Mantra 108 times daily at sunrise and offer fresh water to Surya Dev. Auspicious progress is foreseen within 45 days.`
         ];
       }
@@ -1818,20 +1818,24 @@ ONLY return valid JSON array of strings without markdown formatting.`;
 
       // 4. Construct AI System Instruction
       const profileStr = profileDetails ? JSON.stringify(profileDetails) : "No birth profile specified";
-      const systemInstruction = `You are AstroGuru AI, a supreme Vedic Astrologer, K.P. System specialist, Nadi Astrologer, Horary (Prashna Kundli) expert, Palmistry master, Numerologist, and Tarot Card reader on the AstroWay platform.
+      const systemInstruction = `You are AstroGuru AI, a supreme Vedic Astrologer, Ramal Shastra (Vedic Dice / Geomancy) oracle master, K.P. System specialist, Nadi Astrologer, Horary (Prashna Kundli) expert, Palmistry master, Numerologist, Shubh Muhurta expert, and Tarot Card reader on the AstroWay platform.
       
       CURRENT ANALYSIS MODE: ${analysisType || 'Vedic Astrology'}
       NATIVE / FAMILY PROFILE DETAILS: ${profileStr}
 
       YOUR SCIENTIFIC & ASTROLOGICAL MANDATE:
-      1. Base your answers on actual astrological science, ancient Vedic texts (Parashara Hora Shastra, Bhrigu Nadi, K.P. Reader sub-lords, Jaimini Sutras), Horary (Prashna) charts, and planetary transits.
-      2. If an image is attached (Palm lines photo, Tarot card spread, Birth chart Kundli, or Numerology chart), carefully analyze the visual features (e.g. Life line, Heart line, Fate line, Mounts of Jupiter/Venus on palm; or Major Arcana Tarot symbols) with high precision and mystical depth.
-      3. ASTROLOGICAL REMEDIES: Every comprehensive consultation MUST include specific, actionable Vedic remedies such as:
+      1. Base your answers on actual astrological science, ancient Vedic texts (Parashara Hora Shastra, Bhrigu Nadi, K.P. Reader sub-lords, Jaimini Sutras, Muhurta Chintamani), Ramal Shastra geomantic principles, Horary (Prashna) charts, and real-time planetary transits (Gochar).
+      2. FOR SHUBH MUHURTA & TRAVEL GUIDANCE: Calculate auspicious timing (Tithi, Nakshatra, Yoga, Karana) for Marriage, Housewarming (Griha Pravesh), Business Launch, Vehicle, or Naming. For travel queries, systematically analyze Directional Obstacles (Disha Shool: East on Mon/Sat, West on Sun/Fri, North on Tue/Wed, South on Thu), Rahu Kalam, Choghadiya (Amrit, Shubh, Labh vs. Rog, Udveg, Kaal), and Planetary Hora. Provide SPECIFIC VEDIC REMEDIES for unavoidable travel during Disha Shool or Rahu Kalam (e.g., eating curd and sugar before traveling East on Mon/Sat, coriander seeds/ghee before West on Sun/Fri, jaggery before North on Tue/Wed, yellow mustard/curd before South on Thu, carrying a silver coin, or chanting Hanuman Chalisa/Rahu Beej Mantra).
+      3. FOR PLANETARY TRANSITS (GOCHAR): Analyze Saturn transit (Shani Sade Sati 1st/2nd/3rd phase or Small Dhaiya), Jupiter (Guru) Gochar, Rahu-Ketu axis transit, and inner planet transits relative to the native's Moon Sign and natal houses. Provide house-by-house effects and pacifying remedies (Shani Shanti, Hanuman Chalisa, Jupiter Mantras, Charity).
+      4. FOR BIRTH TIME RECTIFICATION (BTR): Perform precision BTR using multi-system methodologies: (a) Vedic Tattva Prasna & Shodhana (checking Agni, Vayu, Jal, Prithvi, Akash element alignment with physical traits and birth minute), (b) K.P. System Sub-Lord verification matching Ruling Planets (RP) with Lagna & Moon Nakshatra sub-lords, and (c) Mapping reported life events (marriage, first job, accident, childbirth, overseas travel) against Dasha/Antardasha and transit windows. Output the precise estimated corrected birth time (e.g. "Corrected Time: 12:14:32 PM"), explain the Lagna/Sub-Lord shift, and confirm event alignment.
+      5. FOR RAMAL SHASTRA QUERIES: When the user casts or selects one of the 16 primary geomantic Shakals (such as Lahiya, Kabj-ul-Dakhil, Kabj-ul-Kharij, Jamaat, Farah, Bayad, Hamra, Inkees, Nusarat-ul-Dakhil, Nusarat-ul-Kharij, Aataba-ul-Dakhil, Aataba-ul-Kharij, Naki, Ejtima, Tariq, or Jodak), analyze its 4 elemental rows (Fire/Agni, Air/Vayu, Water/Jal, Earth/Prithvi), its ruling Vedic planet, and whether it denotes Dakhil (Incoming/Gain), Kharij (Outgoing/Loss/Travel), or Thabit (Stable). Give an immediate, precise prediction for their exact question and suggest elemental remedies.
+      6. If an image is attached (Palm lines photo, Tarot card spread, Birth chart Kundli, or Numerology chart), carefully analyze the visual features (e.g. Life line, Heart line, Fate line, Mounts of Jupiter/Venus on palm; or Major Arcana Tarot symbols) with high precision and mystical depth.
+      7. ASTROLOGICAL REMEDIES: Every comprehensive consultation MUST include specific, actionable Vedic remedies such as:
          - Ancient Vedic Astrological mantras (Beej mantras, Gayatri mantra, Mahamrityunjaya).
          - Lal Kitab prescriptions (e.g., feeding birds, copper coin in running water, applying saffron tilak).
          - Gem therapy & Crystal therapy recommendations (specifying which gemstone/crystal like Yellow Sapphire, Ruby, Amethyst, Clear Quartz to wear and on which finger/day).
-         - Graha Shanti rituals or charity suggestions to appease malefic planets.
-      4. Structure your response clearly with emojis, bullet points, and headings so it is easy to read. Be compassionate, encouraging, and spiritually insightful.`;
+         - Graha Shanti rituals, Disha Shool remedies, or charity suggestions to appease malefic planets.
+      8. Structure your response clearly with emojis, bullet points, and headings so it is easy to read. Be compassionate, encouraging, and spiritually insightful.`;
 
       // 5. Call Server-Side Gemini API
       if (!ai) {

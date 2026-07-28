@@ -3,9 +3,12 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Sparkles, Star, MessageSquare, Clock, Shield, CheckCircle2, 
   Award, HelpCircle, Send, Image as ImageIcon, X, ChevronRight, 
-  User, Zap, Compass, BookOpen, Heart, Wallet, RefreshCw, Bot, ArrowRight, AlertCircle
+  User, Zap, Compass, BookOpen, Heart, Wallet, RefreshCw, Bot, ArrowRight, AlertCircle,
+  History, Camera, Edit2, Plus
 } from 'lucide-react';
 import { User as UserType } from '../types';
+import { NumerologyStudio } from './NumerologyStudio';
+import { calculateMulank, calculateBhagyank, calculateNamank } from '../utils/numerology';
 
 const localFetch = async (url: string, init?: any) => fetch(url, init);
 
@@ -215,6 +218,63 @@ export const AI_ASTROLOGER_PERSONAS: AIAstrologerPersona[] = [
       "How to identify leadership qualities and career rise from the Mount of Jupiter on the palm?",
       "Can you explain what breaks or islands on the Fate line indicate and what remedies to perform?"
     ]
+  },
+  {
+    id: 'ai-ramal',
+    name: 'Pandit Ramal Daivajna AI',
+    branch: 'Ramal Shastra & Vedic Geomancy',
+    category: 'Prashna & Western',
+    title: 'Vedic Geomancy & 16 Shakal Oracle Master',
+    specialty: '16 Geomantic Shakals, Vedic Pasa Dice Casting, Prashna Kundli & Instant Horary Divination',
+    bio: 'Master of Ramal Shastra, the ancient Vedic science of Prashna (horary) divination using 16 primary geomantic figures (Shakals). Interprets Fire, Air, Water, and Earth elemental rows to give immediate, contradiction-free predictions for career, litigation, love, and missing property.',
+    imageUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=400&h=400',
+    rating: 4.99,
+    readingsCount: 15420,
+    responseSpeed: '0.3s Instant',
+    badge: '16 Shakal Oracle',
+    quickQuestions: [
+      "What does the Lahiya (Brihaspati/Jupiter) Shakal indicate for my financial and legal victory?",
+      "Cast the Ramal Shastra dice and predict whether my upcoming business venture is Dakhil (incoming gain) or Kharij.",
+      "Which elemental remedies should I perform based on my current Ramal geomantic figure?"
+    ]
+  },
+  {
+    id: 'ai-muhurta-gochar',
+    name: 'Pandit Muhurta & Gochar Shastri AI',
+    branch: 'Muhurta Chintamani & Planetary Transits',
+    category: 'Vedic & Nadi',
+    title: 'Auspicious Timing & Real-Time Gochar Specialist',
+    specialty: 'Shubh Muhurta for Marriage/Travel, Disha Shool Remedies, Choghadiya, Shani Sade Sati & Guru Gochar',
+    bio: 'Authority on Muhurta Chintamani and planetary transits (Gochar). Calculates highly auspicious timings for marriage, business opening, housewarming, and travel, with directional obstacle (Disha Shool) remedies and Sade Sati pacification.',
+    imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400&h=400',
+    rating: 4.98,
+    readingsCount: 18950,
+    responseSpeed: '0.3s Instant',
+    badge: 'Muhurta & Gochar Expert',
+    quickQuestions: [
+      "Find the best Vedic Shubh Muhurta for marriage engagement or business opening this month.",
+      "Calculate my travel guidance, Disha Shool obstacle, and remedies for traveling East on Monday.",
+      "How does the current Saturn (Shani) transit and Sade Sati phase affect my Moon sign, and what remedies pacify it?"
+    ]
+  },
+  {
+    id: 'ai-btr-rectifier',
+    name: 'Acharya BTR Time Rectifier AI',
+    branch: 'Birth Time Rectification & K.P. Sub-Lords',
+    category: 'Vedic & Nadi',
+    title: 'Precision Birth Time Rectification Master',
+    specialty: 'Vedic Tattva Prasna, K.P. Ruling Planets (RP), Lagna Sub-Lord Matching & Life Event Timeline',
+    bio: 'Specialist in multi-system Birth Time Rectification (BTR). Pinpoints exact birth minute by correlating reported time windows with physical traits (Tattva Shodhana), K.P. Ruling Planets sub-lords, and life event timelines.',
+    imageUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400&h=400',
+    rating: 4.99,
+    readingsCount: 12840,
+    responseSpeed: '0.4s Instant',
+    badge: 'BTR Master',
+    quickQuestions: [
+      "Run a complete Birth Time Rectification (BTR) based on my reported birth time window and life event timeline.",
+      "Verify my reported birth time using K.P. System Ruling Planets and Lagna sub-lord alignment.",
+      "Use Vedic Tattva Shodhana (element check) based on my physical traits to determine my exact Lagna."
+    ]
   }
 ];
 
@@ -228,17 +288,82 @@ export const AIAstrologersSection: React.FC<AIAstrologersSectionProps> = ({ user
   const [activeChatPersona, setActiveChatPersona] = useState<AIAstrologerPersona | null>(null);
   const [selectedBranchModal, setSelectedBranchModal] = useState<AIAstrologerPersona | null>(null);
 
+  // Profile / Family State for AI Specialist chat
+  const [activeProfileId, setActiveProfileId] = useState<string>('self');
+  const [familyMembers, setFamilyMembers] = useState<Array<{ id: string, name: string, relation: string, dob: string, time: string, place: string }>>(() => {
+    const saved = localStorage.getItem('astroway_user_profiles');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {}
+    }
+    return [
+      { id: 'self', name: user?.name || 'Native (Self)', relation: 'Self / Native', dob: user?.dob || '1992-08-15', time: user?.time_of_birth || '14:30', place: user?.place_of_birth || 'New Delhi, India' }
+    ];
+  });
+  const [showAddProfileModal, setShowAddProfileModal] = useState(false);
+  const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
+  const [newProfileForm, setNewProfileForm] = useState({ name: '', relation: 'Walk-in Client / Customer', dob: '1995-01-01', time: '12:00', place: 'New Delhi, India' });
+
+  useEffect(() => {
+    localStorage.setItem('astroway_user_profiles', JSON.stringify(familyMembers));
+  }, [familyMembers]);
+
+  const currentProfile = familyMembers.find(f => f.id === activeProfileId) || familyMembers[0];
+
+  const handleSaveProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProfileForm.name.trim()) return;
+    if (editingProfileId) {
+      setFamilyMembers(prev => prev.map(p => p.id === editingProfileId ? {
+        ...p,
+        name: newProfileForm.name,
+        relation: newProfileForm.relation,
+        dob: newProfileForm.dob || '1990-01-01',
+        time: newProfileForm.time || '12:00',
+        place: newProfileForm.place || 'New Delhi, India'
+      } : p));
+      setActiveProfileId(editingProfileId);
+      setEditingProfileId(null);
+    } else {
+      const newId = `family-${Date.now()}`;
+      const added = {
+        id: newId,
+        name: newProfileForm.name,
+        relation: newProfileForm.relation,
+        dob: newProfileForm.dob || '1990-01-01',
+        time: newProfileForm.time || '12:00',
+        place: newProfileForm.place || 'New Delhi, India'
+      };
+      setFamilyMembers(prev => [...prev, added]);
+      setActiveProfileId(newId);
+    }
+    setNewProfileForm({ name: '', relation: 'Walk-in Client / Customer', dob: '1995-01-01', time: '12:00', place: 'New Delhi, India' });
+    setShowAddProfileModal(false);
+  };
+
   // Chat session state
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'ai', text: string, timestamp: string, imageUrl?: string }>>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [selectedImageBase64, setSelectedImageBase64] = useState<string | null>(null);
   const [aiMinutesRemaining, setAiMinutesRemaining] = useState<number>(user?.ai_minutes_remaining ?? 15);
+  const [tarotDeck, setTarotDeck] = useState<string[]>([
+    'The Magician 🧙‍♂️', 'The High Priestess 🌙', 'The Empress 👑', 'The Emperor 🏛️', 
+    'The Hierophant 📜', 'The Lovers 💞', 'The Chariot 🏎️', 'Strength 🦁', 
+    'The Hermit 🏮', 'Wheel of Fortune 🎡', 'Justice ⚖️', 'The Hanged Man 🙃', 
+    'Death 🦋', 'Temperance 🕊️', 'The Devil ⛓️', 'The Tower ⚡', 
+    'The Star ⭐', 'The Moon 🌕', 'The Sun ☀️', 'Judgement 🎺', 
+    'The World 🌍', 'Ace of Cups 🏆', 'Three of Swords ⚔️', 'Ten of Pentacles 💰'
+  ]);
+  const [selectedTarotCards, setSelectedTarotCards] = useState<{ card: string, slot: string }[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (activeChatPersona) {
+      setSelectedTarotCards([]);
       setMessages([
         {
           role: 'ai',
@@ -289,12 +414,29 @@ export const AIAstrologersSection: React.FC<AIAstrologersSectionProps> = ({ user
           message: text,
           imageBase64: currentImg,
           analysisType: `${activeChatPersona.name} (${activeChatPersona.branch} Specialist)`,
-          profileDetails: user ? {
-            name: user.name,
-            dob: user.dob || '1992-08-15',
-            time: user.time_of_birth || '14:30',
-            place: user.place_of_birth || 'New Delhi, India'
-          } : { note: 'Guest user - general query' }
+          profileDetails: {
+            ...(currentProfile ? {
+              name: currentProfile.name,
+              dob: currentProfile.dob,
+              time: currentProfile.time,
+              place: currentProfile.place,
+              relation: currentProfile.relation
+            } : (user ? {
+              name: user.name,
+              dob: user.dob || '1992-08-15',
+              time: user.time_of_birth || '14:30',
+              place: user.place_of_birth || 'New Delhi, India'
+            } : { note: 'Guest user - general query' })),
+            specializedData: activeChatPersona.branch.includes('Tarot') ? {
+              spreadType: '3-Card Spread (Situation / Action / Outcome)',
+              selectedCards: selectedTarotCards.length > 0 ? selectedTarotCards : 'No specific cards selected yet (AI can draw cards)'
+            } : activeChatPersona.branch.includes('Numerology') ? {
+              autoCalculatedMulank: calculateMulank(currentProfile?.dob || user?.dob).number,
+              autoCalculatedBhagyank: calculateBhagyank(currentProfile?.dob || user?.dob).number,
+              autoCalculatedNamank: calculateNamank(currentProfile?.name || user?.name).chaldean.number,
+              note: "Full Vedic & Chaldean numerology with Partner Compatibility available in Numerology Studio"
+            } : undefined
+          }
         })
       });
 
@@ -407,6 +549,96 @@ export const AIAstrologersSection: React.FC<AIAstrologersSectionProps> = ({ user
                 <Wallet size={14} /> Recharge Minutes
               </button>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* 1.5. ACTIVE BIRTH CHART TARGET SELECTOR FOR AI SPECIALISTS */}
+      <div className="bg-amber-50/90 border border-gold/40 rounded-3xl p-4 sm:p-5 shadow-sm max-w-5xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="w-11 h-11 rounded-2xl bg-saffron text-white flex items-center justify-center shrink-0 shadow-md">
+            <User size={22} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-xs font-black uppercase tracking-wider text-amber-900">
+                🕉️ Active Birth Chart Target
+              </h3>
+              <span className="text-[10px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full font-extrabold">
+                {currentProfile?.relation || 'Self / Native'}
+              </span>
+            </div>
+            <p className="text-sm font-bold text-stone-900 mt-0.5 truncate">
+              {currentProfile?.name} • DOB: {currentProfile?.dob} ({currentProfile?.time}) • {currentProfile?.place}
+            </p>
+            <p className="text-[11px] text-stone-500 mt-0.5 leading-tight">
+              All 10 AI Specialists will automatically analyze this exact birth Kundli / chart for your questions.
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+          <select
+            value={activeProfileId}
+            onChange={(e) => setActiveProfileId(e.target.value)}
+            className="bg-white border border-amber-300 rounded-xl px-3 py-2 text-xs font-bold text-stone-800 shadow-xs focus:outline-none focus:border-saffron cursor-pointer"
+          >
+            {familyMembers.map(m => (
+              <option key={m.id} value={m.id}>{m.name} ({m.relation}) - {m.dob}</option>
+            ))}
+          </select>
+          <button
+            onClick={() => {
+              setEditingProfileId(null);
+              setNewProfileForm({ name: '', relation: 'Walk-in Client / Customer', dob: '1995-01-01', time: '12:00', place: 'New Delhi, India' });
+              setShowAddProfileModal(true);
+            }}
+            className="bg-gradient-to-r from-deep-blue to-indigo-900 text-amber-300 hover:text-white px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md shrink-0 cursor-pointer"
+          >
+            <span>➕ Add / Edit Birth Target</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 1.8. THE ASTROWAY AI SYNERGY SHOWCASE PANEL */}
+      <div className="bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-amber-500/10 border border-amber-400/40 rounded-3xl p-5 sm:p-6 shadow-sm max-w-5xl mx-auto space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-400/30 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-saffron text-white flex items-center justify-center shrink-0 shadow">
+              <Sparkles size={18} className="animate-spin" style={{ animationDuration: '8s' }} />
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-amber-950 uppercase tracking-wide">
+                ✨ Comprehensive Astrological Synergy at a Single Window
+              </h3>
+              <p className="text-xs text-amber-800 font-medium">
+                Experience holistic predictions as our AI synthesizes multiple astrological disciplines simultaneously.
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] bg-amber-950 text-amber-300 font-extrabold px-3 py-1 rounded-full uppercase tracking-wider self-start sm:self-auto shrink-0 shadow-xs">
+            Cross-Disciplinary AI Engine
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-1">
+          <div className="bg-white/80 p-3 rounded-2xl border border-amber-200/80">
+            <span className="text-[11px] font-extrabold text-deep-blue block">Vedic + K.P. Timing</span>
+            <span className="text-[10px] text-slate-600 font-normal leading-tight block mt-0.5">Parashari Dasha verified by sub-lord cusps for contradiction-free dates.</span>
+          </div>
+          <div className="bg-white/80 p-3 rounded-2xl border border-amber-200/80">
+            <span className="text-[11px] font-extrabold text-deep-blue block">Nadi + Tarot Synergy</span>
+            <span className="text-[10px] text-slate-600 font-normal leading-tight block mt-0.5">Past-life karmic impressions cross-referenced with present Tarot archetypes.</span>
+          </div>
+          <div className="bg-white/80 p-3 rounded-2xl border border-amber-200/80">
+            <span className="text-[11px] font-extrabold text-deep-blue block">Palm Line + Numerology</span>
+            <span className="text-[10px] text-slate-600 font-normal leading-tight block mt-0.5">Physical palm line markings matched with name vibrations and birth numbers.</span>
+          </div>
+          <div className="bg-white/80 p-3 rounded-2xl border border-amber-200/80">
+            <span className="text-[11px] font-extrabold text-deep-blue block">Vastu + Lal Kitab Cures</span>
+            <span className="text-[10px] text-slate-600 font-normal leading-tight block mt-0.5">Spatial energy harmonization reinforced by actionable karmic remedies.</span>
+          </div>
+          <div className="bg-white/80 p-3 rounded-2xl border border-amber-200/80 col-span-2 sm:col-span-1">
+            <span className="text-[11px] font-extrabold text-deep-blue block">Ramal + Prashna Oracle</span>
+            <span className="text-[10px] text-slate-600 font-normal leading-tight block mt-0.5">16 Geomantic Shakals and Vedic dice casting for instant horary divination.</span>
           </div>
         </div>
       </div>
@@ -619,6 +851,137 @@ export const AIAstrologersSection: React.FC<AIAstrologersSectionProps> = ({ user
                     <strong>{activeChatPersona.branch} Consultation Active:</strong> This neural persona interprets your birth data and questions using <em>{activeChatPersona.specialty}</em>. Every answer includes verified ancient Vedic/Remedial guidance.
                   </div>
                 </div>
+
+                {/* GLOBAL KUNDLI AUTO-SYNC BANNER */}
+                <div className="bg-gradient-to-r from-amber-50 via-orange-50/80 to-amber-50 border border-gold/50 rounded-2xl p-3 px-3.5 shadow-xs flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shrink-0 shadow-xs shadow-emerald-400" />
+                    <div>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[11px] font-black uppercase tracking-wider text-amber-900">
+                          🕉️ Active Kundli Auto-Sync:
+                        </span>
+                        <span className="font-extrabold text-stone-900">
+                          {currentProfile?.name || user?.name || 'Native (Self)'}
+                        </span>
+                        <span className="text-[10px] bg-amber-200 text-amber-950 font-bold px-1.5 py-0.5 rounded">
+                          {currentProfile?.relation || 'Self / Native'}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-stone-600 font-medium mt-0.5">
+                        DOB: {currentProfile?.dob || user?.dob || '1992-08-15'} at {currentProfile?.time || user?.time_of_birth || '14:30'} • {currentProfile?.place || user?.place_of_birth || 'New Delhi, India'}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded border border-emerald-300">
+                    ⚡ Auto-Utilized
+                  </span>
+                </div>
+
+                {/* 3-CARD TAROT SPREAD STUDIO FOR TAROT SPECIALISTS */}
+                {activeChatPersona.branch.includes('Tarot') && (
+                  <div className="p-4 bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 text-white rounded-3xl border border-purple-500/40 shadow-lg shrink-0 my-2">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 bg-amber-400 rounded-full animate-pulse" />
+                        <h4 className="text-xs font-black uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+                          🔮 Interactive 3-Card Tarot Spread Studio (Past / Present / Future)
+                        </h4>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const shuffled = [...tarotDeck].sort(() => Math.random() - 0.5);
+                            setTarotDeck(shuffled);
+                          }}
+                          className="text-[10px] bg-white/10 hover:bg-white/20 text-amber-200 px-2.5 py-1 rounded-lg border border-white/20 transition-all font-bold flex items-center gap-1 cursor-pointer"
+                        >
+                          🔀 Shuffle Deck
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedTarotCards([])}
+                          className="text-[10px] bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 px-2.5 py-1 rounded-lg border border-rose-500/30 transition-all font-bold cursor-pointer"
+                        >
+                          🔄 Reset Spread
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-purple-200 mb-2.5 leading-relaxed">
+                      Select exactly 3 cards from our traditional deck below. They automatically assign to your Situation, Challenge, and Outcome:
+                    </p>
+                    
+                    <div className="grid grid-cols-3 gap-2 mb-2.5">
+                      {['1: Situation / Present', '2: Action / Challenge', '3: Outcome / Destiny'].map((slotName, i) => {
+                        const cardSelected = selectedTarotCards[i];
+                        return (
+                          <div key={slotName} className={`p-2 rounded-xl border flex flex-col items-center justify-center text-center min-h-[55px] transition-all ${
+                            cardSelected ? 'bg-gradient-to-br from-amber-500/20 to-purple-500/30 border-amber-400/60 shadow-md' : 'bg-white/5 border-dashed border-white/20 text-purple-300/60'
+                          }`}>
+                            <span className="text-[8px] uppercase tracking-wider font-extrabold text-amber-300 block mb-0.5">{slotName}</span>
+                            <span className="text-[11px] font-black text-white truncate max-w-full">{cardSelected ? cardSelected.card : '🎴 Click card below'}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                      {tarotDeck.slice(0, 14).map((card, idx) => {
+                        const isSelected = selectedTarotCards.some(s => s.card === card);
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            disabled={isSelected || selectedTarotCards.length >= 3}
+                            onClick={() => {
+                              if (selectedTarotCards.length < 3 && !isSelected) {
+                                const slots = ['1: Situation / Present', '2: Action / Challenge', '3: Outcome / Destiny'];
+                                setSelectedTarotCards(prev => [...prev, { card, slot: slots[prev.length] }]);
+                              }
+                            }}
+                            className={`shrink-0 w-11 h-14 rounded-xl border flex flex-col items-center justify-center transition-all cursor-pointer ${
+                              isSelected 
+                                ? 'bg-amber-400 border-amber-300 text-slate-900 scale-95 opacity-40 cursor-not-allowed' 
+                                : 'bg-gradient-to-tr from-indigo-900 via-purple-900 to-indigo-800 hover:from-amber-500 hover:to-orange-500 border-purple-400/40 hover:border-amber-300 shadow-md hover:scale-105'
+                            }`}
+                            title={isSelected ? `${card} (Selected)` : "Click to draw card"}
+                          >
+                            <span className="text-sm">{isSelected ? '✓' : '🎴'}</span>
+                            <span className="text-[7px] font-bold text-amber-200 mt-0.5 uppercase tracking-tighter">No. {idx + 1}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {selectedTarotCards.length > 0 && (
+                      <div className="mt-2 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const spreadStr = selectedTarotCards.map(s => `${s.slot}: ${s.card}`).join('; ');
+                            handleSendMessage(`Perform a divine 3-Card Tarot Reading for ${currentProfile?.name || 'me'} (DOB: ${currentProfile?.dob || '1992-08-15'}). Selected Tarot Spread: [${spreadStr}]. Please interpret their symbolism, planetary correlations, and guidance for my immediate decision.`);
+                          }}
+                          className="bg-gradient-to-r from-amber-400 to-saffron hover:from-saffron hover:to-amber-500 text-slate-950 font-black px-4 py-1.5 rounded-xl text-xs shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <span>✨ Analyze My {selectedTarotCards.length}-Card Spread with AI</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* NUMEROLOGY STUDIO FOR NUMEROLOGY SPECIALISTS */}
+                {activeChatPersona.branch.includes('Numerology') && (
+                  <div className="my-2 rounded-3xl overflow-hidden border border-amber-300 shadow-md">
+                    <NumerologyStudio
+                      activeProfileName={currentProfile?.name || user?.name || 'Native (Self)'}
+                      activeProfileDob={currentProfile?.dob || user?.dob || '1992-08-15'}
+                      familyMembers={familyMembers}
+                      onSendMessage={(prompt) => handleSendMessage(prompt)}
+                    />
+                  </div>
+                )}
 
                 {messages.map((msg, idx) => (
                   <div
@@ -835,6 +1198,110 @@ export const AIAstrologersSection: React.FC<AIAstrologersSectionProps> = ({ user
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ADD / EDIT BIRTH PROFILE MODAL FOR AI SPECIALISTS */}
+      <AnimatePresence>
+        {showAddProfileModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200"
+            >
+              <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                <h3 className="font-extrabold text-base text-slate-800 flex items-center gap-2">
+                  <User size={18} className="text-saffron" /> {editingProfileId ? '✏️ Edit Birth Profile' : '➕ Add Client / Family Profile'}
+                </h3>
+                <button onClick={() => { setShowAddProfileModal(false); setEditingProfileId(null); }} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveProfile} className="space-y-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={newProfileForm.name}
+                    onChange={(e) => setNewProfileForm({ ...newProfileForm, name: e.target.value })}
+                    placeholder="e.g. Priya Sharma or Walk-in Client"
+                    className="w-full bg-stone-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-saffron"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Relation / Target Type</label>
+                    <select
+                      value={newProfileForm.relation}
+                      onChange={(e) => setNewProfileForm({ ...newProfileForm, relation: e.target.value })}
+                      className="w-full bg-stone-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
+                    >
+                      <option value="Self / Native">Self / Native</option>
+                      <option value="Walk-in Client / Customer">Walk-in Client / Customer</option>
+                      <option value="Spouse">Spouse</option>
+                      <option value="Child / Son">Child / Son</option>
+                      <option value="Child / Daughter">Child / Daughter</option>
+                      <option value="Father">Father</option>
+                      <option value="Mother">Mother</option>
+                      <option value="Sibling">Sibling</option>
+                      <option value="Friend / Partner">Friend / Partner</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Date of Birth</label>
+                    <input
+                      type="date"
+                      required
+                      value={newProfileForm.dob}
+                      onChange={(e) => setNewProfileForm({ ...newProfileForm, dob: e.target.value })}
+                      className="w-full bg-stone-50 border border-slate-200 rounded-xl px-3 py-2 text-xs cursor-pointer"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Time of Birth</label>
+                    <input
+                      type="time"
+                      value={newProfileForm.time}
+                      onChange={(e) => setNewProfileForm({ ...newProfileForm, time: e.target.value })}
+                      className="w-full bg-stone-50 border border-slate-200 rounded-xl px-3 py-2 text-xs cursor-pointer"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Place of Birth</label>
+                    <input
+                      type="text"
+                      value={newProfileForm.place}
+                      onChange={(e) => setNewProfileForm({ ...newProfileForm, place: e.target.value })}
+                      placeholder="City, Country"
+                      className="w-full bg-stone-50 border border-slate-200 rounded-xl px-3 py-2 text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => { setShowAddProfileModal(false); setEditingProfileId(null); }}
+                    className="flex-1 bg-stone-100 hover:bg-stone-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-saffron hover:bg-orange-600 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm transition-colors cursor-pointer"
+                  >
+                    {editingProfileId ? 'Update Birth Profile' : 'Save Birth Profile'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

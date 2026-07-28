@@ -18,6 +18,7 @@ interface Express3QuestionModalProps {
 }
 
 const AREAS_OF_INTEREST = [
+  { id: 'mixed', label: 'Mixed Topics / All-Round Guidance', icon: Sparkles, desc: 'Multi-topic questions spanning career, love, health, or general life' },
   { id: 'career', label: 'Career, Jobs & Business Growth', icon: Briefcase, desc: 'Promotions, job change, business expansion' },
   { id: 'love', label: 'Love & Relationships', icon: Heart, desc: 'Soulmate, romantic harmony, relationship guidance' },
   { id: 'marriage', label: 'Marriage & Kundli Compatibility', icon: Gem, desc: 'Timing of marriage, partner compatibility' },
@@ -41,7 +42,33 @@ export const Express3QuestionModal: React.FC<Express3QuestionModalProps> = ({
   const [timeOfBirth, setTimeOfBirth] = useState((user as any)?.time_of_birth || '');
   const [placeOfBirth, setPlaceOfBirth] = useState((user as any)?.place_of_birth || '');
   const [backgroundContext, setBackgroundContext] = useState('');
-  const [selectedArea, setSelectedArea] = useState<string>('career');
+  const [selectedAreas, setSelectedAreas] = useState<string[]>(['career']);
+
+  const toggleArea = (id: string) => {
+    if (id === 'mixed') {
+      setSelectedAreas(['mixed']);
+      return;
+    }
+    setSelectedAreas(prev => {
+      const withoutMixed = prev.filter(item => item !== 'mixed');
+      if (withoutMixed.includes(id)) {
+        if (withoutMixed.length === 1) return prev; // Keep at least one selected
+        return withoutMixed.filter(item => item !== id);
+      } else {
+        if (withoutMixed.length >= 3) {
+          return [...withoutMixed.slice(1), id]; // Keep max 3
+        }
+        return [...withoutMixed, id];
+      }
+    });
+  };
+
+  const getSelectedAreaLabels = (): string => {
+    return selectedAreas
+      .map(id => AREAS_OF_INTEREST.find(a => a.id === id)?.label)
+      .filter(Boolean)
+      .join(" • ") || 'Vedic Astrology';
+  };
   
   const [q1, setQ1] = useState('');
   const [q2, setQ2] = useState('');
@@ -105,8 +132,7 @@ export const Express3QuestionModal: React.FC<Express3QuestionModalProps> = ({
     setIsGenerating(true);
 
     try {
-      const selectedAreaObj = AREAS_OF_INTEREST.find(a => a.id === selectedArea);
-      const areaLabel = selectedAreaObj?.label || 'General Vedic Astrology';
+      const areaLabel = getSelectedAreaLabels();
 
       const res = await localFetch('/api/user/express-questions', {
         method: 'POST',
@@ -161,7 +187,7 @@ export const Express3QuestionModal: React.FC<Express3QuestionModalProps> = ({
   const downloadPDFReport = () => {
     if (!answers) return;
     const doc = new jsPDF();
-    const selectedAreaObj = AREAS_OF_INTEREST.find(a => a.id === selectedArea);
+    const areaLabel = getSelectedAreaLabels();
     
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(18);
@@ -173,7 +199,7 @@ export const Express3QuestionModal: React.FC<Express3QuestionModalProps> = ({
     doc.text(`Consultation Date: ${reportDate}`, 20, 30);
     doc.text(`Client Name: ${name} (${email})`, 20, 36);
     doc.text(`Birth Details: ${dob} at ${timeOfBirth}, ${placeOfBirth}`, 20, 42);
-    doc.text(`Selected Area of Interest: ${selectedAreaObj?.label || 'Vedic Astrology'}`, 20, 48);
+    doc.text(`Selected Area(s): ${areaLabel}`, 20, 48);
     
     let yPos = 54;
     if (backgroundContext.trim()) {
@@ -285,7 +311,7 @@ export const Express3QuestionModal: React.FC<Express3QuestionModalProps> = ({
                     Your Personal Astrological Guidance
                   </h4>
                   <p className="text-xs text-slate-500">
-                    Prepared for <strong>{name}</strong> • Area: <strong>{AREAS_OF_INTEREST.find(a => a.id === selectedArea)?.label}</strong>
+                    Prepared for <strong>{name}</strong> • Area(s): <strong>{getSelectedAreaLabels()}</strong>
                   </p>
                   <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-xs text-slate-600 dark:text-slate-300 border-t border-green-500/10">
                     <span className="bg-white/80 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">DOB: <strong>{dob}</strong></span>
@@ -464,26 +490,47 @@ export const Express3QuestionModal: React.FC<Express3QuestionModalProps> = ({
                 </div>
 
                 {/* Section 3: Select Area of Interest */}
-                <div className="space-y-4">
-                  <h4 className="text-sm font-bold text-deep-blue dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <Award size={16} className="text-saffron" /> Step 3: Select ONE Area of Interest *
-                  </h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <h4 className="text-sm font-bold text-deep-blue dark:text-white uppercase tracking-wider flex items-center gap-2">
+                      <Award size={16} className="text-saffron" /> Step 3: Select Up To 3 Areas (or 'Mixed Topics') *
+                    </h4>
+                    <span className="text-[11px] font-bold text-saffron bg-saffron/10 px-2.5 py-1 rounded-full border border-saffron/20 w-fit">
+                      Selected: {selectedAreas.length} / 3
+                    </span>
+                  </div>
+                  <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50 rounded-xl p-3 flex items-start gap-2.5 text-xs text-amber-900 dark:text-amber-200">
+                    <Sparkles size={16} className="text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                    <div>
+                      <span className="font-bold">What if your questions span different topics or don't match?</span>
+                      <p className="mt-0.5 text-amber-800 dark:text-amber-300">
+                        You can click and select up to 3 different areas below (e.g., Career, Love, and Health), or simply select <strong>'Mixed Topics / All-Round Guidance'</strong> if your questions do not fit any single category!
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {AREAS_OF_INTEREST.map((area) => {
                       const Icon = area.icon;
-                      const isSelected = selectedArea === area.id;
+                      const isSelected = selectedAreas.includes(area.id);
                       return (
                         <button
                           key={area.id}
                           type="button"
-                          onClick={() => setSelectedArea(area.id)}
+                          onClick={() => toggleArea(area.id)}
                           className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between h-32 ${
                             isSelected
                               ? 'border-saffron bg-saffron/10 text-saffron shadow-md ring-2 ring-saffron/20'
                               : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/50 hover:border-saffron/50 text-slate-700 dark:text-slate-300'
                           }`}
                         >
-                          <Icon size={24} className={isSelected ? 'text-saffron' : 'text-slate-400'} />
+                          <div className="flex items-center justify-between">
+                            <Icon size={24} className={isSelected ? 'text-saffron' : 'text-slate-400'} />
+                            {isSelected && (
+                              <span className="text-[10px] bg-saffron text-white px-2 py-0.5 rounded-full font-bold">
+                                Selected
+                              </span>
+                            )}
+                          </div>
                           <div>
                             <span className="text-xs font-bold block leading-tight mb-1">{area.label}</span>
                             <span className="text-[10px] text-slate-400 dark:text-slate-500 line-clamp-2 leading-tight">{area.desc}</span>
@@ -607,7 +654,7 @@ export const Express3QuestionModal: React.FC<Express3QuestionModalProps> = ({
         onClose={() => setShowPayment(false)}
         amount={50}
         title="Express 3-Question Package"
-        description={`Selected Area: ${AREAS_OF_INTEREST.find(a => a.id === selectedArea)?.label}`}
+        description={`Selected Area(s): ${getSelectedAreaLabels()}`}
         userEmail={email}
         userName={name}
         userWalletBalance={user?.wallet_balance || 0}

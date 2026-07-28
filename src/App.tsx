@@ -5,7 +5,7 @@ import {
   Wallet, User, ShoppingBag, BookOpen, LayoutDashboard,
   Sparkles, Compass, Heart, Calendar, Menu, X, Send,
   Download, CheckCircle2, AlertCircle, FileText,
-  ChevronLeft, ChevronRight, History, RefreshCw, Award, Shield, Lock, CreditCard, Smartphone, Building2, Languages, Globe, Zap, Eye, Flame, Layers, Radio, Cpu, Activity
+  ChevronLeft, ChevronRight, History, RefreshCw, Award, Shield, Lock, CreditCard, Smartphone, Building2, Languages, Globe, Zap, Eye, Flame, Layers, Radio, Cpu, Activity, Dices
 } from 'lucide-react';
 import { jsPDF } from "jspdf";
 import { Astrologer, User as UserType, ZODIAC_SIGNS, Category, Vendor, Product, Package, Banner, PanditRegistration as PanditType, PujaBooking as PujaBookingType } from './types';
@@ -1434,6 +1434,149 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli,
           </div>
         </motion.div>
       </div>
+
+      {/* Comprehensive Prediction Through Multi-Branch Astrological Synergy at a Single Window */}
+      <section className="bg-gradient-to-br from-amber-50/95 via-orange-50/70 to-yellow-50/85 rounded-[2.5rem] p-8 sm:p-12 border-2 border-amber-300/80 shadow-xl space-y-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-orange-400/10 rounded-full blur-3xl pointer-events-none" />
+        
+        <div className="text-center space-y-3 max-w-3xl mx-auto relative z-10">
+          <div className="inline-flex items-center gap-2 bg-amber-500/15 text-amber-900 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border border-amber-400/40">
+            <Sparkles size={15} className="text-amber-600 animate-pulse" />
+            <span>Integrated Multi-Science Astrological Intelligence Portal</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-black text-deep-blue tracking-tight leading-tight">
+            Comprehensive Predictions via 9-Branch Astrological Synergy at a Single Window
+          </h2>
+          <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium">
+            Instead of consulting separate tools for individual astrological methods, AstroWay AI brings together nine traditional divinatory sciences into one seamless workspace. Our computational engine cross-synthesizes these disciplines simultaneously—delivering comprehensive, consistent predictions and practical remedies without leaving a single screen.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+          <div className="bg-white/95 hover:bg-white p-6 rounded-3xl border border-amber-200 shadow-sm hover:shadow-md transition-all space-y-3 flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+                <Star size={24} className="text-amber-700" />
+              </div>
+              <h3 className="font-bold text-lg text-deep-blue">Vedic Jyotish & Dasha</h3>
+              <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                Deep Parashari analysis evaluating planetary dignities, Shadbala strength, and Vimshottari Mahadasha timing to map long-term career, wealth, and marriage milestones.
+              </p>
+            </div>
+            <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider block pt-2 border-t border-amber-100">Parashari Shastra</span>
+          </div>
+
+          <div className="bg-white/95 hover:bg-white p-6 rounded-3xl border border-amber-200 shadow-sm hover:shadow-md transition-all space-y-3 flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-orange-100 text-orange-800 flex items-center justify-center font-bold">
+                <Cpu size={24} className="text-orange-700" />
+              </div>
+              <h3 className="font-bold text-lg text-deep-blue">K.P. System & Horary</h3>
+              <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                Applying Krishnamurti Padhdhati sub-lord cuspal theory and instant Prashna Kundli to answer immediate yes/no questions and pinpoint exact event dates—even without birth time.
+              </p>
+            </div>
+            <span className="text-[10px] font-bold text-orange-700 uppercase tracking-wider block pt-2 border-t border-orange-100">Pinpoint Timing</span>
+          </div>
+
+          <div className="bg-white/95 hover:bg-white p-6 rounded-3xl border border-amber-200 shadow-sm hover:shadow-md transition-all space-y-3 flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-yellow-100 text-yellow-800 flex items-center justify-center font-bold">
+                <Eye size={24} className="text-yellow-700" />
+              </div>
+              <h3 className="font-bold text-lg text-deep-blue">Bhrigu Nadi & Past Life</h3>
+              <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                Decoding planetary conjunctions without traditional zodiac signs to uncover past-life karmic debts, soul destiny, and exact age-timing for crucial life breakthroughs.
+              </p>
+            </div>
+            <span className="text-[10px] font-bold text-yellow-700 uppercase tracking-wider block pt-2 border-t border-yellow-100">Karmic Decoding</span>
+          </div>
+
+          <div className="bg-white/95 hover:bg-white p-6 rounded-3xl border border-amber-200 shadow-sm hover:shadow-md transition-all space-y-3 flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+                <Activity size={24} className="text-emerald-700" />
+              </div>
+              <h3 className="font-bold text-lg text-deep-blue">Palm Line Vision AI</h3>
+              <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                Computer-vision Samudrika Shastra scanning your Life Line, Fate Line, and Planetary Mounts directly from palm photos to verify physical vitality and financial triangles.
+              </p>
+            </div>
+            <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider block pt-2 border-t border-emerald-100">Samudrika Shastra</span>
+          </div>
+
+          <div className="bg-white/95 hover:bg-white p-6 rounded-3xl border border-amber-200 shadow-sm hover:shadow-md transition-all space-y-3 flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-800 flex items-center justify-center font-bold">
+                <Layers size={24} className="text-purple-700" />
+              </div>
+              <h3 className="font-bold text-lg text-deep-blue">Tarot Archetypes & Numerology</h3>
+              <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                Synchronizing 78-card Tarot spreads with Chaldean name vibration audits (Namank/Mulank) to illuminate immediate emotional undercurrents and partner compatibility.
+              </p>
+            </div>
+            <span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider block pt-2 border-t border-purple-100">Esoteric Synchronicity</span>
+          </div>
+
+          <div className="bg-white/95 hover:bg-white p-6 rounded-3xl border border-amber-200 shadow-sm hover:shadow-md transition-all space-y-3 flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold">
+                <Compass size={24} className="text-teal-700" />
+              </div>
+              <h3 className="font-bold text-lg text-deep-blue">Vastu Shastra Spatial Grid</h3>
+              <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                Evaluating your residential or office floor plans against 16-zone Vedic directional energy grids to eliminate geopathic stress with 100% non-demolition cures.
+              </p>
+            </div>
+            <span className="text-[10px] font-bold text-teal-700 uppercase tracking-wider block pt-2 border-t border-teal-100">Spatial Harmony</span>
+          </div>
+
+          <div className="bg-white/95 hover:bg-white p-6 rounded-3xl border border-amber-200 shadow-sm hover:shadow-md transition-all space-y-3 flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-800 flex items-center justify-center font-bold">
+                <Flame size={24} className="text-red-700" />
+              </div>
+              <h3 className="font-bold text-lg text-deep-blue">Lal Kitab & Graha Shanti</h3>
+              <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                Prescribing practical, accessible karmic remedies, gemstone prescriptions, and daily Vedic mantras tailored to neutralize planetary afflictions and accelerate success.
+              </p>
+            </div>
+            <span className="text-[10px] font-bold text-red-700 uppercase tracking-wider block pt-2 border-t border-red-100">Karmic Cures</span>
+          </div>
+
+          <div className="bg-white/95 hover:bg-white p-6 rounded-3xl border border-amber-200 shadow-sm hover:shadow-md transition-all space-y-3 flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+                <Dices size={24} className="text-amber-700" />
+              </div>
+              <h3 className="font-bold text-lg text-deep-blue">Ramal Shastra (Vedic Dice)</h3>
+              <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                Ancient geomantic Prashna Oracle using 16 primary Shakals (4-row Fire, Air, Water, Earth figures) and Vedic Pasa dice casting for instant, contradiction-free predictions.
+              </p>
+            </div>
+            <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider block pt-2 border-t border-amber-100">Vedic Geomancy</span>
+          </div>
+
+          <div className="bg-gradient-to-br from-amber-600 via-orange-600 to-amber-700 text-white p-6 rounded-3xl shadow-lg flex flex-col justify-between space-y-3 border border-amber-400/40">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center font-bold text-white">
+                <Zap size={24} />
+              </div>
+              <h3 className="font-bold text-lg text-white">Single-Window Synergy</h3>
+              <p className="text-xs text-amber-100 leading-relaxed font-normal">
+                All 9 disciplines cross-verify your chart simultaneously. No contradictions, no confusing jargon—just clear, actionable intelligence at your fingertips.
+              </p>
+            </div>
+            <button
+              onClick={() => onOpenAI && onOpenAI()}
+              className="w-full bg-white text-amber-900 font-bold py-2.5 px-4 rounded-xl text-xs hover:bg-amber-50 transition-colors shadow flex items-center justify-center gap-1.5 cursor-pointer mt-2"
+            >
+              <Sparkles size={14} className="text-amber-600" /> Consult AI Astrologers Now
+            </button>
+          </div>
+        </div>
+      </section>
 
       {/* 4 Pillars of Vedic Authenticity & Trust (New Sophisticated Section) */}
       <section className="space-y-8">

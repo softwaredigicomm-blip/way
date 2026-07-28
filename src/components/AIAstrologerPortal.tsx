@@ -4,9 +4,12 @@ import {
   Sparkles, Star, Send, Wallet, Clock, History, Plus, 
   Upload, Image as ImageIcon, Camera, AlertCircle, CheckCircle2, 
   RefreshCw, Compass, Moon, Sun, Heart, Shield, BookOpen, 
-  User, Users, ChevronRight, X, Award, HelpCircle, FileText, MessageSquare
+  User, Users, ChevronRight, X, Award, HelpCircle, FileText, MessageSquare, Edit2, Dices,
+  Calendar, Globe
 } from 'lucide-react';
 import { User as UserType } from '../types';
+import { NumerologyStudio } from './NumerologyStudio';
+import { calculateMulank, calculateBhagyank, calculateNamank } from '../utils/numerology';
 
 interface AIAstrologerPortalProps {
   user: UserType | null;
@@ -41,6 +44,25 @@ interface FamilyMember {
   place: string;
 }
 
+const RAMAL_SHAKALS = [
+  { id: 'lahiya', name: 'Lahiya / Lahyan (Gaur/Shwet • The Beard)', dots: ['•', '•', '•', '••'], ruler: 'Jupiter (Brihaspati)', element: 'Fire & Air', nature: 'Auspicious, growth, wisdom, success in legal & financial queries.' },
+  { id: 'kabj-dakhil', name: 'Kabj-ul-Dakhil (Pravesh • Incoming Grip)', dots: ['••', '•', '••', '••'], ruler: 'Rahu / Saturn', element: 'Earth & Water', nature: 'Incoming gains, acquisition, holding property, returning home.' },
+  { id: 'kabj-kharij', name: 'Kabj-ul-Kharij (Nirgama • Outgoing Grip)', dots: ['••', '••', '•', '••'], ruler: 'Ketu / Saturn', element: 'Air & Earth', nature: 'Outgoing expenses, separation, release, travel, letting go.' },
+  { id: 'jamaat', name: 'Jamaat (Sangam • Congregation / Union)', dots: ['••', '••', '••', '••'], ruler: 'Mercury (Budha)', element: 'All Elements Balanced', nature: 'Stability, unity, family gathering, joint ventures, partnerships.' },
+  { id: 'farah', name: 'Farah / Joy (Harsha • Delight)', dots: ['••', '••', '••', '•'], ruler: 'Venus (Shukra)', element: 'Water & Fire', nature: 'High happiness, love, celebration, arts, romance, auspicious ceremonies.' },
+  { id: 'bayad', name: 'Bayad / Shwet (White • Purity)', dots: ['••', '••', '•', '•'], ruler: 'Moon (Chandra)', element: 'Water & Air', nature: 'Calmness, peace, clarity, spiritual purity, recovery from illness.' },
+  { id: 'hamra', name: 'Hamra / Rakt (Red / Ruddy • Passion)', dots: ['••', '•', '••', '•'], ruler: 'Mars (Mangal)', element: 'Fire & Earth', nature: 'Action, courage, conflict, surgery, litigation, physical energy, urgency.' },
+  { id: 'inkees', name: 'Inkees / Mangal (Vakra • Inverted)', dots: ['••', '•', '•', '••'], ruler: 'Mars / Saturn', element: 'Fire & Earth', nature: 'Reversal of fortune, delays, obstacles, rethinking plans, caution required.' },
+  { id: 'nusarat-dakhil', name: 'Nusarat-ul-Dakhil (Vijay Pravesh • Incoming Victory)', dots: ['••', '•', '•', '•'], ruler: 'Sun (Surya) / Jupiter', element: 'Fire & Water', nature: 'Triumph, honor, incoming assistance, promotion, victory over rivals.' },
+  { id: 'nusarat-kharij', name: 'Nusarat-ul-Kharij (Vijay Nirgama • Outgoing Victory)', dots: ['•', '••', '••', '••'], ruler: 'Sun / Mars', element: 'Fire & Air', nature: 'Success through outward action, foreign gains, conquering obstacles away from home.' },
+  { id: 'aataba-dakhil', name: 'Aataba-ul-Dakhil (Dehli Pravesh • Upper Threshold)', dots: ['•', '••', '••', '•'], ruler: 'Moon / Venus', element: 'Water & Earth', nature: 'Safe entry, stability in residence, starting new projects on firm footing.' },
+  { id: 'aataba-kharij', name: 'Aataba-ul-Kharij (Dehli Nirgama • Lower Threshold)', dots: ['•', '•', '••', '••'], ruler: 'Mercury / Saturn', element: 'Air & Earth', nature: 'Stepping out, change of residence, transition, short journeys.' },
+  { id: 'naki', name: 'Naki / Shuddha (Pure • The Way)', dots: ['•', '•', '••', '•'], ruler: 'Mercury / Sun', element: 'Air & Water', nature: 'Clear communication, truth, intelligence, academic success, resolution of doubts.' },
+  { id: 'ejtima', name: 'Ejtima / Sangam (Union • The Head)', dots: ['•', '•', '•', '•'], ruler: 'Sun (Surya) / Jupiter', element: 'Pure Fire & Air', nature: 'Supreme vitality, leadership, divine blessing, enlightenment, unity of purpose.' },
+  { id: 'tariq', name: 'Tariq / Marg (The Path • Journey)', dots: ['•', '••', '•', '••'], ruler: 'Moon / Rahu', element: 'Air & Earth', nature: 'Movement, travel, exploration, searching for answers, dynamic change.' },
+  { id: 'jodak', name: 'Jodak / Ijtima (Twin / Joining • The Tail)', dots: ['•', '••', '•', '•'], ruler: 'Mercury / Venus', element: 'Earth & Water', nature: 'Harmony, reconciliation, dual benefits, friendship, diplomatic agreements.' }
+];
+
 export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, onRecharge, initialTab = 'chat' }) => {
   const [activeTab, setActiveTab] = useState<'chat' | 'ephemeris' | 'ledger' | 'remedies'>(initialTab);
 
@@ -62,13 +84,102 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
 
   // Chat State
   const [sessionId, setSessionId] = useState<number>(0);
-  const [messages, setMessages] = useState<Message[]>([
+  const [messagesByMode, setMessagesByMode] = useState<Record<string, Message[]>>(() => ({
+    'Vedic & Family Q&A': [
+      {
+        role: 'ai',
+        text: "🙏 **Namaste! Welcome to Vedic Astrology & Family Q&A Studio.**\n\nI am your divine Vedic astrological counselor. I can guide you on general horoscopes, career transitions, marriage timing, and family harmony.\n\n✨ **What would you like to explore today?** Ask about yourself or any saved family member below!",
+        timestamp: new Date().toLocaleTimeString()
+      }
+    ],
+    'K.P. System & Horary': [
+      {
+        role: 'ai',
+        text: "🧭 **Welcome to K.P. System & Horary (Prashna Kundli) Studio.**\n\nI analyze exact event timings using Krishnamurti Padhdhati sub-lord theory and Prashna (Horary) charts for immediate questions.\n\n✨ **Enter your Prashna number (1-249) or ask an exact event timing question below:**",
+        timestamp: new Date().toLocaleTimeString()
+      }
+    ],
+    'Nadi Astrology': [
+      {
+        role: 'ai',
+        text: "📜 **Welcome to Nadi Astrology & Past Karma Decoding Studio.**\n\nI decode ancient Bhrigu Nadi principles and karma impressions from planetary combinations and thumb impressions.\n\n✨ **Select your thumb impression or ask about your soul journey and past karma patterns below:**",
+        timestamp: new Date().toLocaleTimeString()
+      }
+    ],
+    'Palm Line Analysis': [
+      {
+        role: 'ai',
+        text: "✋ **Welcome to Vedic Samudrika Shastra (Palm Line Analysis Studio).**\n\nI specialize in decoding your palm lines (Life Line, Fate Line, Heart Line, Head Line) and planetary mounts.\n\n✨ **Select your hand and focus area above, upload a palm photo, and click Analyze!**",
+        timestamp: new Date().toLocaleTimeString()
+      }
+    ],
+    'Tarot Card Reading': [
+      {
+        role: 'ai',
+        text: "🔮 **Welcome to the Sacred Tarot Card Reading Studio.**\n\nI connect traditional 78-card Tarot archetypes with your Vedic planetary energies to give immediate, profound guidance on your Situation, Challenge, and Destiny.\n\n✨ **Select 3 cards from the deck above or ask any Tarot question below for an instant reading!**",
+        timestamp: new Date().toLocaleTimeString()
+      }
+    ],
+    'Numerology': [
+      {
+        role: 'ai',
+        text: "🔢 **Welcome to Divine Numerology & Name Vibration Studio.**\n\nI calculate your Mulank (Psychic Number), Bhagyank (Destiny Number), and Namank (Name Vibration) using both Chaldean and Pythagorean systems.\n\n✨ **Use the Numerology Studio above to check name corrections, lucky dates, and partner compatibility!**",
+        timestamp: new Date().toLocaleTimeString()
+      }
+    ],
+    'Lal Kitab & Remedies': [
+      {
+        role: 'ai',
+        text: "🛡️ **Welcome to Lal Kitab, Crystal & Gemstone Remedies Studio.**\n\nI prescribe powerful Vedic remedies, auspicious gemstones, metal vibrations, and Lal Kitab simple karmic solutions to pacify malefic planets and enhance abundance.\n\n✨ **Select your remedy focus above or tell me what planetary dosha you want to heal:**",
+        timestamp: new Date().toLocaleTimeString()
+      }
+    ],
+    'Ramal Shastra (Vedic Dice)': [
+      {
+        role: 'ai',
+        text: "🎲 **Welcome to Ramal Shastra (Vedic Dice & Geomancy Divination Studio).**\n\nRamal Shastra is the ancient Vedic science of Prashna (Horary) Oracle using 16 primary Geomantic Figures (Shakals) composed of Fire, Air, Water, and Earth elemental rows.\n\n✨ **Cast the Vedic Ramal Dice (Pasa) in the studio above or select a Shakal figure to generate an immediate, contradiction-free prediction for your question!**",
+        timestamp: new Date().toLocaleTimeString()
+      }
+    ],
+    'Shubh Muhurta & Travel Guidance': [
+      {
+        role: 'ai',
+        text: "📅 **Welcome to Vedic Shubh Muhurta & Travel Guidance Studio.**\n\nI calculate auspicious timing (Muhurta) for Marriage, Griha Pravesh, Business Launch, Vehicle Purchase, and Travel (Yatra).\n\n✨ **Disha Shool & Travel Guidance**: I analyze directional obstacles, Rahu Kalam, Choghadiya, and Hora, providing effective Vedic remedies for unavoidable travel during inauspicious times.\n\n✨ **Select your occasion and travel details above or ask a Muhurta question below!**",
+        timestamp: new Date().toLocaleTimeString()
+      }
+    ],
+    'Planetary Transits (Gochar Effects)': [
+      {
+        role: 'ai',
+        text: "🪐 **Welcome to Planetary Transits (Gochar Effects & Sade Sati) Studio.**\n\nI track real-time planetary transits (Gochar) of Saturn (Shani Sade Sati & Dhaiya), Jupiter (Guru Gochar), Rahu-Ketu karmic axis, and inner planets relative to your natal Moon sign and houses.\n\n✨ **Select your Moon sign and transit focus above to calculate personalized house impacts and pacifying remedies!**",
+        timestamp: new Date().toLocaleTimeString()
+      }
+    ],
+    'Birth Time Rectification (BTR)': [
+      {
+        role: 'ai',
+        text: "⏱️ **Welcome to Birth Time Rectification (BTR) & Sub-Lord Alignment Studio.**\n\nNot sure about your exact birth minute? I utilize multi-system Vedic Tattva Prasna, K.P. System Sub-Lord verification, Ruling Planets (RP), and your major life events timeline to pinpoint your exact corrected birth time.\n\n✨ **Enter your reported birth time window and key life events above to run precision BTR!**",
+        timestamp: new Date().toLocaleTimeString()
+      }
+    ]
+  }));
+
+  const messages = messagesByMode[analysisMode] || [
     {
       role: 'ai',
-      text: "🙏 **Namaste! Welcome to AstroGuru AI.**\n\nI am your divine astrological counselor powered by Vedic texts, K.P. System, Horary analysis, Nadi astrology, Numerology, Palmistry, and Tarot.\n\n✨ **What would you like to explore today?** You can ask about yourself or any family member, upload Palm line photos for analysis, or request ancient Vedic, Lal Kitab, Crystal & Gemstone remedies!",
+      text: `🙏 **Welcome to ${analysisMode} Studio.**\n\nHow may I assist your astrological inquiry today?`,
       timestamp: new Date().toLocaleTimeString()
     }
-  ]);
+  ];
+
+  const setMessages = (updater: (prev: Message[]) => Message[]) => {
+    setMessagesByMode(prevMap => {
+      const currentList = prevMap[analysisMode] || [];
+      const nextList = updater(currentList);
+      return { ...prevMap, [analysisMode]: nextList };
+    });
+  };
+
   const [input, setInput] = useState<string>('');
   const [loadingChat, setLoadingChat] = useState<boolean>(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -76,12 +187,70 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Profile / Family State
-  const [activeProfile, setActiveProfile] = useState<string>('self');
-  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([
-    { id: 'self', name: user?.name || 'Native (Self)', relation: 'Self', dob: '1992-08-15', time: '14:30', place: 'New Delhi, India' }
-  ]);
+  const [activeProfile, setActiveProfile] = useState<string>(() => {
+    return localStorage.getItem('astroway_active_profile_id') || 'self';
+  });
+  const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>(() => {
+    const saved = localStorage.getItem('astroway_user_profiles');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {}
+    }
+    return [
+      { id: 'self', name: user?.name || 'Native (Self)', relation: 'Self / Native', dob: user?.dob || '1992-08-15', time: user?.time_of_birth || '14:30', place: user?.place_of_birth || 'New Delhi, India' }
+    ];
+  });
   const [showAddFamily, setShowAddFamily] = useState<boolean>(false);
-  const [newFamily, setNewFamily] = useState({ name: '', relation: 'Spouse', dob: '', time: '', place: '' });
+  const [newFamily, setNewFamily] = useState({ name: '', relation: 'Walk-in Client / Customer', dob: '1995-01-01', time: '12:00', place: 'New Delhi, India' });
+
+  useEffect(() => {
+    localStorage.setItem('astroway_user_profiles', JSON.stringify(familyMembers));
+  }, [familyMembers]);
+
+  useEffect(() => {
+    localStorage.setItem('astroway_active_profile_id', activeProfile);
+  }, [activeProfile]);
+
+  // Specialized Astrological Sciences State
+  const [tarotDeck, setTarotDeck] = useState<string[]>([
+    'The Magician 🧙‍♂️', 'The High Priestess 🌙', 'The Empress 👑', 'The Emperor 🏛️', 
+    'The Hierophant 📜', 'The Lovers 💞', 'The Chariot 🏎️', 'Strength 🦁', 
+    'The Hermit 🏮', 'Wheel of Fortune 🎡', 'Justice ⚖️', 'The Hanged Man 🙃', 
+    'Death 🦋', 'Temperance 🕊️', 'The Devil ⛓️', 'The Tower ⚡', 
+    'The Star ⭐', 'The Moon 🌕', 'The Sun ☀️', 'Judgement 🎺', 
+    'The World 🌍', 'Ace of Cups 🏆', 'Three of Swords ⚔️', 'Ten of Pentacles 💰'
+  ]);
+  const [selectedTarotCards, setSelectedTarotCards] = useState<{ card: string, slot: string }[]>([]);
+  const [palmHand, setPalmHand] = useState<'right' | 'left'>('right');
+  const [palmFocus, setPalmFocus] = useState('Life Line & Longevity');
+  const [nadiThumb, setNadiThumb] = useState<'right' | 'left'>('right');
+  const [nadiMark, setNadiMark] = useState('');
+  const [nadiKandam, setNadiKandam] = useState('1st Kandam (General Life & Personality)');
+  const [kpPrashnaNum, setKpPrashnaNum] = useState<number>(108);
+  const [kpFocus, setKpFocus] = useState('Prashna Kundli (Horary Question Timing)');
+  const [lalkitabTrouble, setLalkitabTrouble] = useState('Financial Blockage / Debt Relief');
+  const [lalkitabPlanet, setLalkitabPlanet] = useState('Rahu & Saturn Malefic');
+  const [ramalSelectedShakal, setRamalSelectedShakal] = useState<string>('lahiya');
+  const [ramalQuestionFocus, setRamalQuestionFocus] = useState<string>('General Future & Auspicious Outcome');
+
+  // Shubh Muhurta & Travel Guidance State
+  const [muhurtaOccasion, setMuhurtaOccasion] = useState<string>('Marriage (Vivah)');
+  const [travelDirection, setTravelDirection] = useState<string>('East (Purva)');
+  const [travelDayOfWeek, setTravelDayOfWeek] = useState<string>('Monday');
+  const [muhurtaTimeframe, setMuhurtaTimeframe] = useState<string>('This Month (Current Month Transits)');
+
+  // Planetary Transits (Gochar Effects) State
+  const [gocharMoonSign, setGocharMoonSign] = useState<string>('Aries (Mesh)');
+  const [gocharPlanetFocus, setGocharPlanetFocus] = useState<string>('Saturn (Shani Transit & Sade Sati)');
+
+  // Birth Time Rectification (BTR) State
+  const [btrReportedTime, setBtrReportedTime] = useState<string>('12:00');
+  const [btrUncertaintyWindow, setBtrUncertaintyWindow] = useState<string>('± 15 minutes');
+  const [btrKeyEvents, setBtrKeyEvents] = useState<string>('Marriage on 15 Oct 2018, Joined First Corporate Job on 01 Jun 2015, Car Accident in July 2021');
+  const [btrPhysicalTraits, setBtrPhysicalTraits] = useState<string>('Tall build, energetic speech, fair skin, oval face structure');
 
   // Ephemeris State
   const [ephemDate, setEphemDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -174,7 +343,62 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
       return;
     }
 
-    const currentProfile = familyMembers.find(f => f.id === activeProfile) || familyMembers[0];
+    const baseProfile = familyMembers.find(f => f.id === activeProfile) || familyMembers[0];
+    const enhancedProfile = {
+      ...baseProfile,
+      activeModule: analysisMode,
+      specializedData: analysisMode === 'Tarot Card Reading' ? {
+        spreadType: '3-Card Spread (Situation / Action / Outcome)',
+        selectedCards: selectedTarotCards.length > 0 ? selectedTarotCards : 'No specific cards selected yet (AI can draw cards)'
+      } : analysisMode === 'Numerology' ? {
+        autoCalculatedMulank: calculateMulank(baseProfile.dob).number,
+        autoCalculatedBhagyank: calculateBhagyank(baseProfile.dob).number,
+        autoCalculatedNamank: calculateNamank(baseProfile.name).chaldean.number,
+        note: "Full Vedic & Chaldean numerology with Partner Compatibility available in Numerology Studio"
+      } : analysisMode === 'Palm Line Analysis' ? {
+        handSelected: palmHand === 'right' ? 'Right Hand (Active Karma)' : 'Left Hand (Inborn Potential)',
+        analysisFocus: palmFocus
+      } : analysisMode === 'Nadi Astrology' ? {
+        thumbType: nadiThumb === 'right' ? 'Right Thumb (Male Native)' : 'Left Thumb (Female Native)',
+        bodilyMark: nadiMark || 'Not specified',
+        targetKandam: nadiKandam
+      } : analysisMode === 'K.P. System & Horary' ? {
+        prashnaNumber: kpPrashnaNum,
+        focus: kpFocus
+      } : analysisMode === 'Lal Kitab & Remedies' ? {
+        lifeTrouble: lalkitabTrouble,
+        maleficPlanet: lalkitabPlanet
+      } : analysisMode === 'Ramal Shastra (Vedic Dice)' ? {
+        castShakalFigure: RAMAL_SHAKALS.find(s => s.id === ramalSelectedShakal)?.name || 'Lahiya / Lahyan',
+        shakalDotsStructure: RAMAL_SHAKALS.find(s => s.id === ramalSelectedShakal)?.dots || ['•', '•', '•', '••'],
+        rulingPlanet: RAMAL_SHAKALS.find(s => s.id === ramalSelectedShakal)?.ruler || 'Jupiter',
+        elementalBalance: RAMAL_SHAKALS.find(s => s.id === ramalSelectedShakal)?.element || 'Fire & Air',
+        shakalNature: RAMAL_SHAKALS.find(s => s.id === ramalSelectedShakal)?.nature || 'Auspicious',
+        questionFocus: ramalQuestionFocus
+      } : analysisMode === 'Shubh Muhurta & Travel Guidance' ? {
+        targetOccasion: muhurtaOccasion,
+        travelDirection: travelDirection,
+        travelDayOfWeek: travelDayOfWeek,
+        timeframe: muhurtaTimeframe
+      } : analysisMode === 'Planetary Transits (Gochar Effects)' ? {
+        moonSign: gocharMoonSign,
+        focusPlanet: gocharPlanetFocus
+      } : analysisMode === 'Birth Time Rectification (BTR)' ? {
+        reportedTime: btrReportedTime,
+        uncertaintyWindow: btrUncertaintyWindow,
+        lifeEventsTimeline: btrKeyEvents,
+        physicalTraits: btrPhysicalTraits
+      } : undefined
+    };
+
+    const activeModeAtSend = analysisMode;
+    const updateModeMessages = (newMsg: Message) => {
+      setMessagesByMode(prevMap => {
+        const currentList = prevMap[activeModeAtSend] || [];
+        return { ...prevMap, [activeModeAtSend]: [...currentList, newMsg] };
+      });
+    };
+
     const userMsg: Message = {
       role: 'user',
       text: queryText,
@@ -182,7 +406,7 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
       timestamp: new Date().toLocaleTimeString()
     };
 
-    setMessages(prev => [...prev, userMsg]);
+    updateModeMessages(userMsg);
     setInput('');
     const imageToSend = selectedImage;
     setSelectedImage(null);
@@ -198,36 +422,36 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
           message: queryText,
           imageBase64: imageToSend || undefined,
           analysisType: analysisMode,
-          profileDetails: currentProfile
+          profileDetails: enhancedProfile
         })
       });
 
       const data = await res.json();
       if (res.status === 402 || data.error === 'INSUFFICIENT_AI_MINUTES') {
         setShowRechargeModal(true);
-        setMessages(prev => [...prev, {
+        updateModeMessages({
           role: 'ai',
           text: "⚠️ **Cosmic Duration Exhausted!**\n\nYour AI consultation duration has expired. Please recharge your wallet with one of our fixed duration packs to resume this consultation instantly.",
           timestamp: new Date().toLocaleTimeString()
-        }]);
+        });
       } else if (res.ok && data.success) {
         setAiMinutes(data.ai_minutes_remaining);
         setLedger(data.ledger || ledger);
-        setMessages(prev => [...prev, {
+        updateModeMessages({
           role: 'ai',
           text: data.aiMessage,
           timestamp: new Date().toLocaleTimeString()
-        }]);
+        });
       } else {
         throw new Error(data.message || "Failed to generate cosmic response");
       }
     } catch (e: any) {
       console.error("AI chat error:", e);
-      setMessages(prev => [...prev, {
+      updateModeMessages({
         role: 'ai',
         text: `🙏 The cosmic signals encountered temporary static: *${e.message || 'Please retry shortly'}*. Your minutes were not consumed for this error.`,
         timestamp: new Date().toLocaleTimeString()
-      }]);
+      });
     } finally {
       setLoadingChat(false);
     }
@@ -262,18 +486,31 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
   const handleAddFamilyMember = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newFamily.name.trim()) return;
-    const newId = `family-${Date.now()}`;
-    const added: FamilyMember = {
-      id: newId,
-      name: newFamily.name,
-      relation: newFamily.relation,
-      dob: newFamily.dob || '1990-01-01',
-      time: newFamily.time || '12:00',
-      place: newFamily.place || 'New Delhi, India'
-    };
-    setFamilyMembers(prev => [...prev, added]);
-    setActiveProfile(newId);
-    setNewFamily({ name: '', relation: 'Spouse', dob: '', time: '', place: '' });
+    if (editingProfileId) {
+      setFamilyMembers(prev => prev.map(p => p.id === editingProfileId ? {
+        ...p,
+        name: newFamily.name,
+        relation: newFamily.relation,
+        dob: newFamily.dob || '1990-01-01',
+        time: newFamily.time || '12:00',
+        place: newFamily.place || 'New Delhi, India'
+      } : p));
+      setActiveProfile(editingProfileId);
+      setEditingProfileId(null);
+    } else {
+      const newId = `family-${Date.now()}`;
+      const added: FamilyMember = {
+        id: newId,
+        name: newFamily.name,
+        relation: newFamily.relation,
+        dob: newFamily.dob || '1990-01-01',
+        time: newFamily.time || '12:00',
+        place: newFamily.place || 'New Delhi, India'
+      };
+      setFamilyMembers(prev => [...prev, added]);
+      setActiveProfile(newId);
+    }
+    setNewFamily({ name: '', relation: 'Walk-in Client / Customer', dob: '1995-01-01', time: '12:00', place: 'New Delhi, India' });
     setShowAddFamily(false);
   };
 
@@ -300,13 +537,88 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
 
   const analysisModes = [
     { name: 'Vedic & Family Q&A', icon: Star, desc: 'General horoscope, career, family harmony & marriage' },
+    { name: 'Shubh Muhurta & Travel Guidance', icon: Calendar, desc: 'Auspicious dates for Marriage, Griha Pravesh, Business, Disha Shool & travel remedies' },
+    { name: 'Planetary Transits (Gochar Effects)', icon: Globe, desc: 'Shani Sade Sati & Dhaiya, Guru Transit, Rahu-Ketu axis, Gochar house impacts & remedies' },
+    { name: 'Birth Time Rectification (BTR)', icon: Clock, desc: 'Precision BTR using Vedic Tattva Prasna, K.P. Sub-Lords & life event timeline mapping' },
     { name: 'K.P. System & Horary', icon: Compass, desc: 'Prashna Kundli, sub-lord theory & accurate timing' },
     { name: 'Nadi Astrology', icon: History, desc: 'Past & future karma, Bhrigu Nadi thumb impressions' },
     { name: 'Palm Line Analysis', icon: Camera, desc: 'Upload palm photo for life line, fate line & mounts' },
     { name: 'Tarot Card Reading', icon: Sparkles, desc: '3-card spread or symbol guidance for immediate decisions' },
     { name: 'Numerology', icon: Award, desc: 'Name number correction, lucky dates & gemstone vibration' },
     { name: 'Lal Kitab & Remedies', icon: Shield, desc: 'Crystal therapy, Gemstones, Mantras & Graha Shanti' },
+    { name: 'Ramal Shastra (Vedic Dice)', icon: Dices, desc: '16 Shakals (Geomancy figures), Vedic Pasa dice casting & instant Prashna oracle' },
   ];
+
+  const quickPromptsByMode: Record<string, Array<{ label: string; prompt: string }>> = {
+    'Shubh Muhurta & Travel Guidance': [
+      { label: '📅 Auspicious Marriage & Ceremony Date', prompt: 'Find the best Vedic Shubh Muhurta for marriage (Vivah) or ring engagement in the upcoming months based on planetary Nakshatras and Tithi.' },
+      { label: '🚗 Travel Guidance & Disha Shool', prompt: 'I am planning a travel. Please calculate the Disha Shool effect, Rahu Kalam time, Choghadiya, and give remedies for safe travel.' },
+      { label: '🏢 Business Launch & Griha Pravesh', prompt: 'What are the most auspicious dates and Shubh Muhurta for opening a new office, shop launch, or housewarming (Griha Pravesh)?' },
+      { label: '🚘 Vehicle & Property Registration', prompt: 'Calculate the best Vedic Muhurta for buying or registering a new vehicle or property to ensure long-term prosperity and safety.' }
+    ],
+    'Planetary Transits (Gochar Effects)': [
+      { label: '🪐 Shani Sade Sati & Dhaiya Status', prompt: 'Check my current Saturn (Shani) Gochar transit relative to my Moon sign. Am I in Sade Sati or Dhaiya, and what precautions should I take?' },
+      { label: '🦁 Jupiter (Guru) Transit Effects', prompt: 'Analyze current Jupiter (Guru) transit effects on my natal houses and explain how it influences my career, wealth, and spiritual growth.' },
+      { label: '🐉 Rahu & Ketu Karmic Axis', prompt: 'What are the current Rahu and Ketu transit impacts on my birth chart? How will this axis shift my focus and relationships?' },
+      { label: '☀️ Monthly Sun, Mars & Mercury Gochar', prompt: 'How do current transits of Sun, Mars, Venus, and Mercury affect my daily energy, finances, health, and communication?' }
+    ],
+    'Birth Time Rectification (BTR)': [
+      { label: '⏱️ Comprehensive BTR Calculation', prompt: 'Please run a complete Birth Time Rectification (BTR) for me using Vedic Tattva Prasna, K.P. Sub-Lord alignment with Ruling Planets, and my major life events timeline.' },
+      { label: '🧭 K.P. Ruling Planets & Sub-Lord Match', prompt: 'Verify my reported birth time using K.P. System Ruling Planets (Lagna Sub-Lord, Moon Nakshatra Sub-Lord, Day Lord) and my event timing.' },
+      { label: '🔥 Vedic Tattva Shodhana Check', prompt: 'Use Vedic Tattva Shodhana (Element calculation: Agni, Vayu, Jal, Prithvi, Akash) based on my physical traits and birth minute to determine my true Lagna.' },
+      { label: '📅 Event Timeline Verification', prompt: 'Validate if my reported birth time aligns with my key life events (marriage, job change, property purchase, accident) or suggest the exact corrected birth minute.' }
+    ],
+    'Tarot Card Reading': [
+      { label: '🔮 General Life Spread (3 Cards)', prompt: 'Draw and interpret a 3-card Tarot spread (Past, Present, Future) for my current life situation and provide intuitive guidance.' },
+      { label: '💞 Love & Relationship Spread', prompt: 'Do a Tarot card reading focusing on my romantic relationship, emotional compatibility, and future harmony.' },
+      { label: '💼 Career & Financial Decision', prompt: 'Perform a Tarot reading focusing on my career path, upcoming financial decisions, and professional success.' },
+      { label: '✨ Daily Tarot Guidance', prompt: 'Draw a daily Tarot guidance card for me today and explain its symbolic message and advice.' }
+    ],
+    'Numerology': [
+      { label: '🔢 Name Vibration Check', prompt: 'Analyze my current name vibration according to Chaldean and Pythagorean numerology and suggest if any spelling correction is needed.' },
+      { label: '📅 Auspicious Dates & Timing', prompt: 'Based on my Mulank and Bhagyank, what are my lucky numbers, lucky days of the week, and most auspicious dates this month?' },
+      { label: '👥 Partner Compatibility', prompt: 'Evaluate the numerological compatibility between my destiny numbers and my partner or family member.' },
+      { label: '💎 Gemstone & Metal Harmony', prompt: 'Which gemstone, lucky color, and metal vibration align best with my birth root numbers?' }
+    ],
+    'Palm Line Analysis': [
+      { label: '✋ Life Line & Longevity', prompt: 'Interpret the depth, curve, and vitality of my Life line on my active hand for longevity and physical health.' },
+      { label: '📈 Fate Line & Career Mounts', prompt: 'Analyze my Fate line and the Mount of Saturn/Sun to predict career advancements and financial elevation.' },
+      { label: '❤️ Heart Line & Relationships', prompt: 'Evaluate my Heart line and Mount of Venus for emotional stability, marriage harmony, and relationships.' },
+      { label: '🌟 Mount of Jupiter & Leadership', prompt: 'Check the prominence of Jupiter and Sun mounts on my palm for leadership qualities and public recognition.' }
+    ],
+    'Nadi Astrology': [
+      { label: '📜 Past Life Karma & Purpose', prompt: 'Decode my soul purpose and karmic impressions from past lives according to Bhrigu Nadi principles.' },
+      { label: '🧘 Karmic Blockages Remedy', prompt: 'Identify any karmic blockages in my career or relationships indicated by Nadi planetary rules and suggest remedies.' },
+      { label: '🪐 Nadi Planetary Combinations', prompt: 'Explain how the conjunctions and mutual aspects of planets in my chart influence my life journey in Nadi astrology.' },
+      { label: '🔮 Future Timing & Destiny', prompt: 'According to Nadi transit rules of Jupiter and Saturn, what major life events are destined in the coming year?' }
+    ],
+    'K.P. System & Horary': [
+      { label: '🧭 Career Promotion Timing', prompt: 'Using K.P. System sub-lord theory, when is the exact timing for my next job promotion or positive career change?' },
+      { label: '💍 Marriage Timing Check', prompt: 'Analyze the 7th cuspal sub-lord and ruling planets to predict the timing and nature of marriage.' },
+      { label: '🔮 Prashna Horary Venture', prompt: 'Give me a horary (Prashna Kundli) judgment on whether starting a new business venture right now will be fruitful.' },
+      { label: '🏠 Property & Wealth Timing', prompt: 'Using K.P. astrology rules, analyze the 4th and 11th cuspal sub-lords for buying property or vehicle.' }
+    ],
+    'Lal Kitab & Remedies': [
+      { label: '💰 Wealth Lal Kitab Remedy', prompt: 'Analyze my planetary positions and suggest simple Lal Kitab remedies to remove obstacles in wealth and cash flow.' },
+      { label: '💎 Auspicious Career Gemstone', prompt: 'Which gemstone is most auspicious for my career advancement and financial protection according to Vedic rules?' },
+      { label: '🛡️ Rahu & Ketu Dosha Shanti', prompt: 'What household karmic remedies and precautions should I take to pacify Rahu and Ketu in my daily life?' },
+      { label: '🕯️ Home & Family Harmony', prompt: 'Suggest Lal Kitab remedies and Graha Shanti practices to maintain peace, health, and positive energy at home.' }
+    ],
+    'Ramal Shastra (Vedic Dice)': [
+      { label: '🎲 Instant Ramal Oracle Prediction', prompt: 'I have cast the Ramal Shastra dice. Based on the resulting Shakal figure, please give an immediate Prashna (horary) prediction for my current question.' },
+      { label: '💼 Career & Financial Ramal Reading', prompt: 'Analyze my career and financial prospects using Ramal Shastra principles and the 16 primary geomantic figures.' },
+      { label: '❤️ Love & Marriage Shakal Oracle', prompt: 'What does Vedic Ramal Shastra indicate regarding my relationship compatibility, love harmony, and marriage timing?' },
+      { label: '🛡️ Ramal Shastra Elemental Remedies', prompt: 'Based on Ramal Shastra divination and the elemental balance of Fire, Air, Water, and Earth, what specific remedies should I perform?' }
+    ],
+    'Vedic & Family Q&A': [
+      { label: '🌟 Complete Horoscope & Dasha', prompt: 'Analyze my current Mahadasha and Antardasha periods and explain their impact on my personal and professional life.' },
+      { label: '💼 Career Opportunities', prompt: 'What does my Vedic horoscope indicate regarding upcoming career opportunities, growth, or business prospects?' },
+      { label: '🏡 Family Harmony Check', prompt: 'How is the astrological compatibility and family harmony looking for me and my loved ones in the coming months?' },
+      { label: '💰 Financial Yoga & Wealth', prompt: 'Check my kundli for Dhana Yogas (wealth combinations) and give advice on long-term financial abundance.' }
+    ]
+  };
+
+  const activePrompts = quickPromptsByMode[analysisMode] || quickPromptsByMode['Vedic & Family Q&A'];
 
   const rechargePacks = [
     { id: 'pack-99', title: 'Quick Cosmic Pack', mins: 15, price: 99, popular: false, desc: '15 Minutes Unlimited AI Q&A' },
@@ -394,41 +706,83 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
         </div>
       </div>
 
+      {/* Unified 8-Branch Astrological Synergy Showcase Bar */}
+      <div className="bg-gradient-to-r from-amber-500/15 via-gold/20 to-amber-500/15 border border-gold/40 rounded-2xl p-4 shadow-sm mb-6 flex items-center justify-between gap-4 text-xs">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-saffron text-white flex items-center justify-center shrink-0 shadow">
+            <Sparkles size={20} className="animate-spin" style={{ animationDuration: '10s' }} />
+          </div>
+          <div>
+            <span className="font-extrabold text-amber-950 block uppercase tracking-wide">
+              ✨ Comprehensive Prediction Engine • 9 Astrological Sciences at a Single Window
+            </span>
+            <p className="text-amber-900 font-medium mt-0.5 leading-relaxed">
+              Every query is cross-synthesizing <strong className="font-bold">Vedic Parashari, K.P. System, Horary (Prashna), Bhrigu Nadi, Palmistry, Tarot, Numerology, Lal Kitab, and Ramal Shastra (Vedic Dice)</strong> simultaneously to provide well-rounded, consistent predictions and practical remedies.
+            </p>
+          </div>
+        </div>
+        <span className="hidden md:inline-block bg-amber-950 text-amber-300 font-black px-3 py-1.5 rounded-xl uppercase tracking-wider text-[10px] shrink-0 shadow-xs">
+          Multi-Branch AI Synergy
+        </span>
+      </div>
+
       {/* Main Content Area */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Left Sidebar: Analysis Modes & Family Selector */}
         <div className="lg:col-span-1 space-y-6">
           {/* Family Member Profile Box */}
           <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                <Users size={14} className="text-saffron" /> Native / Family Target
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                <Users size={14} className="text-saffron" /> Native / Client Birth Target
               </h3>
               <button 
-                onClick={() => setShowAddFamily(true)} 
-                className="text-xs font-bold text-saffron hover:underline flex items-center gap-1"
+                onClick={() => {
+                  setEditingProfileId(null);
+                  setNewFamily({ name: '', relation: 'Walk-in Client / Customer', dob: '1995-01-01', time: '12:00', place: 'New Delhi, India' });
+                  setShowAddFamily(true);
+                }} 
+                className="text-xs font-bold bg-amber-100 hover:bg-amber-200 text-amber-900 px-2.5 py-1 rounded-xl transition-all flex items-center gap-1 cursor-pointer shadow-xs"
               >
-                <Plus size={12} /> Add Family
+                <Plus size={12} /> Add / Edit Profile
               </button>
             </div>
+            <p className="text-[11px] text-slate-500 mb-3 leading-tight">Select or enter exact birth details (DOB, Time, Place) for Self, Family members, or Walk-in Clients:</p>
 
-            <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
+            <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
               {familyMembers.map((member) => (
-                <button
+                <div
                   key={member.id}
                   onClick={() => setActiveProfile(member.id)}
-                  className={`w-full text-left p-3 rounded-2xl border transition-all flex items-center justify-between ${
+                  className={`w-full p-3 rounded-2xl border transition-all flex items-center justify-between gap-2 cursor-pointer ${
                     activeProfile === member.id 
-                      ? 'bg-amber-50/80 border-gold text-deep-blue font-bold shadow-sm' 
-                      : 'bg-stone-50 border-slate-100 text-slate-600 hover:bg-slate-100'
+                      ? 'bg-amber-50/90 border-gold text-deep-blue font-bold shadow-sm ring-1 ring-gold/40' 
+                      : 'bg-stone-50 border-slate-200 text-slate-700 hover:bg-slate-100'
                   }`}
                 >
-                  <div className="truncate">
-                    <p className="text-xs font-bold truncate">{member.name}</p>
-                    <p className="text-[10px] text-slate-400">{member.relation} • {member.dob}</p>
+                  <div className="truncate flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs font-bold truncate text-stone-900">{member.name}</p>
+                      <span className="text-[9px] bg-stone-200/80 text-stone-700 px-1.5 py-0.5 rounded font-semibold shrink-0">{member.relation}</span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 mt-0.5 font-normal">DOB: {member.dob} • {member.time} • {member.place}</p>
                   </div>
-                  {activeProfile === member.id && <CheckCircle2 size={16} className="text-saffron flex-shrink-0" />}
-                </button>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingProfileId(member.id);
+                        setNewFamily({ name: member.name, relation: member.relation, dob: member.dob, time: member.time, place: member.place });
+                        setShowAddFamily(true);
+                      }}
+                      title="Edit Birth Details"
+                      className="p-1.5 rounded-lg bg-white border border-stone-200 hover:bg-amber-100 hover:text-amber-900 text-stone-500 transition-colors cursor-pointer"
+                    >
+                      <Edit2 size={13} />
+                    </button>
+                    {activeProfile === member.id && <CheckCircle2 size={18} className="text-saffron flex-shrink-0" />}
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -467,10 +821,38 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
         </div>
 
         {/* Right Content Area (3 Cols) */}
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3 space-y-4">
+          {/* GLOBAL KUNDLI AUTO-SYNC BANNER */}
+          <div className="bg-gradient-to-r from-amber-50 via-orange-50/70 to-amber-50 border border-gold/50 rounded-2xl p-3.5 px-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse shrink-0 shadow-xs shadow-emerald-400" />
+              <div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-amber-900">
+                    🕉️ Active Kundli Auto-Sync:
+                  </span>
+                  <span className="text-xs font-extrabold text-stone-900">
+                    {familyMembers.find(f => f.id === activeProfile)?.name || 'Native (Self)'} 
+                  </span>
+                  <span className="text-[10px] bg-amber-200 text-amber-950 font-bold px-1.5 py-0.5 rounded">
+                    {familyMembers.find(f => f.id === activeProfile)?.relation || 'Self'}
+                  </span>
+                </div>
+                <p className="text-[11px] text-stone-600 font-medium mt-0.5">
+                  DOB: {familyMembers.find(f => f.id === activeProfile)?.dob || '1992-08-15'} at {familyMembers.find(f => f.id === activeProfile)?.time || '14:30'} • {familyMembers.find(f => f.id === activeProfile)?.place || 'New Delhi, India'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-lg border border-emerald-300 shadow-2xs flex items-center gap-1">
+                ⚡ Auto-Utilized in {analysisMode}
+              </span>
+            </div>
+          </div>
+
           {/* TAB 1: CHAT ARENA */}
           {activeTab === 'chat' && (
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 flex flex-col h-[680px] overflow-hidden">
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 flex flex-col h-[740px] overflow-hidden">
               {/* Chat Arena Header */}
               <div className="p-4 bg-stone-50 border-b border-slate-200 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -502,6 +884,771 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                   )}
                 </div>
               </div>
+
+              {/* SPECIALIZED ASTROLOGICAL SCIENCE STUDIOS */}
+              {analysisMode === 'Tarot Card Reading' && (
+                <div className="p-4 bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 text-white border-b border-purple-500/30 shrink-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 bg-amber-400 rounded-full animate-pulse" />
+                      <h4 className="text-xs font-black uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+                        🔮 Interactive 3-Card Tarot Spread Studio (Past / Present / Future)
+                      </h4>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          const shuffled = [...tarotDeck].sort(() => Math.random() - 0.5);
+                          setTarotDeck(shuffled);
+                        }}
+                        className="text-[10px] bg-white/10 hover:bg-white/20 text-amber-200 px-2.5 py-1 rounded-lg border border-white/20 transition-all font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        🔀 Shuffle Deck
+                      </button>
+                      <button
+                        onClick={() => setSelectedTarotCards([])}
+                        className="text-[10px] bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 px-2.5 py-1 rounded-lg border border-rose-500/30 transition-all font-bold cursor-pointer"
+                      >
+                        🔄 Reset Spread
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-purple-200 mb-2.5 leading-relaxed">
+                    Select exactly 3 cards from our traditional 78-card deck below. They automatically assign to your Situation, Challenge, and Outcome:
+                  </p>
+                  
+                  <div className="grid grid-cols-3 gap-2 mb-2.5">
+                    {['1: Situation / Present', '2: Action / Challenge', '3: Outcome / Destiny'].map((slotName, i) => {
+                      const cardSelected = selectedTarotCards[i];
+                      return (
+                        <div key={slotName} className={`p-2 rounded-xl border flex flex-col items-center justify-center text-center min-h-[60px] transition-all ${
+                          cardSelected ? 'bg-gradient-to-br from-amber-500/20 to-purple-500/30 border-amber-400/60 shadow-md' : 'bg-white/5 border-dashed border-white/20 text-purple-300/60'
+                        }`}>
+                          <span className="text-[8px] uppercase tracking-wider font-extrabold text-amber-300 block mb-0.5">{slotName}</span>
+                          <span className="text-[11px] font-black text-white truncate max-w-full">{cardSelected ? cardSelected.card : '🎴 Click card below'}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                    {tarotDeck.slice(0, 14).map((card, idx) => {
+                      const isSelected = selectedTarotCards.some(s => s.card === card);
+                      return (
+                        <button
+                          key={idx}
+                          disabled={isSelected || selectedTarotCards.length >= 3}
+                          onClick={() => {
+                            if (selectedTarotCards.length < 3 && !isSelected) {
+                              const slots = ['1: Situation / Present', '2: Action / Challenge', '3: Outcome / Destiny'];
+                              setSelectedTarotCards(prev => [...prev, { card, slot: slots[prev.length] }]);
+                            }
+                          }}
+                          className={`shrink-0 w-11 h-14 rounded-xl border flex flex-col items-center justify-center transition-all cursor-pointer ${
+                            isSelected 
+                              ? 'bg-amber-400 border-amber-300 text-slate-900 scale-95 opacity-40 cursor-not-allowed' 
+                              : 'bg-gradient-to-tr from-indigo-900 via-purple-900 to-indigo-800 hover:from-amber-500 hover:to-orange-500 border-purple-400/40 hover:border-amber-300 shadow-md hover:scale-105'
+                          }`}
+                          title={isSelected ? `${card} (Selected)` : "Click to draw card"}
+                        >
+                          <span className="text-sm">{isSelected ? '✓' : '🎴'}</span>
+                          <span className="text-[7px] font-bold text-amber-200 mt-0.5 uppercase tracking-tighter">No. {idx + 1}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {selectedTarotCards.length > 0 && (
+                    <div className="mt-2 flex justify-end">
+                      <button
+                        onClick={() => {
+                          const spreadStr = selectedTarotCards.map(s => `${s.slot}: ${s.card}`).join('; ');
+                          handleSendMessage(`Perform a divine 3-Card Tarot Reading for ${familyMembers.find(f => f.id === activeProfile)?.name || 'me'} (DOB: ${familyMembers.find(f => f.id === activeProfile)?.dob || '1992-08-15'}). Selected Tarot Spread: [${spreadStr}]. Please interpret their symbolism, planetary correlations, and guidance for my immediate decision.`);
+                        }}
+                        className="bg-gradient-to-r from-amber-400 to-saffron hover:from-saffron hover:to-amber-500 text-slate-950 font-black px-4 py-1.5 rounded-xl text-xs shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <span>✨ Analyze My {selectedTarotCards.length}-Card Spread with AI</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {analysisMode === 'Numerology' && (
+                <NumerologyStudio
+                  activeProfileName={familyMembers.find(f => f.id === activeProfile)?.name || 'Native (Self)'}
+                  activeProfileDob={familyMembers.find(f => f.id === activeProfile)?.dob || '1992-08-15'}
+                  familyMembers={familyMembers}
+                  onSendMessage={(prompt) => handleSendMessage(prompt)}
+                />
+              )}
+
+              {analysisMode === 'Palm Line Analysis' && (
+                <div className="p-3.5 bg-amber-50/90 border-b border-amber-200 shrink-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <Camera size={15} className="text-saffron" />
+                      <h4 className="text-xs font-extrabold uppercase tracking-wider text-amber-950">
+                        ✋ Palmistry Specification Studio (Vedic & Western)
+                      </h4>
+                    </div>
+                    <span className="text-[10px] bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded">Active Karma vs Inborn Potential</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Hand Under Analysis (Traditional Convention)</label>
+                      <div className="flex gap-1.5 bg-white p-1 rounded-xl border border-amber-300">
+                        <button
+                          type="button"
+                          onClick={() => setPalmHand('right')}
+                          className={`flex-1 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${palmHand === 'right' ? 'bg-saffron text-white shadow-xs' : 'text-slate-600 hover:bg-stone-100'}`}
+                        >
+                          ✋ Right (Active Karma)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPalmHand('left')}
+                          className={`flex-1 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${palmHand === 'left' ? 'bg-saffron text-white shadow-xs' : 'text-slate-600 hover:bg-stone-100'}`}
+                        >
+                          🤚 Left (Inborn Destiny)
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Line & Mount Focus</label>
+                      <select
+                        value={palmFocus}
+                        onChange={(e) => setPalmFocus(e.target.value)}
+                        className="w-full bg-white border border-amber-300 rounded-xl px-2.5 py-1 text-xs font-bold text-stone-800 cursor-pointer"
+                      >
+                        <option value="Life Line & Longevity">Life Line & Longevity</option>
+                        <option value="Fate Line (Dhanna Rekha) & Career Wealth">Fate Line & Career Wealth</option>
+                        <option value="Heart Line & Marriage/Relationships">Heart Line & Marriage</option>
+                        <option value="Head Line & Mental Peace">Head Line & Mental Peace</option>
+                        <option value="Mounts of Jupiter, Sun & Saturn">Planetary Mounts (Fame/Power)</option>
+                      </select>
+                    </div>
+                    <div className="flex items-end">
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full bg-gradient-to-r from-stone-800 to-slate-900 hover:from-slate-900 hover:to-stone-800 text-amber-300 font-extrabold px-3 py-1 rounded-xl text-xs shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <Camera size={14} /> {selectedImage ? '✅ Palm Photo Attached' : '📸 Upload Palm Line Photo'}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => {
+                        const handLabel = palmHand === 'right' ? 'Right Hand (Active Karma/Present Path)' : 'Left Hand (Inborn Potential/Destiny at Birth)';
+                        handleSendMessage(`Analyze my ${handLabel} palm line features for birth profile: ${familyMembers.find(f => f.id === activeProfile)?.name || 'Native'} (${familyMembers.find(f => f.id === activeProfile)?.dob || '1992-08-15'}). Special focus on: ${palmFocus}. Please interpret the depth, breaks, islands, and planetary mounts.`);
+                      }}
+                      className="bg-saffron hover:bg-orange-600 text-white font-black px-3.5 py-1 rounded-xl text-xs shadow-sm transition-all flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>⚡ Run Comprehensive Palmistry Analysis</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {analysisMode === 'Nadi Astrology' && (
+                <div className="p-3.5 bg-amber-50/90 border-b border-amber-200 shrink-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <History size={15} className="text-saffron" />
+                      <h4 className="text-xs font-extrabold uppercase tracking-wider text-amber-950">
+                        📜 Bhrigu & Agastya Nadi Leaf Inquiry Studio
+                      </h4>
+                    </div>
+                    <span className="text-[10px] bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded">Past & Future Karma</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Thumb Impression Type (Traditional Rule)</label>
+                      <div className="flex gap-1.5 bg-white p-1 rounded-xl border border-amber-300">
+                        <button
+                          type="button"
+                          onClick={() => setNadiThumb('right')}
+                          className={`flex-1 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${nadiThumb === 'right' ? 'bg-saffron text-white shadow-xs' : 'text-slate-600 hover:bg-stone-100'}`}
+                        >
+                          👍 Right (Male Native)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setNadiThumb('left')}
+                          className={`flex-1 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${nadiThumb === 'left' ? 'bg-saffron text-white shadow-xs' : 'text-slate-600 hover:bg-stone-100'}`}
+                        >
+                          👍 Left (Female Native)
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Bodily Identification / Birth Mark (Leaf Check)</label>
+                      <input
+                        type="text"
+                        value={nadiMark}
+                        onChange={(e) => setNadiMark(e.target.value)}
+                        placeholder="e.g. Mole on right cheek or scar on knee"
+                        className="w-full bg-white border border-amber-300 rounded-xl px-2.5 py-1 text-xs font-semibold focus:outline-none focus:border-saffron"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Nadi Chapter (Kandam) Focus</label>
+                      <select
+                        value={nadiKandam}
+                        onChange={(e) => setNadiKandam(e.target.value)}
+                        className="w-full bg-white border border-amber-300 rounded-xl px-2.5 py-1 text-xs font-bold text-stone-800 cursor-pointer"
+                      >
+                        <option value="1st Kandam (General Life & Personality)">1st Kandam: General Life & Destiny</option>
+                        <option value="2nd Kandam (Wealth, Family & Eyes)">2nd Kandam: Wealth & Family Harmony</option>
+                        <option value="7th Kandam (Marriage & Spouse Details)">7th Kandam: Marriage & Spouse</option>
+                        <option value="10th Kandam (Career & Business Profession)">10th Kandam: Profession & Success</option>
+                        <option value="13th & 14th Kandam (Past Life Karma & Shanti Remedies)">13th/14th Kandam: Past Life Shanti</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => {
+                        const thumbLabel = nadiThumb === 'right' ? 'Right Thumb (Male Native)' : 'Left Thumb (Female Native)';
+                        handleSendMessage(`Perform a sacred Bhrigu Nadi leaf consultation for birth profile: ${familyMembers.find(f => f.id === activeProfile)?.name || 'Native'} (${familyMembers.find(f => f.id === activeProfile)?.dob || '1992-08-15'} at ${familyMembers.find(f => f.id === activeProfile)?.time || '14:30'}). Thumb Impression: ${thumbLabel}. Bodily Mark: '${nadiMark || 'Not specified'}'. Target Chapter: ${nadiKandam}. Reveal the karmic imprint and specific Nadi Shanti remedies.`);
+                      }}
+                      className="bg-saffron hover:bg-orange-600 text-white font-black px-3.5 py-1 rounded-xl text-xs shadow-sm transition-all flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>⚡ Decode My Nadi Leaf Chapter</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {analysisMode === 'K.P. System & Horary' && (
+                <div className="p-3.5 bg-amber-50/90 border-b border-amber-200 shrink-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <Compass size={15} className="text-saffron" />
+                      <h4 className="text-xs font-extrabold uppercase tracking-wider text-amber-950">
+                        🧭 K.P. Horary (Prashna Kundli) & Sub-Lord Studio
+                      </h4>
+                    </div>
+                    <span className="text-[10px] bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded">1-249 Horary Number Rule</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Horary Number (Pick 1 to 249 instinctively)</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min="1"
+                          max="249"
+                          value={kpPrashnaNum}
+                          onChange={(e) => setKpPrashnaNum(Math.min(249, Math.max(1, parseInt(e.target.value) || 1)))}
+                          className="w-20 bg-white border border-amber-300 rounded-xl px-2 py-1 text-xs font-bold text-center focus:outline-none focus:border-saffron"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setKpPrashnaNum(Math.floor(Math.random() * 249) + 1)}
+                          className="text-[11px] bg-white hover:bg-amber-100 text-amber-900 font-bold px-2.5 py-1 rounded-xl border border-amber-300 transition-all cursor-pointer"
+                        >
+                          🎲 Pick Random No.
+                        </button>
+                        <span className="text-[11px] text-slate-500 italic">For queries without exact birth time</span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Horary Analysis Focus</label>
+                      <select
+                        value={kpFocus}
+                        onChange={(e) => setKpFocus(e.target.value)}
+                        className="w-full bg-white border border-amber-300 rounded-xl px-2.5 py-1 text-xs font-bold text-stone-800 cursor-pointer"
+                      >
+                        <option value="Prashna Kundli (Horary Question Timing)">Prashna Horary Timing (Yes/No Outcome)</option>
+                        <option value="K.P. Sub-Lord Career Advancement Analysis">Career Advancement Sub-Lord Check</option>
+                        <option value="7th Sub-Lord Marriage Timing & Harmony">Marriage & Relationship Sub-Lord Check</option>
+                        <option value="Property Purchase & Wealth Sub-Lord Check">Property & Financial Windfall Check</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => {
+                        handleSendMessage(`Perform a K.P. System & Horary (Prashna Kundli) analysis for birth profile: ${familyMembers.find(f => f.id === activeProfile)?.name || 'Native'}. Horary Seed Number: ${kpPrashnaNum} (out of 249). Focus: ${kpFocus}. Analyze the sub-lords of the relevant cusps and ruling planets to predict the timing.`);
+                      }}
+                      className="bg-saffron hover:bg-orange-600 text-white font-black px-3.5 py-1 rounded-xl text-xs shadow-sm transition-all flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>⚡ Run K.P. Sub-Lord Horary Analysis</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {analysisMode === 'Lal Kitab & Remedies' && (
+                <div className="p-3.5 bg-amber-50/90 border-b border-amber-200 shrink-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <Shield size={15} className="text-saffron" />
+                      <h4 className="text-xs font-extrabold uppercase tracking-wider text-amber-950">
+                        🛡️ Lal Kitab & Vedic Shanti Specification Studio
+                      </h4>
+                    </div>
+                    <span className="text-[10px] bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded">Rin (Debts) & Graha Shanti</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Primary Life Trouble / Blockage</label>
+                      <select
+                        value={lalkitabTrouble}
+                        onChange={(e) => setLalkitabTrouble(e.target.value)}
+                        className="w-full bg-white border border-amber-300 rounded-xl px-2.5 py-1 text-xs font-bold text-stone-800 cursor-pointer"
+                      >
+                        <option value="Financial Blockage / Debt Relief">Financial Blockage & Debt Relief</option>
+                        <option value="Ancestral Debt (Pitra Dosh) & Family Disputes">Ancestral Debt (Pitra Dosh) & Harmony</option>
+                        <option value="Career Stagnation & Job Obstacles">Career Stagnation & Job Obstacles</option>
+                        <option value="Health Weakness & Unexplained Lethargy">Health Protection & Vitality</option>
+                        <option value="Marital Discord & Relationship Friction">Marital Harmony & Spouse Peace</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Suspected Malefic Planet (Graha)</label>
+                      <select
+                        value={lalkitabPlanet}
+                        onChange={(e) => setLalkitabPlanet(e.target.value)}
+                        className="w-full bg-white border border-amber-300 rounded-xl px-2.5 py-1 text-xs font-bold text-stone-800 cursor-pointer"
+                      >
+                        <option value="Rahu & Saturn Malefic">Rahu & Saturn (Delays & Mental Stress)</option>
+                        <option value="Mars & Ketu (Anger, Disputes & Accidents)">Mars & Ketu (Disputes & Hot Temper)</option>
+                        <option value="Jupiter & Sun (Authority & Luck Deficit)">Jupiter & Sun (Luck & Career Deficit)</option>
+                        <option value="Venus & Moon (Emotional & Financial Drought)">Venus & Moon (Emotional & Financial Stress)</option>
+                        <option value="General All-Planet Shanti">General All-Planet Comprehensive Shanti</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => {
+                        handleSendMessage(`Prescribe powerful Lal Kitab remedies, Vedic mantras, and gemstone/crystal therapy for birth profile: ${familyMembers.find(f => f.id === activeProfile)?.name || 'Native'} (DOB: ${familyMembers.find(f => f.id === activeProfile)?.dob || '1992-08-15'}). Targeted Life Blockage: ${lalkitabTrouble}. Suspected Malefic Influence: ${lalkitabPlanet}. Give simple, practical household remedies (e.g., feeding birds, copper coins, mantras, gemstone to wear).`);
+                      }}
+                      className="bg-saffron hover:bg-orange-600 text-white font-black px-3.5 py-1 rounded-xl text-xs shadow-sm transition-all flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>⚡ Generate Actionable Shanti Remedies</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {analysisMode === 'Shubh Muhurta & Travel Guidance' && (
+                <div className="p-3.5 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 border-b border-amber-200 shrink-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <Calendar size={15} className="text-saffron" />
+                      <h4 className="text-xs font-extrabold uppercase tracking-wider text-amber-950">
+                        📅 Auspicious Muhurta & Travel Guidance (Disha Shool & Remedies)
+                      </h4>
+                    </div>
+                    <span className="text-[10px] bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded">Tithi • Nakshatra • Choghadiya</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Target Occasion</label>
+                      <select
+                        value={muhurtaOccasion}
+                        onChange={(e) => setMuhurtaOccasion(e.target.value)}
+                        className="w-full bg-white border border-amber-300 rounded-xl px-2.5 py-1 text-xs font-bold text-stone-800 cursor-pointer"
+                      >
+                        <option value="Marriage (Vivah / Ring Ceremony)">Marriage (Vivah / Engagement)</option>
+                        <option value="Business / Shop Launch">Business Launch / Shop Opening</option>
+                        <option value="Housewarming (Griha Pravesh)">Housewarming (Griha Pravesh)</option>
+                        <option value="Travel / Yatra (Short / Long Distance)">Travel / Yatra (Short / Long)</option>
+                        <option value="Vehicle Purchase & Registration">Vehicle Purchase & Registration</option>
+                        <option value="Property / Land Registration">Property / Land Purchase</option>
+                        <option value="Child Naming (Namakaran)">Child Naming (Namakaran)</option>
+                        <option value="New Job / Contract Signing">New Job / Contract Signing</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Travel Direction (Disha)</label>
+                      <select
+                        value={travelDirection}
+                        onChange={(e) => setTravelDirection(e.target.value)}
+                        className="w-full bg-white border border-amber-300 rounded-xl px-2.5 py-1 text-xs font-bold text-stone-800 cursor-pointer"
+                      >
+                        <option value="East (Purva)">East (Purva)</option>
+                        <option value="West (Pashchim)">West (Pashchim)</option>
+                        <option value="North (Uttara)">North (Uttara)</option>
+                        <option value="South (Dakshin)">South (Dakshin)</option>
+                        <option value="Northeast (Eshanya)">Northeast (Eshanya)</option>
+                        <option value="Northwest (Vayavya)">Northwest (Vayavya)</option>
+                        <option value="Southeast (Agneya)">Southeast (Agneya)</option>
+                        <option value="Southwest (Nairitya)">Southwest (Nairitya)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Day of Travel / Event</label>
+                      <select
+                        value={travelDayOfWeek}
+                        onChange={(e) => setTravelDayOfWeek(e.target.value)}
+                        className="w-full bg-white border border-amber-300 rounded-xl px-2.5 py-1 text-xs font-bold text-stone-800 cursor-pointer"
+                      >
+                        <option value="Monday">Monday (Somavar)</option>
+                        <option value="Tuesday">Tuesday (Mangalvar)</option>
+                        <option value="Wednesday">Wednesday (Budhavar)</option>
+                        <option value="Thursday">Thursday (Guruvar)</option>
+                        <option value="Friday">Friday (Shukravar)</option>
+                        <option value="Saturday">Saturday (Shanivar)</option>
+                        <option value="Sunday">Sunday (Ravivar)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Timeframe Window</label>
+                      <select
+                        value={muhurtaTimeframe}
+                        onChange={(e) => setMuhurtaTimeframe(e.target.value)}
+                        className="w-full bg-white border border-amber-300 rounded-xl px-2.5 py-1 text-xs font-bold text-stone-800 cursor-pointer"
+                      >
+                        <option value="This Month (Current Transits)">This Month (Current Transits)</option>
+                        <option value="Next 30 Days">Next 30 Days</option>
+                        <option value="Next 3 Months">Next 3 Months</option>
+                        <option value="Upcoming Auspicious Festival Period">Upcoming Festival Window</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Disha Shool Live Calculator Badge */}
+                  {(() => {
+                    const isEastShool = (travelDirection.includes('East') || travelDirection.includes('Northeast')) && (travelDayOfWeek === 'Monday' || travelDayOfWeek === 'Saturday');
+                    const isWestShool = (travelDirection.includes('West') || travelDirection.includes('Southwest')) && (travelDayOfWeek === 'Sunday' || travelDayOfWeek === 'Friday');
+                    const isNorthShool = (travelDirection.includes('North') || travelDirection.includes('Northwest')) && (travelDayOfWeek === 'Tuesday' || travelDayOfWeek === 'Wednesday');
+                    const isSouthShool = travelDirection.includes('South') && travelDayOfWeek === 'Thursday';
+                    const hasDishaShool = isEastShool || isWestShool || isNorthShool || isSouthShool;
+
+                    let remedyText = '';
+                    if (isEastShool) remedyText = 'Eat Curd & Sugar (Dahi-Shakkar) or Milk before departure. Recite Rahu/Ketu Shanti Mantra.';
+                    else if (isWestShool) remedyText = 'Eat Coriander seeds (Dhaniyaphala) or Ghee before stepping out. Carry a silver coin.';
+                    else if (isNorthShool) remedyText = 'Eat Jaggery (Gud) or Sesame seeds before leaving. Recite Hanuman Chalisa.';
+                    else if (isSouthShool) remedyText = 'Eat Yellow Mustard, Cumin seeds or Curd before stepping out.';
+
+                    return (
+                      <div className={`p-2.5 rounded-xl border mb-2.5 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 ${
+                        hasDishaShool ? 'bg-amber-100/90 border-amber-300 text-amber-950' : 'bg-emerald-50 border-emerald-200 text-emerald-950'
+                      }`}>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                            hasDishaShool ? 'bg-amber-600 text-white' : 'bg-emerald-600 text-white'
+                          }`}>
+                            {hasDishaShool ? '⚠️ Disha Shool Active' : '✅ Clear Travel Direction'}
+                          </span>
+                          <span className="font-bold text-[11px]">
+                            {travelDirection} travel on {travelDayOfWeek}: {hasDishaShool ? 'Inauspicious direction according to Vedic Shastra.' : 'No major Disha Shool obstacle detected.'}
+                          </span>
+                        </div>
+                        {hasDishaShool && (
+                          <div className="text-[10px] font-semibold text-amber-900 bg-amber-200/60 px-2 py-1 rounded-lg">
+                            <span className="font-extrabold text-amber-950">Vedic Remedy:</span> {remedyText}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => {
+                        handleSendMessage(`Calculate the best Vedic Shubh Muhurta and travel guidance for profile: ${familyMembers.find(f => f.id === activeProfile)?.name || 'Native'}. Occasion: ${muhurtaOccasion}. Travel Direction: ${travelDirection}. Day: ${travelDayOfWeek}. Timeframe: ${muhurtaTimeframe}. Include Disha Shool remedies, Rahu Kalam warning timings, auspicious Choghadiya slots (Amrit, Shubh, Labh), and planetary Hora guidance.`);
+                      }}
+                      className="bg-saffron hover:bg-orange-600 text-white font-black px-4 py-1.5 rounded-xl text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Calendar size={14} />
+                      <span>⚡ Calculate Auspicious Muhurta & Travel Guidance</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {analysisMode === 'Planetary Transits (Gochar Effects)' && (
+                <div className="p-3.5 bg-gradient-to-r from-sky-50 via-blue-50 to-indigo-50 border-b border-sky-200 shrink-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <Globe size={15} className="text-blue-600" />
+                      <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-900">
+                        🪐 Real-Time Planetary Transits (Gochar & Sade Sati) Studio
+                      </h4>
+                    </div>
+                    <span className="text-[10px] bg-blue-200 text-blue-900 font-bold px-2 py-0.5 rounded">Saturn • Jupiter • Rahu-Ketu Gochar</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-2.5">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Native Moon Sign (Rashi) / Lagna</label>
+                      <select
+                        value={gocharMoonSign}
+                        onChange={(e) => setGocharMoonSign(e.target.value)}
+                        className="w-full bg-white border border-sky-300 rounded-xl px-2.5 py-1 text-xs font-bold text-stone-800 cursor-pointer"
+                      >
+                        <option value="Aries (Mesh)">Aries (Mesh)</option>
+                        <option value="Taurus (Vrishabha)">Taurus (Vrishabha)</option>
+                        <option value="Gemini (Mithuna)">Gemini (Mithuna)</option>
+                        <option value="Cancer (Karka)">Cancer (Karka)</option>
+                        <option value="Leo (Simha)">Leo (Simha)</option>
+                        <option value="Virgo (Kanya)">Virgo (Kanya)</option>
+                        <option value="Libra (Tula)">Libra (Tula)</option>
+                        <option value="Scorpio (Vrischika)">Scorpio (Vrischika)</option>
+                        <option value="Sagittarius (Dhanu)">Sagittarius (Dhanu)</option>
+                        <option value="Capricorn (Makar)">Capricorn (Makar)</option>
+                        <option value="Aquarius (Kumbha)">Aquarius (Kumbha)</option>
+                        <option value="Pisces (Meena)">Pisces (Meena)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Primary Transit Focus</label>
+                      <select
+                        value={gocharPlanetFocus}
+                        onChange={(e) => setGocharPlanetFocus(e.target.value)}
+                        className="w-full bg-white border border-sky-300 rounded-xl px-2.5 py-1 text-xs font-bold text-stone-800 cursor-pointer"
+                      >
+                        <option value="Saturn (Shani Transit & Sade Sati / Dhaiya)">Saturn (Shani Sade Sati & Dhaiya)</option>
+                        <option value="Jupiter (Guru Transit & House Growth)">Jupiter (Guru Transit & Wealth Growth)</option>
+                        <option value="Rahu & Ketu Karmic Axis Transit">Rahu & Ketu Karmic Axis Transit</option>
+                        <option value="Sun, Mars & Mercury Fast Monthly Transits">Sun, Mars & Mercury Fast Transits</option>
+                        <option value="Comprehensive All 9 Planets Gochar Overview">Comprehensive All 9 Planets Gochar</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Live Gochar Sade Sati Snapshot */}
+                  {(() => {
+                    let sadeSatiText = '';
+                    let isUnderShani = false;
+                    if (gocharMoonSign.includes('Kumbha') || gocharMoonSign.includes('Aquarius')) {
+                      sadeSatiText = '⚠️ Peak Phase Sade Sati (2nd Phase: Saturn in Aquarius over Natal Moon). Requires discipline & Saturn remedies.';
+                      isUnderShani = true;
+                    } else if (gocharMoonSign.includes('Meena') || gocharMoonSign.includes('Pisces')) {
+                      sadeSatiText = '⚠️ Rising Phase Sade Sati (1st Phase: Saturn in 12th house from Moon). Mental restlessness & foreign connections.';
+                      isUnderShani = true;
+                    } else if (gocharMoonSign.includes('Makar') || gocharMoonSign.includes('Capricorn')) {
+                      sadeSatiText = '⚠️ Setting Phase Sade Sati (3rd Phase: Saturn in 2nd house from Moon). Financial & family restructuring.';
+                      isUnderShani = true;
+                    } else if (gocharMoonSign.includes('Karka') || gocharMoonSign.includes('Cancer') || gocharMoonSign.includes('Vrischika') || gocharMoonSign.includes('Scorpio')) {
+                      sadeSatiText = '⚠️ Small Shani Dhaiya Active (4th/8th House Shani Transit). Career patience & health care recommended.';
+                      isUnderShani = true;
+                    } else {
+                      sadeSatiText = '✅ No Sade Sati or Small Dhaiya currently active for this Moon Sign. Favorable period for growth!';
+                    }
+
+                    return (
+                      <div className="p-2 bg-white/80 rounded-xl border border-sky-200 mb-2 flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[9px] font-black px-2 py-0.5 rounded uppercase ${isUnderShani ? 'bg-amber-600 text-white' : 'bg-emerald-600 text-white'}`}>
+                            {isUnderShani ? 'Shani Influence' : 'Favorable Transit'}
+                          </span>
+                          <span className="font-bold text-[11px] text-slate-800">{sadeSatiText}</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => {
+                        handleSendMessage(`Analyze current planetary transits (Gochar) for Moon Sign: ${gocharMoonSign} and profile: ${familyMembers.find(f => f.id === activeProfile)?.name || 'Native'}. Focus: ${gocharPlanetFocus}. Include house-by-house impact breakdown, Sade Sati/Dhaiya remedies, Jupiter growth houses, Rahu-Ketu karmic axis effects, and pacifying mantras/charity.`);
+                      }}
+                      className="bg-sky-600 hover:bg-sky-700 text-white font-black px-4 py-1.5 rounded-xl text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Globe size={14} />
+                      <span>⚡ Calculate My Gochar Impacts & Remedies</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {analysisMode === 'Birth Time Rectification (BTR)' && (
+                <div className="p-3.5 bg-gradient-to-r from-purple-50 via-stone-50 to-purple-50 border-b border-purple-200 shrink-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <Clock size={15} className="text-purple-700" />
+                      <h4 className="text-xs font-extrabold uppercase tracking-wider text-purple-950">
+                        ⏱️ Precision Birth Time Rectification (BTR) & Sub-Lord Studio
+                      </h4>
+                    </div>
+                    <span className="text-[10px] bg-purple-200 text-purple-900 font-bold px-2 py-0.5 rounded">Vedic Tattva • K.P. Sub-Lord • Timeline</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Reported Birth Time</label>
+                      <input
+                        type="time"
+                        value={btrReportedTime}
+                        onChange={(e) => setBtrReportedTime(e.target.value)}
+                        className="w-full bg-white border border-purple-300 rounded-xl px-2.5 py-1 text-xs font-bold text-stone-800"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Uncertainty Window</label>
+                      <select
+                        value={btrUncertaintyWindow}
+                        onChange={(e) => setBtrUncertaintyWindow(e.target.value)}
+                        className="w-full bg-white border border-purple-300 rounded-xl px-2.5 py-1 text-xs font-bold text-stone-800 cursor-pointer"
+                      >
+                        <option value="± 10 minutes">± 10 minutes (Slight minute shift)</option>
+                        <option value="± 30 minutes">± 30 minutes (Approximate hour)</option>
+                        <option value="± 1 hour">± 1 hour (Substantial uncertainty)</option>
+                        <option value="± 2 hours">± 2 hours (Lagna boundary shift)</option>
+                        <option value="Unknown exact hour (Morning/Evening window)">Unknown exact hour</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Physical Traits & Nature</label>
+                      <input
+                        type="text"
+                        value={btrPhysicalTraits}
+                        onChange={(e) => setBtrPhysicalTraits(e.target.value)}
+                        placeholder="e.g. Tall, energetic voice, fair skin, oval face"
+                        className="w-full bg-white border border-purple-300 rounded-xl px-2.5 py-1 text-xs font-medium text-stone-800 placeholder:text-slate-400"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mb-2.5">
+                    <label className="text-[10px] font-bold text-slate-700 block mb-0.5">
+                      Key Life Events Timeline (Dates of Marriage, First Job, Major Move, Accident, Child Birth)
+                    </label>
+                    <textarea
+                      value={btrKeyEvents}
+                      onChange={(e) => setBtrKeyEvents(e.target.value)}
+                      rows={2}
+                      placeholder="e.g. Married on 15 Oct 2018, Joined corporate job on 01 Jun 2015, Car accident in Jul 2021..."
+                      className="w-full bg-white border border-purple-300 rounded-xl p-2 text-xs font-medium text-stone-800 placeholder:text-slate-400 resize-none"
+                    />
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-2 bg-purple-100/70 p-2 rounded-xl border border-purple-200">
+                    <div className="flex items-center gap-1.5 text-[11px] text-purple-900 font-semibold">
+                      <span>⚡ Multi-System Methodologies:</span>
+                      <span className="font-bold text-purple-950 underline">Tattva Shodhana</span> • 
+                      <span className="font-bold text-purple-950 underline">K.P. Ruling Planets (RP)</span> • 
+                      <span className="font-bold text-purple-950 underline">Nadi Prashna</span>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        handleSendMessage(`Perform a precision Birth Time Rectification (BTR) for profile: ${familyMembers.find(f => f.id === activeProfile)?.name || 'Native'} (DOB: ${familyMembers.find(f => f.id === activeProfile)?.dob || '1992-08-15'}). Reported Time: ${btrReportedTime}. Uncertainty Window: ${btrUncertaintyWindow}. Physical Traits: ${btrPhysicalTraits}. Key Life Events Timeline: ${btrKeyEvents}. Calculate exact corrected birth minute using Vedic Tattva Shodhana (element check), K.P. Lagna Sub-Lord alignment with Ruling Planets, and Dasha event cross-verification.`);
+                      }}
+                      className="bg-purple-700 hover:bg-purple-800 text-white font-black px-4 py-1.5 rounded-xl text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                    >
+                      <Clock size={14} />
+                      <span>⚡ Run Precision AI Birth Time Rectification</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+              {analysisMode === 'Ramal Shastra (Vedic Dice)' && (
+                <div className="p-4 bg-gradient-to-r from-amber-950 via-stone-900 to-amber-950 text-white border-b border-amber-500/40 shrink-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 bg-amber-400 rounded-full animate-pulse" />
+                      <h4 className="text-xs font-black uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+                        🎲 Vedic Ramal Shastra Oracle • 16 Primary Shakals (Geomantic Figures)
+                      </h4>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          const randomIdx = Math.floor(Math.random() * RAMAL_SHAKALS.length);
+                          setRamalSelectedShakal(RAMAL_SHAKALS[randomIdx].id);
+                        }}
+                        className="text-[11px] bg-gradient-to-r from-amber-500 to-saffron hover:from-amber-600 hover:to-orange-600 text-white px-3 py-1 rounded-xl shadow transition-all font-bold flex items-center gap-1.5 cursor-pointer"
+                      >
+                        🎲 Cast Vedic Pasa (Random Dice)
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3 bg-black/30 p-3 rounded-2xl border border-amber-500/20">
+                    <div className="md:col-span-2">
+                      <label className="text-[10px] font-bold text-amber-200 uppercase tracking-wider block mb-1">
+                        Select / Cast from the 16 Classical Shastra Figures (Shakals):
+                      </label>
+                      <select
+                        value={ramalSelectedShakal}
+                        onChange={(e) => setRamalSelectedShakal(e.target.value)}
+                        className="w-full bg-stone-900 border border-amber-500/50 rounded-xl px-3 py-1.5 text-xs font-bold text-amber-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400"
+                      >
+                        {RAMAL_SHAKALS.map((shakal) => (
+                          <option key={shakal.id} value={shakal.id}>
+                            {shakal.name} — Ruler: {shakal.ruler} ({shakal.element})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-amber-200 uppercase tracking-wider block mb-1">
+                        Inquiry Focus Area:
+                      </label>
+                      <select
+                        value={ramalQuestionFocus}
+                        onChange={(e) => setRamalQuestionFocus(e.target.value)}
+                        className="w-full bg-stone-900 border border-amber-500/50 rounded-xl px-2.5 py-1.5 text-xs font-bold text-amber-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400"
+                      >
+                        <option value="General Future & Auspicious Outcome">General Future & Outcome</option>
+                        <option value="Career Advancement & Financial Success">Career & Financial Success</option>
+                        <option value="Love Harmony & Marriage Compatibility">Love & Marriage Compatibility</option>
+                        <option value="Litigation, Rivals & Victory (Nusarat)">Litigation & Victory (Nusarat)</option>
+                        <option value="Health Protection & Recovery">Health Protection & Vitality</option>
+                        <option value="Lost Property or Missing Person">Lost Property or Travel (Tariq)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Display Current Shakal Details */}
+                  {(() => {
+                    const activeShakal = RAMAL_SHAKALS.find(s => s.id === ramalSelectedShakal) || RAMAL_SHAKALS[0];
+                    return (
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-gradient-to-r from-amber-900/40 via-stone-900/60 to-amber-900/40 p-3 rounded-2xl border border-amber-400/30">
+                        <div className="flex items-center gap-4">
+                          <div className="bg-stone-950 px-3 py-2 rounded-xl border border-amber-500/40 flex flex-col items-center justify-center gap-0.5 shadow-inner min-w-[70px]">
+                            <span className="text-[9px] font-bold text-amber-400 uppercase tracking-widest">Shakal</span>
+                            <div className="font-mono text-sm font-black text-amber-200 tracking-widest flex flex-col items-center">
+                              {activeShakal.dots.map((row, idx) => (
+                                <span key={idx} className="leading-tight">{row}</span>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-sm font-black text-white">{activeShakal.name}</span>
+                              <span className="text-[10px] bg-amber-500/20 text-amber-300 font-bold px-2 py-0.5 rounded-full border border-amber-400/30">
+                                {activeShakal.ruler}
+                              </span>
+                              <span className="text-[10px] bg-stone-800 text-stone-300 font-medium px-2 py-0.5 rounded-full">
+                                {activeShakal.element}
+                              </span>
+                            </div>
+                            <p className="text-xs text-amber-100/90 mt-1 font-medium leading-tight">
+                              <span className="text-amber-400 font-bold">Sastra Nature:</span> {activeShakal.nature}
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            handleSendMessage(`I have cast the Ramal Shastra Vedic Dice (Pasa). The resulting geomantic figure is "${activeShakal.name}" with 4-row structure [${activeShakal.dots.join(', ')}], ruled by ${activeShakal.ruler} (${activeShakal.element}). My inquiry focus is: ${ramalQuestionFocus}. Please interpret this Shakal according to classical Ramal Sastra principles, explain whether this represents Dakhil (Incoming/Gain), Kharij (Outgoing/Release), or Thabit (Stable), give an immediate prediction for my situation, and suggest elemental Vedic remedies.`);
+                          }}
+                          className="bg-gradient-to-r from-gold to-amber-500 hover:from-amber-400 hover:to-orange-500 text-deep-blue font-black px-4 py-2 rounded-xl text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer shrink-0 w-full sm:w-auto justify-center"
+                        >
+                          <Sparkles size={15} />
+                          <span>Predict with This Shakal</span>
+                        </button>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
 
               {/* Messages Container */}
               <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-gradient-to-b from-stone-50/50 to-white">
@@ -557,30 +1704,15 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
 
               {/* Quick Prompt Chips */}
               <div className="px-6 py-2 bg-stone-50 border-t border-slate-100 flex gap-2 overflow-x-auto">
-                <button
-                  onClick={() => handleSendMessage("Analyze my current Dasha period and suggest Lal Kitab remedies for wealth growth.")}
-                  className="text-xs bg-white hover:bg-amber-50 text-slate-700 font-medium px-3 py-1.5 rounded-xl border border-slate-200 whitespace-nowrap transition-colors flex items-center gap-1.5"
-                >
-                  💰 Wealth Lal Kitab Remedy
-                </button>
-                <button
-                  onClick={() => handleSendMessage("Which gemstone is most auspicious for my career advancement according to Vedic rules?")}
-                  className="text-xs bg-white hover:bg-amber-50 text-slate-700 font-medium px-3 py-1.5 rounded-xl border border-slate-200 whitespace-nowrap transition-colors flex items-center gap-1.5"
-                >
-                  💎 Auspicious Gemstone
-                </button>
-                <button
-                  onClick={() => handleSendMessage("How is the compatibility and family harmony looking for the selected profile in coming months?")}
-                  className="text-xs bg-white hover:bg-amber-50 text-slate-700 font-medium px-3 py-1.5 rounded-xl border border-slate-200 whitespace-nowrap transition-colors flex items-center gap-1.5"
-                >
-                  🏡 Family Harmony Check
-                </button>
-                <button
-                  onClick={() => handleSendMessage("Give me a horary (Prashna) insight on whether I should start a new business venture now.")}
-                  className="text-xs bg-white hover:bg-amber-50 text-slate-700 font-medium px-3 py-1.5 rounded-xl border border-slate-200 whitespace-nowrap transition-colors flex items-center gap-1.5"
-                >
-                  🔮 Prashna Horary Timing
-                </button>
+                {activePrompts.map((item, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleSendMessage(item.prompt)}
+                    className="text-xs bg-white hover:bg-amber-50 text-slate-700 font-medium px-3 py-1.5 rounded-xl border border-slate-200 whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  >
+                    {item.label}
+                  </button>
+                ))}
               </div>
 
               {/* Input Footer */}
@@ -1041,9 +2173,9 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
             >
               <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
                 <h3 className="font-extrabold text-base text-slate-800 flex items-center gap-2">
-                  <Users size={18} className="text-saffron" /> Add Family Member Profile
+                  <Users size={18} className="text-saffron" /> {editingProfileId ? '✏️ Edit Birth Profile' : '➕ Add Client / Family Profile'}
                 </h3>
-                <button onClick={() => setShowAddFamily(false)} className="text-slate-400 hover:text-slate-600">
+                <button onClick={() => { setShowAddFamily(false); setEditingProfileId(null); }} className="text-slate-400 hover:text-slate-600">
                   <X size={18} />
                 </button>
               </div>
@@ -1056,18 +2188,20 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                     required
                     value={newFamily.name}
                     onChange={(e) => setNewFamily({ ...newFamily, name: e.target.value })}
-                    placeholder="e.g. Priya Sharma"
+                    placeholder="e.g. Priya Sharma or Walk-in Client"
                     className="w-full bg-stone-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-saffron"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-bold text-slate-700 block mb-1">Relation</label>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Relation / Target Type</label>
                     <select
                       value={newFamily.relation}
                       onChange={(e) => setNewFamily({ ...newFamily, relation: e.target.value })}
                       className="w-full bg-stone-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium"
                     >
+                      <option value="Self / Native">Self / Native</option>
+                      <option value="Walk-in Client / Customer">Walk-in Client / Customer</option>
                       <option value="Spouse">Spouse</option>
                       <option value="Child / Son">Child / Son</option>
                       <option value="Child / Daughter">Child / Daughter</option>
@@ -1113,16 +2247,16 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                 <div className="pt-2 flex gap-3">
                   <button
                     type="button"
-                    onClick={() => setShowAddFamily(false)}
-                    className="flex-1 bg-stone-100 hover:bg-stone-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition-colors"
+                    onClick={() => { setShowAddFamily(false); setEditingProfileId(null); }}
+                    className="flex-1 bg-stone-100 hover:bg-stone-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 bg-saffron hover:bg-orange-600 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm transition-colors"
+                    className="flex-1 bg-saffron hover:bg-orange-600 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm transition-colors cursor-pointer"
                   >
-                    Save Profile
+                    {editingProfileId ? 'Update Birth Profile' : 'Save Birth Profile'}
                   </button>
                 </div>
               </form>
