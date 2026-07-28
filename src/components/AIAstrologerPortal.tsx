@@ -5,7 +5,7 @@ import {
   Upload, Image as ImageIcon, Camera, AlertCircle, CheckCircle2, 
   RefreshCw, Compass, Moon, Sun, Heart, Shield, BookOpen, 
   User, Users, ChevronRight, X, Award, HelpCircle, FileText, MessageSquare, Edit2, Dices,
-  Calendar, Globe, HeartPulse, Activity, ShieldAlert
+  Calendar, Globe, HeartPulse, Activity, ShieldAlert, ScanFace, FileSignature, PenTool, UserCheck
 } from 'lucide-react';
 import { User as UserType } from '../types';
 import { NumerologyStudio } from './NumerologyStudio';
@@ -117,6 +117,20 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
       {
         role: 'ai',
         text: "✋ **Welcome to Vedic Samudrika Shastra (Palm Line Analysis Studio).**\n\nI specialize in decoding your palm lines (Life Line, Fate Line, Heart Line, Head Line) and planetary mounts.\n\n✨ **Select your hand and focus area above, upload a palm photo, and click Analyze!**",
+        timestamp: new Date().toLocaleTimeString()
+      }
+    ],
+    'Face Reading (Mukh Samudrik)': [
+      {
+        role: 'ai',
+        text: "👤 **Welcome to Vedic Mukh Samudrik Shastra (Face Reading Studio).**\n\nSamudrika Shastra decodes personality, fate, financial fortune, and health from facial features—forehead lines (Bhagya Rekha), eyebrows (Bhrukuti), eyes (Netra), nose (Nasa), lips (Oshtha), chin (Chibuka), and facial symmetry.\n\n✨ **Upload a clear facial photo in the studio above, select your focal area, and click Analyze Face Features!**",
+        timestamp: new Date().toLocaleTimeString()
+      }
+    ],
+    'Signature Analysis (Hastakshar Vigyan)': [
+      {
+        role: 'ai',
+        text: "✍️ **Welcome to Hastakshar Vigyan & Graphology Studio (Signature Analysis).**\n\nYour signature is a direct reflection of your subconscious mind, self-worth, money flow, and leadership drive. Slant, pressure, first letter capital size, underlines, trailing dots, and legibility reveal your psychological and financial trajectory.\n\n✨ **Upload a photo of your signature in the studio above, configure its characteristics, and click Analyze Signature!**",
         timestamp: new Date().toLocaleTimeString()
       }
     ],
@@ -258,6 +272,18 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
   const [btrUncertaintyWindow, setBtrUncertaintyWindow] = useState<string>('± 15 minutes');
   const [btrKeyEvents, setBtrKeyEvents] = useState<string>('Marriage on 15 Oct 2018, Joined First Corporate Job on 01 Jun 2015, Car Accident in July 2021');
   const [btrPhysicalTraits, setBtrPhysicalTraits] = useState<string>('Tall build, energetic speech, fair skin, oval face structure');
+
+  // Face Reading (Mukh Samudrik Shastra) State
+  const [faceFeatureFocus, setFaceFeatureFocus] = useState<string>('Forehead Lines (Bhagya Rekha) & Destiny');
+  const [faceInquiryArea, setFaceInquiryArea] = useState<string>('Career & Leadership Potential');
+  const [faceMarkings, setFaceMarkings] = useState<string>('');
+
+  // Signature Analysis (Hastakshar Vigyan) State
+  const [signatureSlant, setSignatureSlant] = useState<string>('Upward Slant (Ambitious & Growing)');
+  const [signatureUnderline, setSignatureUnderline] = useState<string>('Single Underline with Two Dots');
+  const [signatureFirstLetter, setSignatureFirstLetter] = useState<string>('Oversized Capital Letter');
+  const [signatureLegibility, setSignatureLegibility] = useState<string>('Clear & Easily Legible');
+  const [signatureFocusArea, setSignatureFocusArea] = useState<string>('Financial Growth & Money Mindset');
 
   // Medical Astrology & Vedic Remedies State
   const [medicalAilmentDesc, setMedicalAilmentDesc] = useState<string>('');
@@ -597,6 +623,8 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
     { name: 'Birth Time Rectification (BTR)', icon: Clock, desc: 'Precision BTR using Vedic Tattva Prasna, K.P. Sub-Lords & life event timeline mapping' },
     { name: 'K.P. System & Horary', icon: Compass, desc: 'Prashna Kundli, sub-lord theory & accurate timing' },
     { name: 'Nadi Astrology', icon: History, desc: 'Past & future karma, Bhrigu Nadi thumb impressions' },
+    { name: 'Face Reading (Mukh Samudrik)', icon: ScanFace, desc: 'Upload face photo for forehead lines, eyes, nose, lips, chin & facial destiny' },
+    { name: 'Signature Analysis (Hastakshar Vigyan)', icon: FileSignature, desc: 'Upload signature photo for slant, pressure, loops, underline, dots & money mindset' },
     { name: 'Palm Line Analysis', icon: Camera, desc: 'Upload palm photo for life line, fate line & mounts' },
     { name: 'Tarot Card Reading', icon: Sparkles, desc: '3-card spread or symbol guidance for immediate decisions' },
     { name: 'Numerology', icon: Award, desc: 'Name number correction, lucky dates & gemstone vibration' },
@@ -646,6 +674,18 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
       { label: '📈 Fate Line & Career Mounts', prompt: 'Analyze my Fate line and the Mount of Saturn/Sun to predict career advancements and financial elevation.' },
       { label: '❤️ Heart Line & Relationships', prompt: 'Evaluate my Heart line and Mount of Venus for emotional stability, marriage harmony, and relationships.' },
       { label: '🌟 Mount of Jupiter & Leadership', prompt: 'Check the prominence of Jupiter and Sun mounts on my palm for leadership qualities and public recognition.' }
+    ],
+    'Face Reading (Mukh Samudrik)': [
+      { label: '👤 Complete Face Reading & Destiny', prompt: 'Perform a full Face Reading (Mukh Samudrik Shastra) analysis evaluating forehead lines, eyes, nose, lips, chin, and facial symmetry for my life destiny.' },
+      { label: '🧠 Forehead Lines (Bhagya Rekha)', prompt: 'Analyze my forehead lines and structure to predict career growth, intelligence, leadership, and fortunate periods in life.' },
+      { label: '👁️ Eyes, Eyebrows & Inner Soul', prompt: 'Interpret my eye shape, depth, and eyebrow alignment to evaluate my emotional temperament, truthfulness, and intuitive strength.' },
+      { label: '💼 Nose & Chin Financial Fortune', prompt: 'Examine my nose tip, nostrils, and chin structure for financial capacity, wealth retention, and long-term determination.' }
+    ],
+    'Signature Analysis (Hastakshar Vigyan)': [
+      { label: '✍️ Full Signature & Money Mindset', prompt: 'Perform a comprehensive Hastakshar Vigyan (Signature Analysis) evaluating my signature slant, letter height, underline, dots, and legibility.' },
+      { label: '✨ Signature Correction (Hastakshar Shodhan)', prompt: 'Check my signature for any negative flow or self-sabotaging strokes, and prescribe Hastakshar Shodhan (signature correction) remedies for career success.' },
+      { label: '📊 Underline & Dots Financial Stability', prompt: 'Explain the psychological and financial significance of my signature underline and trailing dots for wealth protection and reputation.' },
+      { label: '🚀 Slant & Capital Letter Analysis', prompt: 'Analyze the upward/horizontal slant and oversized first letter of my signature for ambition, confidence, and public authority.' }
     ],
     'Nadi Astrology': [
       { label: '📜 Past Life Karma & Purpose', prompt: 'Decode my soul purpose and karmic impressions from past lives according to Bhrigu Nadi principles.' },
@@ -944,9 +984,9 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                     <span>{extendedReadingView ? '📖 Extended Reading View: Active' : '📖 Expand Reading View'}</span>
                   </button>
 
-                  {analysisMode === 'Palm Line Analysis' && (
+                  {(analysisMode === 'Palm Line Analysis' || analysisMode === 'Face Reading (Mukh Samudrik)' || analysisMode === 'Signature Analysis (Hastakshar Vigyan)') && (
                     <span className="text-[11px] font-bold text-saffron bg-amber-50 border border-amber-200 px-3 py-1 rounded-full flex items-center gap-1">
-                      <Camera size={14} /> Upload Palm Photo below
+                      <Camera size={14} /> Photo Upload Available Below
                     </span>
                   )}
                   {aiMinutes <= 3 && (
@@ -1121,6 +1161,289 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                       className="bg-saffron hover:bg-orange-600 text-white font-black px-3.5 py-1 rounded-xl text-xs shadow-sm transition-all flex items-center gap-1 cursor-pointer"
                     >
                       <span>⚡ Run Comprehensive Palmistry Analysis</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {analysisMode === 'Face Reading (Mukh Samudrik)' && (
+                <div className="p-3.5 bg-gradient-to-r from-amber-50 via-orange-50/80 to-yellow-50 border-b border-amber-200 shrink-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <ScanFace size={17} className="text-amber-800" />
+                      <h4 className="text-xs font-extrabold uppercase tracking-wider text-amber-950">
+                        👤 Face Reading & Physiognomy Studio (Mukh Samudrik Shastra • मुख सामुद्रिक)
+                      </h4>
+                    </div>
+                    <span className="text-[10px] bg-amber-200/90 text-amber-900 font-bold px-2 py-0.5 rounded">
+                      Classical Samudrika & Oriental Facial Analysis
+                    </span>
+                  </div>
+
+                  {/* Photo Upload & Preview Banner */}
+                  <div className="mb-2.5 p-2 bg-white/80 border border-amber-300 rounded-xl flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      {selectedImage ? (
+                        <div className="relative group">
+                          <img src={selectedImage} alt="Facial photo preview" className="w-12 h-12 object-cover rounded-lg border border-amber-400 shadow-xs" />
+                          <button
+                            onClick={() => setSelectedImage(null)}
+                            className="absolute -top-1 -right-1 bg-rose-600 text-white rounded-full p-0.5 shadow-xs hover:scale-110 transition-all cursor-pointer"
+                            title="Remove attached photo"
+                          >
+                            <X size={10} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="w-12 h-12 rounded-lg border border-dashed border-amber-400 bg-amber-100/50 flex items-center justify-center text-amber-700">
+                          <ScanFace size={20} />
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-xs font-bold text-stone-800 block">
+                          {selectedImage ? '✅ Facial Photo Attached' : '📸 Attach Facial Photo (Front View)'}
+                        </span>
+                        <span className="text-[10px] text-slate-500 block">
+                          {selectedImage ? 'Image ready for AI feature analysis' : 'Clear lighting, neutral facial expression, no heavy filters'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="file"
+                        id="face-photo-input"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                      <label
+                        htmlFor="face-photo-input"
+                        className="bg-stone-800 hover:bg-stone-900 text-amber-300 font-extrabold px-3 py-1.5 rounded-xl text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Camera size={14} />
+                        <span>{selectedImage ? 'Change Photo' : 'Upload Face Photo'}</span>
+                      </label>
+                      {selectedImage && (
+                        <button
+                          onClick={() => setSelectedImage(null)}
+                          className="text-[11px] font-bold text-rose-600 hover:underline px-1 cursor-pointer"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Form Selectors */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-2.5">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Primary Feature Focus</label>
+                      <select
+                        value={faceFeatureFocus}
+                        onChange={(e) => setFaceFeatureFocus(e.target.value)}
+                        className="w-full bg-white border border-amber-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-stone-800 cursor-pointer focus:outline-none focus:border-amber-500"
+                      >
+                        <option value="Forehead Lines (Bhagya Rekha) & Destiny">Forehead Lines (Bhagya Rekha) & Destiny (1st/9th House)</option>
+                        <option value="Eyes & Eyebrows (Netra/Bhrukuti)">Eyes & Eyebrows (Netra/Bhrukuti - Sun/Moon Soul Energy)</option>
+                        <option value="Nose & Nostrils (Nasa - Wealth Capacity)">Nose & Nostrils (Nasa - Jupiter/Venus Wealth Capacity)</option>
+                        <option value="Lips & Speech (Oshtha - Communication)">Lips & Speech (Oshtha - Mercury Communication & Affection)</option>
+                        <option value="Chin & Jawline (Chibuka - Willpower)">Chin & Jawline (Chibuka - Saturn/Mars Willpower)</option>
+                        <option value="Facial Moles, Marks & Symmetry">Facial Moles, Marks & Overall Symmetry</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Primary Inquiry Area</label>
+                      <select
+                        value={faceInquiryArea}
+                        onChange={(e) => setFaceInquiryArea(e.target.value)}
+                        className="w-full bg-white border border-amber-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-stone-800 cursor-pointer focus:outline-none focus:border-amber-500"
+                      >
+                        <option value="Career & Leadership Potential">Career, Leadership & Social Status</option>
+                        <option value="Financial Wealth & Prosperity">Financial Wealth & Business Luck</option>
+                        <option value="Marriage, Relationship & Emotional Nature">Marriage, Relationship & Affection</option>
+                        <option value="Health, Immunity & Longevity">Health, Vitality & Immunity</option>
+                        <option value="Overall Temperament & Destiny">Overall Temperament & Soul Purpose</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Distinctive Face Notes / Markings (Optional)</label>
+                      <input
+                        type="text"
+                        value={faceMarkings}
+                        onChange={(e) => setFaceMarkings(e.target.value)}
+                        placeholder="e.g., Mole on right cheek, 3 forehead lines, dimple, prominent nose bridge..."
+                        className="w-full bg-white border border-amber-300 rounded-xl px-2.5 py-1.5 text-xs font-medium text-stone-800 placeholder:text-slate-400 focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-2 bg-amber-100/80 p-2.5 rounded-xl border border-amber-200">
+                    <div className="flex items-center gap-1.5 text-[11px] text-amber-950 font-semibold">
+                      <Sparkles size={14} className="text-amber-700 shrink-0" />
+                      <span>Decodes facial zones, forehead lines, eyes, nose & chin using Mukh Samudrik principles.</span>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        const activeNative = familyMembers.find(f => f.id === activeProfile) || familyMembers[0];
+                        const prompt = `Perform a detailed Face Reading (Mukh Samudrik Shastra) for ${activeNative.name} (DOB: ${activeNative.dob}, Place: ${activeNative.place}).\n\n- Feature Focus: ${faceFeatureFocus}\n- Primary Inquiry Area: ${faceInquiryArea}\n- Distinctive Face Notes/Markings: ${faceMarkings || 'Not specified'}\n${selectedImage ? '📸 [Facial Photo Attached for AI visual analysis]' : '📸 [No photo attached - please guide based on feature choices and give facial photography tips]'}.\n\nPlease analyze according to classical Samudrika Shastra texts, decoding forehead lines, eye shape, nose structure, lip alignment, chin, moles, and facial balance.`;
+                        handleSendMessage(prompt);
+                      }}
+                      className="bg-amber-800 hover:bg-amber-900 text-white font-black px-4 py-1.5 rounded-xl text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                    >
+                      <ScanFace size={14} />
+                      <span>Analyze Face Features with AI</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {analysisMode === 'Signature Analysis (Hastakshar Vigyan)' && (
+                <div className="p-3.5 bg-gradient-to-r from-sky-50 via-indigo-50/80 to-purple-50 border-b border-indigo-200 shrink-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <FileSignature size={17} className="text-indigo-800" />
+                      <h4 className="text-xs font-extrabold uppercase tracking-wider text-indigo-950">
+                        ✍️ Signature Analysis & Graphology Studio (हस्ताक्षर विज्ञान एवं हस्तलेख)
+                      </h4>
+                    </div>
+                    <span className="text-[10px] bg-indigo-200/90 text-indigo-950 font-bold px-2 py-0.5 rounded">
+                      Vedic Hastakshar Vigyan & Financial Graphology
+                    </span>
+                  </div>
+
+                  {/* Photo Upload & Preview Banner */}
+                  <div className="mb-2.5 p-2 bg-white/80 border border-indigo-300 rounded-xl flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      {selectedImage ? (
+                        <div className="relative group">
+                          <img src={selectedImage} alt="Signature photo preview" className="w-16 h-10 object-contain bg-white rounded-lg border border-indigo-400 p-1 shadow-xs" />
+                          <button
+                            onClick={() => setSelectedImage(null)}
+                            className="absolute -top-1 -right-1 bg-rose-600 text-white rounded-full p-0.5 shadow-xs hover:scale-110 transition-all cursor-pointer"
+                            title="Remove attached signature"
+                          >
+                            <X size={10} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="w-16 h-10 rounded-lg border border-dashed border-indigo-400 bg-indigo-100/50 flex items-center justify-center text-indigo-700">
+                          <FileSignature size={20} />
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-xs font-bold text-stone-800 block">
+                          {selectedImage ? '✅ Signature Photo Attached' : '📸 Attach Signature Photo (Blank White Paper)'}
+                        </span>
+                        <span className="text-[10px] text-slate-500 block">
+                          {selectedImage ? 'Image ready for graphological stroke analysis' : 'Sign clearly with pen on unlined white paper and take a photo'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="file"
+                        id="signature-photo-input"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                      <label
+                        htmlFor="signature-photo-input"
+                        className="bg-indigo-900 hover:bg-indigo-950 text-indigo-100 font-extrabold px-3 py-1.5 rounded-xl text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <PenTool size={14} />
+                        <span>{selectedImage ? 'Change Signature Photo' : 'Upload Signature Photo'}</span>
+                      </label>
+                      {selectedImage && (
+                        <button
+                          onClick={() => setSelectedImage(null)}
+                          className="text-[11px] font-bold text-rose-600 hover:underline px-1 cursor-pointer"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Form Selectors */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-2.5">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Signature Slant</label>
+                      <select
+                        value={signatureSlant}
+                        onChange={(e) => setSignatureSlant(e.target.value)}
+                        className="w-full bg-white border border-indigo-300 rounded-xl px-2 py-1 text-[11px] font-bold text-stone-800 cursor-pointer focus:outline-none focus:border-indigo-500"
+                      >
+                        <option value="Upward Slant (Ambitious & Growing)">Upward Slant (Ambitious & Optimistic Growth)</option>
+                        <option value="Straight Horizontal (Balanced)">Straight Horizontal (Balanced & Methodical)</option>
+                        <option value="Downward Slant (Pessimistic/Fatigued)">Downward Slant (Pessimistic or Emotional Fatigue)</option>
+                        <option value="Irregular / Wavy Slant">Irregular / Wavy Slant (Fluctuating Mindset)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Underline & Dots</label>
+                      <select
+                        value={signatureUnderline}
+                        onChange={(e) => setSignatureUnderline(e.target.value)}
+                        className="w-full bg-white border border-indigo-300 rounded-xl px-2 py-1 text-[11px] font-bold text-stone-800 cursor-pointer focus:outline-none focus:border-indigo-500"
+                      >
+                        <option value="Single Underline with Two Dots">Single Underline with Two Dots (Self-Reliance & Protection)</option>
+                        <option value="Single Underline without Dots">Single Underline without Dots (Solid Self-Confidence)</option>
+                        <option value="Line Cutting Through Name">Line Cutting Through Name (Self-Sabotage / Inner Conflict)</option>
+                        <option value="No Underline or Dots">No Underline or Dots (Independent / Unanchored)</option>
+                        <option value="Double Underline">Double Underline (Re-checking / High Perfectionism)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">First Capital Letter Size</label>
+                      <select
+                        value={signatureFirstLetter}
+                        onChange={(e) => setSignatureFirstLetter(e.target.value)}
+                        className="w-full bg-white border border-indigo-300 rounded-xl px-2 py-1 text-[11px] font-bold text-stone-800 cursor-pointer focus:outline-none focus:border-indigo-500"
+                      >
+                        <option value="Oversized Capital Letter">Oversized Capital Letter (High Self-Esteem & Ambition)</option>
+                        <option value="Proportional Standard Capital">Proportional Standard Capital (Balanced Efficacy)</option>
+                        <option value="Small / Lowercase Initial">Small / Lowercase Initial (Modest / Low Self-Worth)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-0.5">Legibility & Clarity</label>
+                      <select
+                        value={signatureLegibility}
+                        onChange={(e) => setSignatureLegibility(e.target.value)}
+                        className="w-full bg-white border border-indigo-300 rounded-xl px-2 py-1 text-[11px] font-bold text-stone-800 cursor-pointer focus:outline-none focus:border-indigo-500"
+                      >
+                        <option value="Clear & Easily Legible">Clear & Easily Legible (Open, Transparent & Direct)</option>
+                        <option value="Semi-Legible Stylized Script">Semi-Legible Stylized Script (Creative & Executive)</option>
+                        <option value="Unreadable Scribble">Unreadable Scribble (Guarded, Private & Fast-Paced)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-2 bg-indigo-100/80 p-2.5 rounded-xl border border-indigo-200">
+                    <div className="flex items-center gap-1.5 text-[11px] text-indigo-950 font-semibold">
+                      <Sparkles size={14} className="text-indigo-700 shrink-0" />
+                      <span>Analyzes subconscious money mindset, leadership strokes & prescribes Hastakshar Shodhan (corrections).</span>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        const activeNative = familyMembers.find(f => f.id === activeProfile) || familyMembers[0];
+                        const prompt = `Perform a comprehensive Hastakshar Vigyan (Signature Analysis & Graphology) for ${activeNative.name} (DOB: ${activeNative.dob}, Place: ${activeNative.place}).\n\n- Signature Slant: ${signatureSlant}\n- Underline & Dots: ${signatureUnderline}\n- First Letter Size: ${signatureFirstLetter}\n- Legibility & Clarity: ${signatureLegibility}\n- Target Focus: ${signatureFocusArea}\n${selectedImage ? '✍️ [Signature Photo Attached for AI graphological stroke analysis]' : '✍️ [No image attached - please evaluate based on configured signature traits and provide signature guidelines]'}.\n\nPlease analyze subconscious psychology, money flow mindset, executive career potential, self-worth, and prescribe Hastakshar Shodhan (signature correction) remedies to fix negative strokes.`;
+                        handleSendMessage(prompt);
+                      }}
+                      className="bg-indigo-900 hover:bg-indigo-950 text-white font-black px-4 py-1.5 rounded-xl text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                    >
+                      <FileSignature size={14} />
+                      <span>Analyze Signature & Prescribe Remedies</span>
                     </button>
                   </div>
                 </div>
