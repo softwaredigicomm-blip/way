@@ -207,6 +207,287 @@ export function calculateNamank(name?: string): {
   };
 }
 
+export const CHALDEAN_COMPOUND_MEANINGS: Record<number, string> = {
+  10: "Wheel of Fortune - Honor, self-confidence & steady success (Sun ☀️)",
+  11: "Hidden Trials - Great intuition, requires spiritual alignment (Moon 🌙)",
+  12: "Sacrificed Energy - Mind anxiety, vulnerability to false critics (Neptune 🌊)",
+  13: "Genius Transformation - Sudden breakthroughs and high focus (Rahu 🐉)",
+  14: "Magnetic Movement - High communication, business growth & travel (Mercury 💬)",
+  15: "The Magician - Artistic charisma, luxury, money flow & magnetic charm (Venus 💎)",
+  16: "The Shattered Citadel - Requires steady ethics & careful contracts (Ketu 🧘)",
+  17: "Star of the Magi - Hope, spiritual wisdom & public immortality (Saturn ⚖️)",
+  18: "Karmic Discipline - Inner strength & overcoming material hurdles (Mars 🔥)",
+  19: "Prince of Heaven - Crown of victory, supreme leadership & prosperity (Sun ☀️)",
+  20: "The Awakening - New callings, spiritual purpose & deep intuition (Moon 🌙)",
+  21: "Crown of the Magi - Victory after effort, honors, wealth & elevation (Jupiter 🪐)",
+  22: "Master Architect - Large-scale practical success and vision (Rahu 🐉)",
+  23: "Royal Star of the Lion - Divine protection, help from superiors, rapid wealth (Mercury 💬)",
+  24: "Love & Financial Fortune - Venusian grace, steady cash flow & royal support (Venus 💎)",
+  25: "Wise Investigator - Learning through observation & spiritual maturity (Ketu 🧘)",
+  26: "Karmic Balance - Financial patience and structural strength (Saturn ⚖️)",
+  27: "The Scepter - Authority, courage, executive command & prosperity (Mars 🔥)",
+  28: "Trust & Alliance - Partnership strength and caution in contracts (Sun ☀️)",
+  29: "Uncertain Water - Emotional sensitivity and intuition expansion (Moon 🌙)",
+  30: "The Luminous Mind - Higher learning, teaching and intellectual victory (Jupiter 🪐)",
+  31: "Solitary Genius - Independent thinking and unique solutions (Rahu 🐉)",
+  32: "Star of Wisdom - Public popularity, mass influence & high commerce (Mercury 💬)",
+  33: "Master Teacher - Supreme Venusian charm, luxury, fame & unconditional luck (Venus 💎)",
+  34: "Devoted Seeker - Scientific mind and steady wealth accumulation (Ketu 🧘)",
+  35: "Peaceful Balance - Business diplomacy and artistic success (Saturn ⚖️)",
+  36: "Victorious Courage - Overcoming obstacles with energy and luck (Mars 🔥)",
+  37: "Good Fortune - Strong friendships, financial partnerships & joy (Sun ☀️)",
+  38: "Gentle Harmony - Creative imagination and diplomatic alliances (Moon 🌙)",
+  39: "Expansive Vision - Global success, higher teaching & abundance (Jupiter 🪐)",
+  40: "Practical Fortitude - Methodical progress and organizational gain (Rahu 🐉)",
+  41: "Enterprise & Wealth - Quick intellect, profitable trades & luck (Mercury 💬)",
+  42: "Grace & Prosperity - Smooth popularity, romantic bliss & riches (Venus 💎)",
+  43: "Intuitive Strength - Spiritual research and hidden discovery (Ketu 🧘)",
+  44: "Double Structural Success - Massive physical foundation and stability (Saturn ⚖️)",
+  45: "Force & High Ambition - Victory in competitive endeavors & leadership (Mars 🔥)",
+  46: "Crown of Recognition - Public applause, fame and high status (Sun ☀️)",
+  47: "Inner Resilience - Spiritual protection and long-term vision (Ketu 🧘)",
+  48: "Karmic Master - Discipline in leadership and organization (Saturn ⚖️)",
+  49: "Dynamic Courage - Strategic victories and physical vigor (Mars 🔥)",
+  50: "Intellectual Summit - Commercial victory and clear judgment (Mercury 💬)",
+  51: "Warrior of Light - High magnetic power and invincible good luck (Venus 💎)",
+  52: "Mystic Harmony - Spiritual peace and diplomatic success (Moon 🌙)"
+};
+
+export interface NameCorrectionSuggestion {
+  originalName: string;
+  suggestedName: string;
+  modificationType: string;
+  modificationCategory: 'Addition' | 'Substitution' | 'Doubling' | 'Phonetic Shift';
+  chaldeanNumber: number;
+  chaldeanRawSum: number;
+  pythagoreanNumber: number;
+  pythagoreanRawSum: number;
+  planet: string;
+  rulerSymbol: string;
+  compoundVibration: string;
+  harmonyScore: number;
+  harmonyBadge: string;
+  benefits: string;
+}
+
+/**
+ * Generates optimized name spelling corrections by adding or substituting alphabets to achieve better luck, fortune, and planetary harmony.
+ */
+export function generateNameCorrections(
+  originalName: string,
+  mulankNumber: number,
+  bhagyankNumber: number,
+  primaryGoal: string = 'Wealth & Financial Growth'
+): NameCorrectionSuggestion[] {
+  if (!originalName || !originalName.trim()) return [];
+
+  const trimmed = originalName.trim().toUpperCase();
+  const words = trimmed.split(/\s+/);
+  const firstName = words[0] || '';
+  const restOfName = words.slice(1).join(' ');
+
+  const nativeMInfo = PLANETARY_NUMEROLOGY_MAP[mulankNumber] || PLANETARY_NUMEROLOGY_MAP[1];
+  const nativeBInfo = PLANETARY_NUMEROLOGY_MAP[bhagyankNumber] || PLANETARY_NUMEROLOGY_MAP[1];
+
+  const candidatesMap = new Map<string, { type: string; category: NameCorrectionSuggestion['modificationCategory'] }>();
+
+  // Baseline current name
+  candidatesMap.set(trimmed, { type: 'Original Spelling', category: 'Phonetic Shift' });
+
+  // 1. ADDITION: Add vowels 'A', 'E', 'I', 'O', 'Y', 'EE' at end of first name
+  ['A', 'E', 'I', 'Y', 'EE'].forEach((vowel) => {
+    const newFirst = firstName + vowel;
+    const fullCandidate = restOfName ? `${newFirst} ${restOfName}` : newFirst;
+    candidatesMap.set(fullCandidate, { type: `Added '${vowel}' at end of first name`, category: 'Addition' });
+  });
+
+  // 2. ADDITION: Add key lucky consonants 'H', 'S', 'R', 'N', 'K', 'M' at end of first name
+  ['H', 'S', 'R', 'N', 'K', 'M'].forEach((c) => {
+    const newFirst = firstName + c;
+    const fullCandidate = restOfName ? `${newFirst} ${restOfName}` : newFirst;
+    candidatesMap.set(fullCandidate, { type: `Added '${c}' at end of first name`, category: 'Addition' });
+  });
+
+  // 3. DOUBLING: Double vowels or key consonants inside first name
+  if (firstName.length >= 2) {
+    const lastChar = firstName[firstName.length - 1];
+    const doubledLast = firstName + lastChar;
+    const candidateDoubledLast = restOfName ? `${doubledLast} ${restOfName}` : doubledLast;
+    candidatesMap.set(candidateDoubledLast, { type: `Doubled final '${lastChar}' in first name`, category: 'Doubling' });
+
+    const consonantsToDouble = ['R', 'S', 'K', 'N', 'M', 'L', 'T', 'P', 'D', 'B', 'G'];
+    for (const cons of consonantsToDouble) {
+      if (firstName.includes(cons)) {
+        const doubledFirst = firstName.replace(cons, cons + cons);
+        const fullCandidate = restOfName ? `${doubledFirst} ${restOfName}` : doubledFirst;
+        candidatesMap.set(fullCandidate, { type: `Doubled consonant '${cons}' ➔ '${cons}${cons}'`, category: 'Doubling' });
+      }
+    }
+
+    const vowelsToDouble = ['A', 'E', 'I', 'O', 'U'];
+    for (const v of vowelsToDouble) {
+      if (firstName.includes(v)) {
+        const doubledVowelFirst = firstName.replace(v, v + v);
+        const fullCandidate = restOfName ? `${doubledVowelFirst} ${restOfName}` : doubledVowelFirst;
+        candidatesMap.set(fullCandidate, { type: `Doubled vowel '${v}' ➔ '${v}${v}'`, category: 'Doubling' });
+      }
+    }
+  }
+
+  // 4. SUBSTITUTIONS: Standard Numerological Vowel/Consonant Substitutions
+  if (firstName.includes('I')) {
+    const sub = firstName.replace(/I/g, 'EE');
+    const full = restOfName ? `${sub} ${restOfName}` : sub;
+    candidatesMap.set(full, { type: `Substituted 'I' ➔ 'EE'`, category: 'Substitution' });
+
+    const subY = firstName.replace(/I/g, 'Y');
+    const fullY = restOfName ? `${subY} ${restOfName}` : subY;
+    candidatesMap.set(fullY, { type: `Substituted 'I' ➔ 'Y'`, category: 'Substitution' });
+  }
+
+  if (firstName.includes('Y')) {
+    const sub = firstName.replace(/Y/g, 'I');
+    const full = restOfName ? `${sub} ${restOfName}` : sub;
+    candidatesMap.set(full, { type: `Substituted 'Y' ➔ 'I'`, category: 'Substitution' });
+
+    const subYY = firstName.replace(/Y/g, 'YY');
+    const fullYY = restOfName ? `${subYY} ${restOfName}` : subYY;
+    candidatesMap.set(fullYY, { type: `Doubled 'Y' ➔ 'YY'`, category: 'Doubling' });
+  }
+
+  if (firstName.includes('A')) {
+    const sub = firstName.replace(/A/g, 'AA');
+    const full = restOfName ? `${sub} ${restOfName}` : sub;
+    candidatesMap.set(full, { type: `Substituted 'A' ➔ 'AA'`, category: 'Substitution' });
+  }
+
+  if (firstName.includes('E')) {
+    const sub = firstName.replace(/E/g, 'EE');
+    const full = restOfName ? `${sub} ${restOfName}` : sub;
+    candidatesMap.set(full, { type: `Substituted 'E' ➔ 'EE'`, category: 'Substitution' });
+  }
+
+  if (firstName.includes('S')) {
+    const sub = firstName.replace(/S/g, 'SH');
+    const full = restOfName ? `${sub} ${restOfName}` : sub;
+    candidatesMap.set(full, { type: `Substituted 'S' ➔ 'SH'`, category: 'Substitution' });
+  }
+
+  if (firstName.includes('K')) {
+    const sub = firstName.replace(/K/g, 'KH');
+    const full = restOfName ? `${sub} ${restOfName}` : sub;
+    candidatesMap.set(full, { type: `Substituted 'K' ➔ 'KH'`, category: 'Substitution' });
+  }
+
+  if (firstName.includes('C')) {
+    const sub = firstName.replace(/C/g, 'K');
+    const full = restOfName ? `${sub} ${restOfName}` : sub;
+    candidatesMap.set(full, { type: `Substituted 'C' ➔ 'K'`, category: 'Substitution' });
+  }
+
+  if (firstName.includes('V')) {
+    const sub = firstName.replace(/V/g, 'W');
+    const full = restOfName ? `${sub} ${restOfName}` : sub;
+    candidatesMap.set(full, { type: `Substituted 'V' ➔ 'W'`, category: 'Substitution' });
+  }
+
+  if (firstName.includes('T')) {
+    const sub = firstName.replace(/T/g, 'TH');
+    const full = restOfName ? `${sub} ${restOfName}` : sub;
+    candidatesMap.set(full, { type: `Substituted 'T' ➔ 'TH'`, category: 'Substitution' });
+  }
+
+  if (restOfName) {
+    ['A', 'E', 'S', 'R', 'H'].forEach((ch) => {
+      const full = `${firstName} ${restOfName}${ch}`;
+      candidatesMap.set(full, { type: `Added '${ch}' at end of surname`, category: 'Addition' });
+    });
+  }
+
+  const results: NameCorrectionSuggestion[] = [];
+
+  const luckyCompounds = [10, 14, 15, 19, 21, 23, 24, 27, 32, 33, 37, 41, 42, 45, 46, 51];
+  const challengingCompounds = [12, 16, 18, 29];
+
+  candidatesMap.forEach((meta, candidateName) => {
+    if (candidateName === trimmed && candidatesMap.size > 1) return;
+
+    const namank = calculateNamank(candidateName);
+    const chaldeanSingle = namank.chaldean.number;
+    const chaldeanSum = namank.chaldean.rawSum;
+    const pythagoreanSingle = namank.pythagorean.number;
+    const pythagoreanSum = namank.pythagorean.rawSum;
+
+    if (challengingCompounds.includes(chaldeanSum)) return;
+
+    let score = 50;
+
+    if (nativeMInfo.friendlyNumbers.includes(chaldeanSingle)) score += 25;
+    else if (nativeMInfo.enemyNumbers.includes(chaldeanSingle)) score -= 30;
+
+    if (nativeBInfo.friendlyNumbers.includes(chaldeanSingle)) score += 25;
+    else if (nativeBInfo.enemyNumbers.includes(chaldeanSingle)) score -= 30;
+
+    if ([1, 3, 5, 6, 9].includes(chaldeanSingle)) score += 15;
+    if (luckyCompounds.includes(chaldeanSum)) score += 20;
+
+    if (primaryGoal.includes('Wealth') || primaryGoal.includes('Financial')) {
+      if ([5, 6, 1].includes(chaldeanSingle)) score += 15;
+      if ([15, 23, 24, 32, 33, 41, 42, 51].includes(chaldeanSum)) score += 15;
+    } else if (primaryGoal.includes('Career') || primaryGoal.includes('Leadership')) {
+      if ([1, 3, 9, 5].includes(chaldeanSingle)) score += 15;
+      if ([10, 19, 21, 27, 37, 45, 46].includes(chaldeanSum)) score += 15;
+    } else if (primaryGoal.includes('Harmony') || primaryGoal.includes('Love')) {
+      if ([2, 3, 6].includes(chaldeanSingle)) score += 15;
+      if ([15, 24, 33, 38, 42].includes(chaldeanSum)) score += 15;
+    }
+
+    const finalScore = Math.min(99, Math.max(35, score));
+
+    let badge = "✨ Harmonic Alignment";
+    if (finalScore >= 90) badge = "🌟 100% Divine Prosperity Match";
+    else if (finalScore >= 80) badge = "💎 Auspicious Wealth & Luck";
+    else if (finalScore >= 70) badge = "👍 Balanced Planetary Vibration";
+    else badge = "⚠️ Moderate Synergy";
+
+    const compoundDesc = CHALDEAN_COMPOUND_MEANINGS[chaldeanSum] || `Compound ${chaldeanSum} (${namank.chaldean.planet})`;
+
+    let benefits = "Harmonizes name vibration with date of birth to eliminate hidden obstacles and boost luck.";
+    if ([1, 10, 19, 37, 46].includes(chaldeanSum) || chaldeanSingle === 1) {
+      benefits = "☀️ Solar Authority: Enhances confidence, leadership status, government favor, and executive promotion.";
+    } else if ([15, 24, 33, 42, 51].includes(chaldeanSum) || chaldeanSingle === 6) {
+      benefits = "💎 Venusian Magnetism: Attracts steady wealth inflow, luxury comfort, artistic success, and romantic charm.";
+    } else if ([14, 23, 32, 41, 50].includes(chaldeanSum) || chaldeanSingle === 5) {
+      benefits = "💬 Mercury Intelligence: Accelerates business trade, sharp decision-making, client footfall & financial liquidity.";
+    } else if ([21, 30, 39].includes(chaldeanSum) || chaldeanSingle === 3) {
+      benefits = "🪐 Jupiter Expansion: Brings wisdom, academic victory, wealth multiplication & respected social repute.";
+    } else if ([27, 36, 45].includes(chaldeanSum) || chaldeanSingle === 9) {
+      benefits = "🔥 Mars Courage: Provides physical vigor, victory over competition, property growth & high drive.";
+    }
+
+    results.push({
+      originalName,
+      suggestedName: candidateName,
+      modificationType: meta.type,
+      modificationCategory: meta.category,
+      chaldeanNumber: chaldeanSingle,
+      chaldeanRawSum: chaldeanSum,
+      pythagoreanNumber: pythagoreanSingle,
+      pythagoreanRawSum: pythagoreanSum,
+      planet: namank.chaldean.planet,
+      rulerSymbol: namank.chaldean.symbol,
+      compoundVibration: compoundDesc,
+      harmonyScore: finalScore,
+      harmonyBadge: badge,
+      benefits
+    });
+  });
+
+  return results
+    .sort((a, b) => b.harmonyScore - a.harmonyScore)
+    .slice(0, 8);
+}
+
 export interface CompatibilityResult {
   score: number;
   rating: string;

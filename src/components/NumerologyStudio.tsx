@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Award, Sparkles, User, Users, Heart, Shield, CheckCircle2, 
-  AlertCircle, Send, RefreshCw, Star, ArrowRight, Briefcase, Smile 
+  AlertCircle, Send, RefreshCw, Star, ArrowRight, Briefcase, Smile,
+  Edit3, PlusCircle, Repeat, Check, Zap, TrendingUp, Copy, Sliders
 } from 'lucide-react';
 import { 
   calculateMulank, 
   calculateBhagyank, 
   calculateNamank, 
   calculateCompatibility, 
+  generateNameCorrections,
+  NameCorrectionSuggestion,
   PLANETARY_NUMEROLOGY_MAP 
 } from '../utils/numerology';
 
@@ -29,6 +32,11 @@ export const NumerologyStudio: React.FC<NumerologyStudioProps> = ({
   const [currentBusinessName, setCurrentBusinessName] = useState<string>(activeProfileName || 'Native');
   const [favNumber, setFavNumber] = useState<string>('7');
   const [analysisFocus, setAnalysisFocus] = useState<string>('Name Spelling Correction & Vibration');
+
+  // State for Name Alphabet Correction Engine
+  const [correctionPrimaryGoal, setCorrectionPrimaryGoal] = useState<string>('Wealth & Financial Growth');
+  const [correctionFilterCategory, setCorrectionFilterCategory] = useState<'All' | 'Addition' | 'Substitution' | 'Doubling'>('All');
+  const [copiedSpelling, setCopiedSpelling] = useState<string | null>(null);
 
   // State for Partner Compatibility
   const [partnerSource, setPartnerSource] = useState<'family' | 'custom'>('family');
@@ -71,6 +79,36 @@ export const NumerologyStudio: React.FC<NumerologyStudioProps> = ({
     partnerBhagyank.number,
     relationType
   );
+
+  // Generate suggested corrections based on targetName, nativeMulank, nativeBhagyank, and goal
+  const suggestedCorrections = generateNameCorrections(
+    targetName || activeProfileName || 'Native',
+    nativeMulank.number,
+    nativeBhagyank.number,
+    correctionPrimaryGoal
+  );
+
+  const handleApplySuggestedSpelling = (suggestion: NameCorrectionSuggestion) => {
+    setTargetName(suggestion.suggestedName);
+    setCurrentBusinessName(suggestion.suggestedName);
+    setCopiedSpelling(suggestion.suggestedName);
+    setTimeout(() => setCopiedSpelling(null), 2500);
+  };
+
+  const handleConsultSelectedCorrection = (suggestion: NameCorrectionSuggestion) => {
+    const prompt = `I would like a detailed Vedic & Chaldean Numerology analysis for a suggested name spelling correction:
+Original Name: '${activeProfileName || targetName}'
+Proposed Corrected Spelling: '${suggestion.suggestedName}'
+Alphabet Modification: ${suggestion.modificationType} (${suggestion.modificationCategory})
+Native DOB: ${activeProfileDob} -> Mulank ${nativeMulank.number} (${nativeMulank.planet}), Bhagyank ${nativeBhagyank.number} (${nativeBhagyank.planet})
+New Chaldean Namank: ${suggestion.chaldeanNumber} (${suggestion.planet})
+Compound Vibration: ${suggestion.compoundVibration}
+Harmony Rating: ${suggestion.harmonyBadge} (${suggestion.harmonyScore}%)
+Primary Life Goal: ${correctionPrimaryGoal}
+
+Please analyze this proposed name spelling. Confirm if this alphabet addition/substitution provides optimal planetary alignment, explain its long-term impact on fortune and financial prosperity, recommend signature modification rules, and outline any consecration or activation ritual for adoption.`;
+    onSendMessage(prompt);
+  };
 
   const handleSendNativeReport = () => {
     const prompt = `Conduct a comprehensive Chaldean & Pythagorean Numerology consultation for Native: '${activeProfileName}' (DOB: ${activeProfileDob}).
@@ -271,13 +309,174 @@ Please explain the emotional, practical, and karmic dynamics of this ${relationT
         </div>
       </div>
 
-      {/* SECTION 2: DIVINE COMPATIBILITY CALCULATOR (FAMILY, FRIENDS, BUSINESS PARTNERS) */}
+      {/* SECTION 2: NAME ALPHABET ADDITION & SUBSTITUTION CORRECTION ENGINE */}
+      <div className="bg-gradient-to-br from-amber-100/90 via-orange-50 to-amber-50 p-3.5 rounded-2xl border-2 border-amber-300 shadow-xs space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200/90 pb-2.5">
+          <div>
+            <h4 className="text-xs font-black uppercase tracking-wider text-amber-950 flex items-center gap-1.5">
+              <Zap size={16} className="text-saffron fill-saffron" />
+              <span>2. Name Alphabet Addition & Substitution Correction Engine</span>
+            </h4>
+            <p className="text-[11px] text-stone-700 font-medium">
+              Suggests lucky alphabet additions or substitutions in <strong className="text-amber-950 underline decoration-saffron">{targetName || 'Name'}</strong> to achieve maximum luck, financial prosperity, and planetary harmony with Mulank ({nativeMulank.number}) & Bhagyank ({nativeBhagyank.number}).
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-black uppercase bg-saffron text-white px-2.5 py-1 rounded-lg shadow-2xs">
+              Chaldean Compound Optimizer
+            </span>
+          </div>
+        </div>
+
+        {/* Goal Selector & Filter Tabs */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 items-center bg-white/90 p-2.5 rounded-xl border border-amber-200">
+          <div>
+            <label className="text-[10px] font-bold text-stone-700 block mb-0.5 flex items-center gap-1">
+              <TrendingUp size={12} className="text-saffron" />
+              <span>Primary Prosperity & Luck Goal:</span>
+            </label>
+            <select
+              value={correctionPrimaryGoal}
+              onChange={(e) => setCorrectionPrimaryGoal(e.target.value)}
+              className="w-full bg-stone-50 border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-black text-amber-950 cursor-pointer focus:outline-none focus:border-saffron"
+            >
+              <option value="Wealth & Financial Growth">💎 Wealth & Financial Cash Flow (Target 5, 6, 1)</option>
+              <option value="Career & Leadership">☀️ Executive Career & Public Status (Target 1, 3, 9)</option>
+              <option value="Love, Marriage & Relationship">💞 Romantic Harmony & Charm (Target 6, 3, 2)</option>
+              <option value="Health, Mind & Peace">🧘 Spiritual Peace & Mental Clarity (Target 7, 3, 2)</option>
+            </select>
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="text-[10px] font-bold text-stone-700 block mb-0.5">Filter Alphabet Modification Type:</label>
+            <div className="flex flex-wrap gap-1 text-xs font-bold">
+              {[
+                { id: 'All', label: '⚡ All Variations', icon: Sparkles },
+                { id: 'Addition', label: '➕ Alphabet Addition', icon: PlusCircle },
+                { id: 'Substitution', label: '🔀 Alphabet Substitution', icon: Repeat },
+                { id: 'Doubling', label: '♊ Letter Doubling', icon: Edit3 }
+              ].map((cat) => {
+                const IconComponent = cat.icon;
+                const active = correctionFilterCategory === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setCorrectionFilterCategory(cat.id as any)}
+                    className={`px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 cursor-pointer text-[11px] ${
+                      active
+                        ? 'bg-amber-600 text-white shadow-2xs font-black'
+                        : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                    }`}
+                  >
+                    <IconComponent size={12} />
+                    <span>{cat.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Suggested Spellings Grid */}
+        {suggestedCorrections.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+            {suggestedCorrections
+              .filter(s => correctionFilterCategory === 'All' || s.modificationCategory === correctionFilterCategory)
+              .map((suggestion, idx) => {
+                const isSelected = targetName === suggestion.suggestedName;
+                return (
+                  <div
+                    key={idx}
+                    className={`p-3 rounded-xl border transition-all flex flex-col justify-between ${
+                      isSelected
+                        ? 'bg-amber-50 border-saffron ring-2 ring-saffron/30 shadow-md'
+                        : 'bg-white border-amber-200 hover:border-amber-400 shadow-2xs'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-1 mb-1.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-base">{suggestion.rulerSymbol}</span>
+                          <span className="text-xs font-black text-amber-950 tracking-wide bg-amber-100 px-2 py-0.5 rounded-lg border border-amber-300">
+                            {suggestion.suggestedName}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300">
+                          {suggestion.harmonyBadge}
+                        </span>
+                      </div>
+
+                      <div className="text-[11px] text-stone-700 font-bold mb-2 flex items-center gap-1.5 bg-stone-50 p-1.5 rounded-lg border border-slate-200">
+                        <Zap size={13} className="text-saffron shrink-0" />
+                        <span><strong className="text-amber-900">Alphabet Change:</strong> {suggestion.modificationType}</span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-1.5 text-[10px] mb-2 text-center font-bold">
+                        <div className="bg-amber-50/80 p-1 rounded-lg border border-amber-200">
+                          <span className="text-stone-500 uppercase block text-[9px]">Chaldean Namank</span>
+                          <span className="text-xs font-black text-amber-950">{suggestion.chaldeanNumber} ({suggestion.planet.split(' ')[0]})</span>
+                          <span className="text-[9px] text-amber-800 block font-semibold">Sum: {suggestion.chaldeanRawSum}</span>
+                        </div>
+                        <div className="bg-amber-50/80 p-1 rounded-lg border border-amber-200">
+                          <span className="text-stone-500 uppercase block text-[9px]">Pythagorean</span>
+                          <span className="text-xs font-black text-amber-950">{suggestion.pythagoreanNumber}</span>
+                          <span className="text-[9px] text-stone-600 block font-semibold">Sum: {suggestion.pythagoreanRawSum}</span>
+                        </div>
+                      </div>
+
+                      <p className="text-[11px] text-stone-800 font-semibold mb-1 flex items-start gap-1">
+                        <span className="text-saffron font-black shrink-0">✨ Vibration:</span>
+                        <span>{suggestion.compoundVibration}</span>
+                      </p>
+
+                      <p className="text-[10px] text-stone-600 font-medium italic bg-stone-50 p-1.5 rounded-md border border-slate-100">
+                        {suggestion.benefits}
+                      </p>
+                    </div>
+
+                    <div className="pt-2.5 mt-2 border-t border-slate-100 flex items-center justify-between gap-1.5 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => handleApplySuggestedSpelling(suggestion)}
+                        className={`px-2.5 py-1.5 rounded-lg font-extrabold text-[11px] transition-all flex items-center gap-1 cursor-pointer ${
+                          isSelected
+                            ? 'bg-emerald-600 text-white shadow-2xs'
+                            : 'bg-stone-100 text-stone-800 hover:bg-amber-100 border border-stone-300'
+                        }`}
+                      >
+                        {isSelected ? <Check size={12} /> : <Sliders size={12} />}
+                        <span>{isSelected ? 'Applied to Engine' : 'Test This Spelling'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleConsultSelectedCorrection(suggestion)}
+                        className="bg-saffron hover:bg-orange-600 text-white font-black px-2.5 py-1.5 rounded-lg text-[11px] shadow-2xs transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        <Sparkles size={12} />
+                        <span>Consult AI Astrologer</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        ) : (
+          <div className="text-center py-4 text-xs text-stone-600 bg-white/80 rounded-xl border border-amber-200">
+            Enter a valid name above to auto-generate alphabet addition & substitution suggestions.
+          </div>
+        )}
+      </div>
+
+      {/* SECTION 3: DIVINE COMPATIBILITY CALCULATOR (FAMILY, FRIENDS, BUSINESS PARTNERS) */}
       <div className="pt-3 border-t-2 border-dashed border-amber-300 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h4 className="text-xs font-black uppercase tracking-wider text-amber-950 flex items-center gap-1.5">
               <Users size={15} className="text-saffron" />
-              <span>2. Divine Compatibility Calculator (Family, Friends & Business Partners)</span>
+              <span>3. Divine Compatibility Calculator (Family, Friends & Business Partners)</span>
             </h4>
             <p className="text-[11px] text-stone-600">
               Evaluate planetary harmony between your Mulank ({nativeMulank.number}) & Bhagyank ({nativeBhagyank.number}) with any partner.
