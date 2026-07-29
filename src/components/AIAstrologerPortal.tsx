@@ -167,6 +167,13 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
         timestamp: new Date().toLocaleTimeString()
       }
     ],
+    'Marriage Match Making (North & South Indian Systems)': [
+      {
+        role: 'ai',
+        text: "💑 **Welcome to Vedic Marriage Match Making & Compatibility Studio.**\n\nWe provide authoritative compatibility evaluations using both **South Indian (Dasha Porutham / Thirumana Porutham)** and **North Indian (Ashta Koota - 36 Gunas)** systems.\n\n✨ **South Indian System**: Evaluates 10 & 12 Poruthams (Dina, Gana, Mahendra, Stree Deergam, Yoni, Rasi, Rasi Adhipathi, Vasya, Rajju, Vedha), Sevvai (Kuja) Dosham, Papa Samyam (malefic point balance), and Dasha Sandhi.\n\n✨ **North Indian System**: Evaluates Ashta Koota (36 Gunas), Manglik Dosha, and Bhakoot/Nadi Dosha cancellations.\n\n✨ **Ask a match making question below or select a preset prompt!**",
+        timestamp: new Date().toLocaleTimeString()
+      }
+    ],
     'Shubh Muhurta & Travel Guidance': [
       {
         role: 'ai',
@@ -622,6 +629,7 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
 
   const analysisModes = [
     { name: 'Vedic & Family Q&A', icon: Star, desc: 'General horoscope, career, family harmony & marriage' },
+    { name: 'Marriage Match Making (North & South Indian Systems)', icon: Heart, desc: 'South Indian Dasha Porutham (10/12 Poruthams, Rajju, Sevvai/Kuja Dosham, Papa Samyam) & North Indian Ashta Koota' },
     { name: 'Medical Astrology & Vedic Remedies', icon: HeartPulse, desc: 'Health analysis, ailment history, 6th/8th house malefic lords & natural Ayurvedic remedies as per Vedic texts' },
     { name: 'Shubh Muhurta & Travel Guidance', icon: Calendar, desc: 'Auspicious dates for Marriage, Griha Pravesh, Business, Disha Shool & travel remedies' },
     { name: 'Planetary Transits (Gochar Effects)', icon: Globe, desc: 'Shani Sade Sati & Dhaiya, Guru Transit, Rahu-Ketu axis, Gochar house impacts & remedies' },
@@ -638,6 +646,12 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
   ];
 
   const quickPromptsByMode: Record<string, Array<{ label: string; prompt: string }>> = {
+    'Marriage Match Making (North & South Indian Systems)': [
+      { label: '💍 South Indian Dasha Porutham (Thirumana Porutham)', prompt: 'Perform a complete South Indian Marriage Match Making analysis evaluating all 10 & 12 Poruthams (Dina, Gana, Mahendra, Stree Deergam, Yoni, Rasi, Rasi Adhipathi, Vasya, Rajju, Vedha) for compatibility between groom and bride.' },
+      { label: '🛡️ South Indian Sevvai (Kuja) Dosham & Papa Samyam', prompt: 'Analyze Sevvai (Mars) placement in both birth charts and calculate Papa Samyam (malefic point balance from Lagna, Moon, and Venus) to verify marital harmony and longevity.' },
+      { label: '📜 South Indian Rajju & Vedha Porutham Check', prompt: 'Verify Rajju Porutham (Mangalya Valam longevity - Siras, Kanta, Uru, Nabhi, Pada) and Vedha Porutham (elimination of star afflictions) between bride and groom nakshatras.' },
+      { label: '🔱 North Indian Ashta Koota Guna Milan (36 Gunas)', prompt: 'Calculate North Indian Ashta Koota Guna Milan score out of 36 (Varna, Vashya, Tara, Yoni, Maitri, Gana, Bhakoot, Nadi) and Manglik Dosha status.' }
+    ],
     'Medical Astrology & Vedic Remedies': [
       { label: '🩺 Complete Medical Astrology Birth Chart Diagnosis', prompt: 'Perform a comprehensive Medical Astrology analysis based on my birth details. Identify 6th/8th/12th house planetary afflictions, Roga Karaka planets, current Dasha influences, and recommend natural Vedic remedies.' },
       { label: '🌿 Natural Ayurvedic & Herbal Remedies', prompt: 'What natural Ayurvedic herbs, dietary adjustments, and lifestyle changes are prescribed according to classical Vedic texts for pacifying my currently afflicted health planets?' },
@@ -2161,11 +2175,17 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                 </div>
               )}
               {analysisMode === 'Ramal Shastra (Vedic Dice)' && (
-                <div className="p-4 bg-gradient-to-r from-amber-950 via-stone-900 to-amber-950 text-white border-b border-amber-500/40 shrink-0 space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div 
+                  className="p-5 text-amber-950 border-b-2 border-amber-500/60 shrink-0 space-y-4 relative bg-cover bg-center shadow-xl"
+                  style={{ backgroundImage: "url('/gold_background.jpg')" }}
+                >
+                  {/* Subtle golden radiance overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-amber-900/20 via-transparent to-amber-950/30 pointer-events-none" />
+
+                  <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-stone-950/85 backdrop-blur-md p-3.5 rounded-2xl border-2 border-amber-400/60 shadow-lg">
                     <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 bg-amber-400 rounded-full animate-pulse" />
-                      <h4 className="text-xs font-black uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+                      <span className="w-3 h-3 bg-amber-400 rounded-full animate-pulse shadow-md shadow-amber-400/50" />
+                      <h4 className="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-300 flex items-center gap-2">
                         🎲 Vedic Ramal Shastra Divination Studio • 16 Primary Shakals
                       </h4>
                     </div>
@@ -2175,7 +2195,7 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                           const randomIdx = Math.floor(Math.random() * RAMAL_SHAKALS.length);
                           setRamalSelectedShakal(RAMAL_SHAKALS[randomIdx].id);
                         }}
-                        className="text-[11px] bg-gradient-to-r from-amber-500 to-saffron hover:from-amber-600 hover:to-orange-600 text-white px-3 py-1 rounded-xl shadow transition-all font-bold flex items-center gap-1.5 cursor-pointer"
+                        className="text-xs bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-stone-950 px-4 py-1.5 rounded-xl shadow-lg transition-all font-black flex items-center gap-1.5 cursor-pointer transform hover:scale-105 active:scale-95"
                       >
                         🎲 Cast Sacred Pasa (Random Dice)
                       </button>
@@ -2183,7 +2203,7 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                   </div>
 
                   {/* Demonstration Gallery Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-black/40 p-2.5 rounded-2xl border border-amber-500/30">
+                  <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-3 bg-stone-950/85 backdrop-blur-md p-3 rounded-2xl border-2 border-amber-400/60 shadow-lg">
                     {/* Image 1: Traditional Brass Ramal Dice */}
                     <div 
                       onClick={() => setActiveImageModal({
@@ -2191,9 +2211,9 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                         title: 'Authentic Sacred Brass Ramal Pasas (Traditional Dice)',
                         desc: 'Sacred rectangular brass sticks (Pasas) marked with 1, 2, 3, and 4 dots. Cast in pairs by the Ramal Daivajna to determine the 4 elemental rows (Fire, Air, Water, Earth) forming each geomantic figure.'
                       })}
-                      className="group relative overflow-hidden rounded-xl border border-amber-500/30 bg-stone-900 cursor-pointer transition-all hover:border-amber-400 hover:shadow-lg flex items-center gap-3 p-2"
+                      className="group relative overflow-hidden rounded-xl border border-amber-500/50 bg-stone-900/90 cursor-pointer transition-all hover:border-amber-300 hover:shadow-amber-500/20 hover:shadow-xl flex items-center gap-3 p-2.5"
                     >
-                      <div className="w-20 h-16 rounded-lg overflow-hidden shrink-0 border border-amber-400/40 relative">
+                      <div className="w-20 h-16 rounded-lg overflow-hidden shrink-0 border border-amber-400/60 relative shadow-inner">
                         <img 
                           src="/ramal_dice_brass.jpg" 
                           alt="Authentic Brass Ramal Pasas" 
@@ -2209,7 +2229,7 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                         <h5 className="text-xs font-bold text-stone-100 group-hover:text-amber-200 transition-colors line-clamp-1">
                           Vedic Divination Dice Sticks
                         </h5>
-                        <p className="text-[10px] text-amber-200/70 line-clamp-1">
+                        <p className="text-[10px] text-amber-200/80 line-clamp-1">
                           Click to inspect authentic casting dice
                         </p>
                       </div>
@@ -2222,9 +2242,9 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                         title: 'Ramal Shastra Geomancy Symbols & Shakals Matrix Chart',
                         desc: 'Classical master chart table displaying the 7 planetary coordinates (s, c, m, b, g, v, t) and the corresponding geometric symbol sequences (red triangles, yellow dots, black squares, bowls) corresponding to the 16 primary Shakals.'
                       })}
-                      className="group relative overflow-hidden rounded-xl border border-amber-500/30 bg-stone-900 cursor-pointer transition-all hover:border-amber-400 hover:shadow-lg flex items-center gap-3 p-2"
+                      className="group relative overflow-hidden rounded-xl border border-amber-500/50 bg-stone-900/90 cursor-pointer transition-all hover:border-amber-300 hover:shadow-amber-500/20 hover:shadow-xl flex items-center gap-3 p-2.5"
                     >
-                      <div className="w-20 h-16 rounded-lg overflow-hidden shrink-0 border border-amber-400/40 relative">
+                      <div className="w-20 h-16 rounded-lg overflow-hidden shrink-0 border border-amber-400/60 relative shadow-inner">
                         <img 
                           src="/ramal_shakal_chart.jpg" 
                           alt="Ramal Shakals Symbol Chart" 
@@ -2240,22 +2260,22 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                         <h5 className="text-xs font-bold text-stone-100 group-hover:text-amber-200 transition-colors line-clamp-1">
                           Geomancy Symbol Reference
                         </h5>
-                        <p className="text-[10px] text-amber-200/70 line-clamp-1">
+                        <p className="text-[10px] text-amber-200/80 line-clamp-1">
                           Click to inspect 7-coordinate symbol grid
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-black/30 p-3 rounded-2xl border border-amber-500/20">
+                  <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-3 bg-stone-950/85 backdrop-blur-md p-3.5 rounded-2xl border-2 border-amber-400/60 shadow-lg">
                     <div className="md:col-span-2">
-                      <label className="text-[10px] font-bold text-amber-200 uppercase tracking-wider block mb-1">
+                      <label className="text-[10px] font-black text-amber-300 uppercase tracking-wider block mb-1">
                         Select / Cast from the 16 Classical Shastra Figures (Shakals):
                       </label>
                       <select
                         value={ramalSelectedShakal}
                         onChange={(e) => setRamalSelectedShakal(e.target.value)}
-                        className="w-full bg-stone-900 border border-amber-500/50 rounded-xl px-3 py-1.5 text-xs font-bold text-amber-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400"
+                        className="w-full bg-stone-900 border-2 border-amber-500/60 rounded-xl px-3 py-1.5 text-xs font-bold text-amber-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400"
                       >
                         {RAMAL_SHAKALS.map((shakal) => (
                           <option key={shakal.id} value={shakal.id}>
@@ -2265,13 +2285,13 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-amber-200 uppercase tracking-wider block mb-1">
+                      <label className="text-[10px] font-black text-amber-300 uppercase tracking-wider block mb-1">
                         Inquiry Focus Area:
                       </label>
                       <select
                         value={ramalQuestionFocus}
                         onChange={(e) => setRamalQuestionFocus(e.target.value)}
-                        className="w-full bg-stone-900 border border-amber-500/50 rounded-xl px-2.5 py-1.5 text-xs font-bold text-amber-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400"
+                        className="w-full bg-stone-900 border-2 border-amber-500/60 rounded-xl px-2.5 py-1.5 text-xs font-bold text-amber-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400"
                       >
                         <option value="General Future & Auspicious Outcome">General Future & Outcome</option>
                         <option value="Career Advancement & Financial Success">Career & Financial Success</option>
@@ -2287,10 +2307,10 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                   {(() => {
                     const activeShakal = RAMAL_SHAKALS.find(s => s.id === ramalSelectedShakal) || RAMAL_SHAKALS[0];
                     return (
-                      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-gradient-to-r from-amber-900/40 via-stone-900/60 to-amber-900/40 p-3 rounded-2xl border border-amber-400/30">
+                      <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-3 bg-stone-950/90 backdrop-blur-md p-3.5 rounded-2xl border-2 border-amber-400/60 shadow-xl">
                         <div className="flex items-center gap-4">
-                          <div className="bg-stone-950 px-3 py-2 rounded-xl border border-amber-500/40 flex flex-col items-center justify-center gap-0.5 shadow-inner min-w-[70px]">
-                            <span className="text-[9px] font-bold text-amber-400 uppercase tracking-widest">Shakal</span>
+                          <div className="bg-stone-900 px-3 py-2 rounded-xl border border-amber-500/60 flex flex-col items-center justify-center gap-0.5 shadow-inner min-w-[70px]">
+                            <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest">Shakal</span>
                             <div className="font-mono text-sm font-black text-amber-200 tracking-widest flex flex-col items-center">
                               {activeShakal.dots.map((row, idx) => (
                                 <span key={idx} className="leading-tight">{row}</span>
@@ -2300,15 +2320,15 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-sm font-black text-white">{activeShakal.name}</span>
-                              <span className="text-[10px] bg-amber-500/20 text-amber-300 font-bold px-2 py-0.5 rounded-full border border-amber-400/30">
+                              <span className="text-[10px] bg-amber-500/20 text-amber-300 font-extrabold px-2 py-0.5 rounded-full border border-amber-400/40">
                                 {activeShakal.ruler}
                               </span>
-                              <span className="text-[10px] bg-stone-800 text-stone-300 font-medium px-2 py-0.5 rounded-full">
+                              <span className="text-[10px] bg-stone-800 text-stone-200 font-bold px-2 py-0.5 rounded-full">
                                 {activeShakal.element}
                               </span>
                             </div>
-                            <p className="text-xs text-amber-100/90 mt-1 font-medium leading-tight">
-                              <span className="text-amber-400 font-bold">Sastra Nature:</span> {activeShakal.nature}
+                            <p className="text-xs text-stone-200 mt-1 font-medium leading-tight">
+                              <span className="text-amber-400 font-black">Sastra Nature:</span> {activeShakal.nature}
                             </p>
                           </div>
                         </div>
@@ -2317,9 +2337,9 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                           onClick={() => {
                             handleSendMessage(`I have cast the Ramal Shastra Vedic Dice (Pasa). The resulting geomantic figure is "${activeShakal.name}" with 4-row structure [${activeShakal.dots.join(', ')}], ruled by ${activeShakal.ruler} (${activeShakal.element}). My inquiry focus is: ${ramalQuestionFocus}. Please interpret this Shakal according to classical Ramal Sastra principles, explain whether this represents Dakhil (Incoming/Gain), Kharij (Outgoing/Release), or Thabit (Stable), give an immediate prediction for my situation, and suggest elemental Vedic remedies.`);
                           }}
-                          className="bg-gradient-to-r from-gold to-amber-500 hover:from-amber-400 hover:to-orange-500 text-deep-blue font-black px-4 py-2 rounded-xl text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer shrink-0 w-full sm:w-auto justify-center"
+                          className="bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-stone-950 font-black px-5 py-2.5 rounded-xl text-xs shadow-lg transition-all flex items-center gap-1.5 cursor-pointer shrink-0 w-full sm:w-auto justify-center transform hover:scale-105 active:scale-95"
                         >
-                          <Sparkles size={15} />
+                          <Sparkles size={16} />
                           <span>Predict with This Shakal</span>
                         </button>
                       </div>

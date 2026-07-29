@@ -1945,6 +1945,7 @@ function Horoscope() {
 function Kundli({ user, onViewPackages }: { user: UserType | null, onViewPackages: () => void }) {
   const [activeTab, setActiveTab] = useState<'making' | 'matching'>('making');
   const [chartStyle, setChartStyle] = useState<'north' | 'south'>('north');
+  const [matchSystem, setMatchSystem] = useState<'north_ashtakoota' | 'south_dashaporutham'>('south_dashaporutham');
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<string | null>(null);
   const [userPackages, setUserPackages] = useState<any[]>([]);
@@ -2004,10 +2005,39 @@ function Kundli({ user, onViewPackages }: { user: UserType | null, onViewPackage
          9. Important Remedies (Mantra, Gemstone recommendations)
          
          Format the report with clear headings and professional tone.`
-      : `Generate a comprehensive and highly detailed Vedic Match Making (Ashta Koota) report for:
+      : matchSystem === 'south_dashaporutham'
+      ? `Generate a comprehensive and highly authoritative South Indian Marriage Match Making (Thirumana Porutham / Dasha Porutham) report for:
+         Boy / Groom: ${formData.name}, DOB: ${formData.dob}, TOB: ${formData.tob}, POB: ${formData.pob}
+         Girl / Bride: ${formData.partnerName}, DOB: ${formData.partnerDob}, TOB: ${formData.partnerTob}, POB: ${formData.partnerPob}
+         Chart Style: South Indian Chart
+         
+         Please evaluate the match according to classical South Indian Jyotisha principles and provide:
+         1. Nakshatra & Rashi Details for both Groom & Bride.
+         2. 10 & 12 Porutham Analysis with individual scores and pass/fail verdicts:
+            - Dina Porutham (Health & Well-being)
+            - Gana Porutham (Temperament & Mental Harmony)
+            - Mahendra Porutham (Progeny, Wealth & Lineage)
+            - Stree Deergam Porutham (Longevity & Prosperity of Bride)
+            - Yoni Porutham (Physical & Sexual Compatibility)
+            - Rasi Porutham (Family Harmony & Prosperity)
+            - Rasi Adhipathi Porutham (Planetary Lord Friendship)
+            - Vasya Porutham (Mutual Attraction & Devotion)
+            - Rajju Porutham (CRITICAL: Mangalya Valam & Marital Bond Longevity - Siras, Kanta, Uru, Nabhi, Pada)
+            - Vedha Porutham (Elimination of Evil Eye & Star Affliction)
+            - Nadi & Gotra Porutham
+         3. Sevvai (Kuja / Manglik) Dosham Analysis:
+            - Mars positions from Lagna, Moon, and Venus for both
+            - Sevvai Dosham cancellation or matching equilibrium
+         4. Papa Samyam (Dosha Point Balance):
+            - Malefic points comparison (Mars, Saturn, Rahu, Ketu, Sun)
+         5. Dasha Sandhi Check (Overlapping major Dasha periods at marriage time).
+         6. Final South Indian Marriage Compatibility Verdict (Uthama / Madhyama / Adhama) with practical Vedic & Temple Remedies.
+         
+         Format the report with clear headings and professional tone.`
+      : `Generate a comprehensive and highly detailed North Indian Vedic Match Making (Ashta Koota) report for:
          Person 1: ${formData.name}, DOB: ${formData.dob}, TOB: ${formData.tob}, POB: ${formData.pob}
          Person 2: ${formData.partnerName}, DOB: ${formData.partnerDob}, TOB: ${formData.partnerTob}, POB: ${formData.partnerPob}
-         Style: ${chartStyle === 'north' ? 'North Indian' : 'South Indian'}
+         Style: North Indian
          
          Please provide a full analysis including:
          1. Birth Details of both individuals
@@ -2037,7 +2067,15 @@ function Kundli({ user, onViewPackages }: { user: UserType | null, onViewPackage
              - Moon Sign: Taurus (Vrishabha) - You are emotionally stable and value security.
              - Nakshatra: Rohini - You are charming, creative, and have a love for the arts.
              - Planetary Positions: Sun in 10th house indicates career success. Jupiter in 9th house brings good fortune and spiritual growth.`
-          : `Compatibility Analysis for ${formData.name} and ${formData.partnerName}:
+          : matchSystem === 'south_dashaporutham'
+          ? `South Indian Thirumana Porutham (Dasha Porutham) Analysis for ${formData.name} & ${formData.partnerName}:
+             - Overall Porutham Score: 8/10 Poruthams Matched (Uthama / Superior Compatibility)
+             - Rajju Porutham: PASSED (No Siras/Kanta/Uru/Nabhi/Pada Rajju affliction - Ensures marital longevity & Mangalya Valam)
+             - Vedha Porutham: PASSED (No mutual star opposition)
+             - Sevvai (Kuja) Dosham: BALANCED (Both charts have neutral/cancelled Mars placement)
+             - Papa Samyam: Matched within acceptable tolerance limits
+             - Final Verdict: Highly auspicious match recommended for Marriage (Kalyanam).`
+          : `North Indian Ashta Koota Analysis for ${formData.name} and ${formData.partnerName}:
              - Guna Milan Score: 28/36 (Excellent Compatibility)
              - Manglik Dosha: Both are Non-Manglik, ensuring a smooth marital life.
              - Verdict: This is a highly compatible match with strong emotional and spiritual bonding.`;
@@ -2199,6 +2237,51 @@ function Kundli({ user, onViewPackages }: { user: UserType | null, onViewPackage
                     <label className="text-[10px] font-bold text-slate-500 uppercase">Birth Place</label>
                     <input name="partnerPob" value={formData.partnerPob} onChange={handleInputChange} type="text" className="w-full bg-stone-50 border border-slate-200 rounded-xl px-4 py-2 text-sm" placeholder="City, State, Country" required />
                   </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'matching' && (
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <label className="text-[10px] font-bold text-slate-500 uppercase block">
+                  Match Making System (Compatibility Method)
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => { setMatchSystem('south_dashaporutham'); setChartStyle('south'); }}
+                    className={`p-3 rounded-2xl border text-left transition-all ${
+                      matchSystem === 'south_dashaporutham'
+                        ? 'bg-amber-500/10 border-amber-500 ring-2 ring-amber-400/30 text-amber-950 font-bold'
+                        : 'bg-stone-50 border-slate-200 text-slate-600 hover:bg-stone-100'
+                    }`}
+                  >
+                    <span className="text-xs font-black block flex items-center justify-between">
+                      🏛️ South Indian System
+                      {matchSystem === 'south_dashaporutham' && <span className="text-[10px] bg-amber-500 text-white px-2 py-0.5 rounded-full font-extrabold">Active</span>}
+                    </span>
+                    <span className="text-[10px] text-slate-500 block leading-tight mt-1">
+                      10 & 12 Dasha Poruthams, Rajju & Vedha Check, Sevvai (Kuja) Dosham, Papa Samyam & Dasha Sandhi
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => { setMatchSystem('north_ashtakoota'); setChartStyle('north'); }}
+                    className={`p-3 rounded-2xl border text-left transition-all ${
+                      matchSystem === 'north_ashtakoota'
+                        ? 'bg-amber-500/10 border-amber-500 ring-2 ring-amber-400/30 text-amber-950 font-bold'
+                        : 'bg-stone-50 border-slate-200 text-slate-600 hover:bg-stone-100'
+                    }`}
+                  >
+                    <span className="text-xs font-black block flex items-center justify-between">
+                      🔱 North Indian System
+                      {matchSystem === 'north_ashtakoota' && <span className="text-[10px] bg-saffron text-white px-2 py-0.5 rounded-full font-extrabold">Active</span>}
+                    </span>
+                    <span className="text-[10px] text-slate-500 block leading-tight mt-1">
+                      Ashta Koota Guna Milan (36 Gunas), Manglik Dosha Analysis & Bhakoot/Nadi Remedies
+                    </span>
+                  </button>
                 </div>
               </div>
             )}

@@ -4,7 +4,8 @@ import {
   Home, Building2, Factory, Compass, Upload, FileText, Video, Image as ImageIcon,
   CheckCircle2, AlertTriangle, Sparkles, Calendar, User, MapPin, ArrowRight, Trash2,
   Eye, Play, Shield, Star, PhoneCall, Check, Plus, RefreshCw, Info, HelpCircle,
-  Layers, Maximize2, Sun, Droplets, Wind, Flame, Award, Clock, DollarSign, ChevronRight, X
+  Layers, Maximize2, Sun, Droplets, Wind, Flame, Award, Clock, DollarSign, ChevronRight, X,
+  PieChart, BarChart3, Filter
 } from 'lucide-react';
 import { Astrologer, User as UserType } from '../types';
 
@@ -66,6 +67,256 @@ const DIRECTIONS = [
   { name: 'North-West', sanskrit: 'Vayavya', element: 'Air & Support / Travel', lord: 'Vayu / Moon', color: 'bg-cyan-100 text-cyan-800' },
   { name: 'Center', sanskrit: 'Brahmasthan', element: 'Cosmic Ether / Space', lord: 'Lord Brahma', color: 'bg-yellow-100 text-yellow-800' }
 ];
+
+export interface Vastu16ZoneData {
+  code: string;
+  name: string;
+  degreeRange: string;
+  angleCenter: number;
+  attribute: string;
+  element: 'Water' | 'Air' | 'Fire' | 'Earth' | 'Space';
+  deity: string;
+  basePositivity: number;
+  observation: string;
+  remedy: string;
+}
+
+export interface QuantifiedVastu16Zone extends Vastu16ZoneData {
+  positivityPct: number;
+  negativityPct: number;
+  status: 'Highly Positive' | 'Balanced Energy' | 'Mild Deficit' | 'Requires Remedial Cure';
+}
+
+export const VASTU_16_DIRECTIONS_MASTER: Vastu16ZoneData[] = [
+  {
+    code: 'N',
+    name: 'North (Uttara)',
+    degreeRange: '348.75° - 11.25°',
+    angleCenter: 0,
+    attribute: 'Money, Career Growth & New Opportunities',
+    element: 'Water',
+    deity: 'Kubera & Mercury',
+    basePositivity: 88,
+    observation: 'Energy flow controls financial inflows, career progress, and corporate sales leads.',
+    remedy: 'Place a green plant or brass Kubera idol in the North zone to stimulate fresh growth.'
+  },
+  {
+    code: 'NNE',
+    name: 'North-North-East',
+    degreeRange: '11.25° - 33.75°',
+    angleCenter: 22.5,
+    attribute: 'Health, Immunity & Natural Healing',
+    element: 'Water',
+    deity: 'Dhanvantari',
+    basePositivity: 90,
+    observation: 'Governs bodily immunity, energy recovery, and protection from chronic sickness.',
+    remedy: 'Keep medicine boxes or Dhanvantari image here. Avoid red colors or heavy fire items in NNE.'
+  },
+  {
+    code: 'NE',
+    name: 'North-East (Ishanya)',
+    degreeRange: '33.75° - 56.25°',
+    angleCenter: 45,
+    attribute: 'Clarity of Mind, Wisdom & Spiritual Grace',
+    element: 'Water',
+    deity: 'Lord Shiva & Jupiter',
+    basePositivity: 92,
+    observation: 'Supreme spiritual center. Essential for uncluttered decision-making and inner peace.',
+    remedy: 'Keep 100% clean and lightweight. Place a marble Shiva lingam or crystal water bowl.'
+  },
+  {
+    code: 'NEE',
+    name: 'East-North-East (NEE / ENE)',
+    degreeRange: '56.25° - 78.75°',
+    angleCenter: 67.5,
+    attribute: 'Joy, Happiness, Fun & Rejuvenation',
+    element: 'Air',
+    deity: 'Indra / Soma',
+    basePositivity: 86,
+    observation: 'Governs emotional happiness, cheerful environment, and family recreation.',
+    remedy: 'Ideal for family lounge or green plants. Avoid placing toilets or garbage bins in NEE.'
+  },
+  {
+    code: 'E',
+    name: 'East (Purva)',
+    degreeRange: '78.75° - 101.25°',
+    angleCenter: 90,
+    attribute: 'Social Connections, Networking & Influence',
+    element: 'Air',
+    deity: 'Surya (Sun God)',
+    basePositivity: 87,
+    observation: 'Controls social standing, government relations, and broad public repute.',
+    remedy: 'Place a polished brass Sun emblem on the East wall to boost social influence.'
+  },
+  {
+    code: 'ESE',
+    name: 'East-South-East',
+    degreeRange: '101.25° - 123.75°',
+    angleCenter: 112.5,
+    attribute: 'Analytical Thinking & Overcoming Anxiety',
+    element: 'Air',
+    deity: 'Agni-Soma Transit',
+    basePositivity: 72,
+    observation: 'Zone of churning. Over-activity or bedrooms here can create anxiety and overthinking.',
+    remedy: 'Keep a wooden churner or light green decor. Do not place master beds in ESE.'
+  },
+  {
+    code: 'SE',
+    name: 'South-East (Agneya)',
+    degreeRange: '123.75° - 146.25°',
+    angleCenter: 135,
+    attribute: 'Cash Liquidity, Fire Energy & Wealth Flow',
+    element: 'Fire',
+    deity: 'Agni Dev & Venus',
+    basePositivity: 84,
+    observation: 'Governs daily cash liquidity, enthusiasm, and female family health.',
+    remedy: 'Ideal location for kitchen burner or red zero-watt light bulb to keep cash flowing smoothly.'
+  },
+  {
+    code: 'SSE',
+    name: 'South-South-East',
+    degreeRange: '146.25° - 168.75°',
+    angleCenter: 157.5,
+    attribute: 'Confidence, Physical Strength & Zeal',
+    element: 'Fire',
+    deity: 'Ganesh / Skanda',
+    basePositivity: 85,
+    observation: 'Provides courage and stamina to overcome market competition and fear.',
+    remedy: 'Place a Hanuman Chalisa frame or red copper pyramid strip to ignite confidence.'
+  },
+  {
+    code: 'S',
+    name: 'South (Dakshina)',
+    degreeRange: '168.75° - 191.25°',
+    angleCenter: 180,
+    attribute: 'Fame, Brand Reputation & Peaceful Sleep',
+    element: 'Fire',
+    deity: 'Yama & Mars',
+    basePositivity: 81,
+    observation: 'Controls public recognition, brand power, and sound restful sleep.',
+    remedy: 'Keep heavy furniture here. Hang brand awards or red/brown paintings on South wall.'
+  },
+  {
+    code: 'SSW',
+    name: 'South-South-West',
+    degreeRange: '191.25° - 213.75°',
+    angleCenter: 202.5,
+    attribute: 'Expenditure, Waste Disposal & Detoxification',
+    element: 'Earth',
+    deity: 'Nirriti',
+    basePositivity: 68,
+    observation: 'Zone of disposal. Drains energy if bedrooms or safes are located here.',
+    remedy: 'Ideal for toilets or dustbins. If bedroom exists here, use yellow strip on floor skirting.'
+  },
+  {
+    code: 'SW',
+    name: 'South-West (Nairutya)',
+    degreeRange: '213.75° - 236.25°',
+    angleCenter: 225,
+    attribute: 'Relationships, Skill Mastery & Stability',
+    element: 'Earth',
+    deity: 'Rahu / Pitrus',
+    basePositivity: 80,
+    observation: 'Governs master stability, relationship longevity, and core professional skills.',
+    remedy: 'Master bedroom or owner desk belong here. Keep earth tone yellow/golden decor.'
+  },
+  {
+    code: 'WSW',
+    name: 'West-South-West',
+    degreeRange: '236.25° - 258.75°',
+    angleCenter: 247.5,
+    attribute: 'Education, Savings, Knowledge & Memory',
+    element: 'Space',
+    deity: 'Saraswati',
+    basePositivity: 83,
+    observation: 'Controls child academic focus, study retention, and bank savings accumulation.',
+    remedy: 'Place study table, books, or bank locker deposit boxes in WSW for compounding growth.'
+  },
+  {
+    code: 'W',
+    name: 'West (Paschima)',
+    degreeRange: '258.75° - 281.25°',
+    angleCenter: 270,
+    attribute: 'Financial Profits, Capital Gains & Fulfillment',
+    element: 'Space',
+    deity: 'Varuna & Saturn',
+    basePositivity: 88,
+    observation: 'Directly converts efforts into tangible financial gains and property profits.',
+    remedy: 'Keep a white/silver metal piggy bank or chest in West to seal financial gains.'
+  },
+  {
+    code: 'WNW',
+    name: 'West-North-West',
+    degreeRange: '281.25° - 303.75°',
+    angleCenter: 292.5,
+    attribute: 'Emotional Release, Detox & Stress Relief',
+    element: 'Space',
+    deity: 'Rudra / Vayu',
+    basePositivity: 70,
+    observation: 'Zone of depression and emotional catharsis. Clears mental baggage.',
+    remedy: 'Good for washing machines or storage. Avoid sleeping or working in WNW.'
+  },
+  {
+    code: 'NW',
+    name: 'North-West (Vayavya)',
+    degreeRange: '303.75° - 326.25°',
+    angleCenter: 315,
+    attribute: 'Banking Support, Client Footfall & Legal Aid',
+    element: 'Air',
+    deity: 'Vayu & Moon',
+    basePositivity: 85,
+    observation: 'Regulates smooth loan approvals, investor support, and customer movement.',
+    remedy: 'Hang a 6-rod brass wind chime or place a silver metallic globe to attract support.'
+  },
+  {
+    code: 'NNW',
+    name: 'North-North-West',
+    degreeRange: '326.25° - 348.75°',
+    angleCenter: 337.5,
+    attribute: 'Attraction, Charisma, Charm & Marital Bliss',
+    element: 'Water',
+    deity: 'Rati & Kama',
+    basePositivity: 86,
+    observation: 'Generates personal charisma, customer attraction, and romantic bliss.',
+    remedy: 'Place a pair of love birds or flower vase in NNW to enhance interpersonal charm.'
+  }
+];
+
+export function generate16ZoneEnergyMap(facingDirection: string, primaryConcern: string): QuantifiedVastu16Zone[] {
+  return VASTU_16_DIRECTIONS_MASTER.map((zone) => {
+    let positivity = zone.basePositivity;
+
+    if (zone.name.toLowerCase().includes(facingDirection.toLowerCase()) || zone.code === facingDirection) {
+      positivity += 6;
+    }
+
+    if (primaryConcern.includes('Financial') && ['N', 'SE', 'W', 'WSW'].includes(zone.code)) {
+      positivity += 5;
+    } else if (primaryConcern.includes('Health') && ['NNE', 'NE', 'S'].includes(zone.code)) {
+      positivity += 5;
+    } else if (primaryConcern.includes('Harmony') && ['SW', 'NNW', 'NEE', 'E'].includes(zone.code)) {
+      positivity += 5;
+    } else if (primaryConcern.includes('Business') && ['E', 'NW', 'SE', 'W'].includes(zone.code)) {
+      positivity += 5;
+    }
+
+    const positivityPct = Math.min(98, Math.max(35, positivity));
+    const negativityPct = 100 - positivityPct;
+
+    let status: 'Highly Positive' | 'Balanced Energy' | 'Mild Deficit' | 'Requires Remedial Cure' = 'Highly Positive';
+    if (positivityPct >= 85) status = 'Highly Positive';
+    else if (positivityPct >= 75) status = 'Balanced Energy';
+    else if (positivityPct >= 65) status = 'Mild Deficit';
+    else status = 'Requires Remedial Cure';
+
+    return {
+      ...zone,
+      positivityPct,
+      negativityPct,
+      status
+    };
+  });
+}
 
 const ROOM_TAGS = [
   'Main Entrance / Gate',
@@ -428,6 +679,13 @@ export function VastuConsultancy({ user, onRecharge, onOpenChat }: VastuConsulta
   const [selectedConsultantForBooking, setSelectedConsultantForBooking] = useState<any | null>(null);
   const [bookingMode, setBookingMode] = useState<'video_call' | 'report_audit'>('video_call');
 
+  // 16-Zone Energy Map States
+  const [energyMapFilter, setEnergyMapFilter] = useState<'All' | 'HighPositive' | 'Deficit' | 'Water' | 'Air' | 'Fire' | 'Earth' | 'Space'>('All');
+  const [selected16ZoneCode, setSelected16ZoneCode] = useState<string | null>('NEE');
+  const [energyMapViewMode, setEnergyMapViewMode] = useState<'wheel' | 'grid'>('wheel');
+  const [interactiveCompassType, setInteractiveCompassType] = useState<'8-zone' | '16-zone'>('16-zone');
+  const [active16CompassZone, setActive16CompassZone] = useState<QuantifiedVastu16Zone>(VASTU_16_DIRECTIONS_MASTER[3] as QuantifiedVastu16Zone); // NEE default
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -494,10 +752,21 @@ export function VastuConsultancy({ user, onRecharge, onOpenChat }: VastuConsulta
         statusText = "Favorable Orientation • Energy Balancing Needed";
       }
 
+      const energyMap16Zones = generate16ZoneEnergyMap(facingDirection, primaryConcern);
+      const avgPositivityPct = Math.round(energyMap16Zones.reduce((acc, z) => acc + z.positivityPct, 0) / 16);
+      const avgNegativityPct = 100 - avgPositivityPct;
+      const positiveZonesCount = energyMap16Zones.filter(z => z.positivityPct >= 80).length;
+      const remedialZonesCount = energyMap16Zones.filter(z => z.positivityPct < 80).length;
+
       setAiReport({
         score,
         statusText,
         propertySummary: `${selectedPropertyType} (${totalArea} ${areaUnit}) facing ${facingDirection}. Focused on ${primaryConcern}. Analyzed across ${uploadedMedia.length} uploaded diagrams/media files.`,
+        energyMap16Zones,
+        avgPositivityPct,
+        avgNegativityPct,
+        positiveZonesCount,
+        remedialZonesCount,
         zonalAnalysis: [
           {
             zone: "North-East (Ishanya)",
@@ -1063,6 +1332,344 @@ export function VastuConsultancy({ user, onRecharge, onOpenChat }: VastuConsulta
                   </div>
                 </div>
               </div>
+
+              {/* AUTO-GENERATED 16-ZONE VASTU ENERGY MAP SECTION */}
+              {aiReport.energyMap16Zones && (
+                <div className="bg-stone-900 text-white p-6 sm:p-8 rounded-3xl border-2 border-amber-400/80 shadow-2xl space-y-6">
+                  {/* Energy Map Title & Subtitle */}
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-stone-800 pb-5">
+                    <div>
+                      <div className="inline-flex items-center gap-2 bg-amber-400/20 text-amber-300 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider border border-amber-400/30 mb-2">
+                        <Sparkles size={14} className="animate-spin text-amber-300" /> Auto-Generated 16-Zone Vastu Energy Map
+                      </div>
+                      <h4 className="font-serif font-black text-2xl sm:text-3xl text-white">
+                        Quantified Directional & Energy Vibration Audit
+                      </h4>
+                      <p className="text-stone-300 text-xs sm:text-sm mt-1 leading-relaxed max-w-3xl">
+                        Calculated across all 16 classical Vedic angular directions (N, NNE, NE, NEE/ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW). Each zone is quantified for Positivity % and Negativity % with specific elemental cures.
+                      </p>
+                    </div>
+
+                    {/* View Switcher Controls */}
+                    <div className="flex items-center gap-2 bg-stone-800 p-1.5 rounded-2xl border border-stone-700 shrink-0">
+                      <button
+                        onClick={() => setEnergyMapViewMode('wheel')}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                          energyMapViewMode === 'wheel'
+                            ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-950 shadow-md font-extrabold'
+                            : 'text-stone-300 hover:text-white'
+                        }`}
+                      >
+                        <PieChart size={15} /> 16-Angle Compass Wheel
+                      </button>
+                      <button
+                        onClick={() => setEnergyMapViewMode('grid')}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                          energyMapViewMode === 'grid'
+                            ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-950 shadow-md font-extrabold'
+                            : 'text-stone-300 hover:text-white'
+                        }`}
+                      >
+                        <BarChart3 size={15} /> 16-Zone Matrix Grid
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Metrics Bar */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                    <div className="bg-stone-800/90 p-4 rounded-2xl border border-stone-700/80 text-center space-y-1">
+                      <span className="text-[10px] uppercase font-bold text-stone-400 block tracking-wider">Avg Positivity Score</span>
+                      <strong className="text-2xl font-black text-emerald-400 block">{aiReport.avgPositivityPct}%</strong>
+                      <span className="text-[10px] text-emerald-300/80 font-bold">Positive Vibration</span>
+                    </div>
+
+                    <div className="bg-stone-800/90 p-4 rounded-2xl border border-stone-700/80 text-center space-y-1">
+                      <span className="text-[10px] uppercase font-bold text-stone-400 block tracking-wider">Avg Negativity Friction</span>
+                      <strong className="text-2xl font-black text-rose-400 block">{aiReport.avgNegativityPct}%</strong>
+                      <span className="text-[10px] text-rose-300/80 font-bold">Zonal Energy Deficit</span>
+                    </div>
+
+                    <div className="bg-stone-800/90 p-4 rounded-2xl border border-stone-700/80 text-center space-y-1">
+                      <span className="text-[10px] uppercase font-bold text-stone-400 block tracking-wider">High Positivity Zones</span>
+                      <strong className="text-2xl font-black text-amber-300 block">{aiReport.positiveZonesCount} / 16</strong>
+                      <span className="text-[10px] text-amber-200/80 font-bold">≥ 80% Auspicious</span>
+                    </div>
+
+                    <div className="bg-stone-800/90 p-4 rounded-2xl border border-stone-700/80 text-center space-y-1">
+                      <span className="text-[10px] uppercase font-bold text-stone-400 block tracking-wider">Remedial Cures Needed</span>
+                      <strong className="text-2xl font-black text-cyan-300 block">{aiReport.remedialZonesCount} / 16</strong>
+                      <span className="text-[10px] text-cyan-200/80 font-bold">Non-Demolition Remedies</span>
+                    </div>
+                  </div>
+
+                  {/* Filter Toolbar */}
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-stone-800">
+                    <span className="text-xs font-bold text-stone-400 flex items-center gap-1 mr-2">
+                      <Filter size={13} /> Filter 16 Zones:
+                    </span>
+                    {(['All', 'HighPositive', 'Deficit', 'Water', 'Air', 'Fire', 'Earth', 'Space'] as const).map((filterOpt) => (
+                      <button
+                        key={filterOpt}
+                        onClick={() => setEnergyMapFilter(filterOpt)}
+                        className={`text-xs px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
+                          energyMapFilter === filterOpt
+                            ? 'bg-amber-400 text-stone-950 shadow-md font-black'
+                            : 'bg-stone-800 text-stone-300 hover:bg-stone-700 hover:text-white border border-stone-700'
+                        }`}
+                      >
+                        {filterOpt === 'All' && 'All 16 Directions'}
+                        {filterOpt === 'HighPositive' && 'Highly Positive (≥80%)'}
+                        {filterOpt === 'Deficit' && 'Remedial Needed (<80%)'}
+                        {filterOpt === 'Water' && '💧 Water Element'}
+                        {filterOpt === 'Air' && '💨 Air Element'}
+                        {filterOpt === 'Fire' && '🔥 Fire Element'}
+                        {filterOpt === 'Earth' && '⛰️ Earth Element'}
+                        {filterOpt === 'Space' && '🌌 Space Element'}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* VIEW MODE 1: 16-SECTOR SVG COMPASS WHEEL */}
+                  {energyMapViewMode === 'wheel' && (
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-stone-950/60 p-6 rounded-3xl border border-stone-800">
+                      {/* SVG Wheel Column */}
+                      <div className="lg:col-span-6 flex flex-col items-center justify-center relative">
+                        <div className="relative w-full max-w-[380px] aspect-square flex items-center justify-center">
+                          <svg viewBox="0 0 400 400" className="w-full h-full drop-shadow-2xl">
+                            {/* Outer Degree Ring */}
+                            <circle cx="200" cy="200" r="185" fill="none" stroke="#44403c" strokeWidth="2" strokeDasharray="3 3" />
+                            <circle cx="200" cy="200" r="170" fill="#1c1917" stroke="#d97706" strokeWidth="3" />
+
+                            {/* Render 16 Angled Sectors */}
+                            {aiReport.energyMap16Zones.map((z: QuantifiedVastu16Zone, i: number) => {
+                              const angleCenter = z.angleCenter - 90; // North = -90deg
+                              const angleStart = angleCenter - 11.25;
+                              const angleEnd = angleCenter + 11.25;
+
+                              const radStart = (angleStart * Math.PI) / 180;
+                              const radEnd = (angleEnd * Math.PI) / 180;
+                              const radCenter = (angleCenter * Math.PI) / 180;
+
+                              const R = 162;
+                              const r = 62;
+
+                              const x1 = 200 + R * Math.cos(radStart);
+                              const y1 = 200 + R * Math.sin(radStart);
+                              const x2 = 200 + R * Math.cos(radEnd);
+                              const y2 = 200 + R * Math.sin(radEnd);
+
+                              const ix1 = 200 + r * Math.cos(radStart);
+                              const iy1 = 200 + r * Math.sin(radStart);
+                              const ix2 = 200 + r * Math.cos(radEnd);
+                              const iy2 = 200 + r * Math.sin(radEnd);
+
+                              const pathD = `M ${ix1} ${iy1} L ${x1} ${y1} A ${R} ${R} 0 0 1 ${x2} ${y2} L ${ix2} ${iy2} A ${r} ${r} 0 0 0 ${ix1} ${iy1} Z`;
+
+                              // Label positions
+                              const tx = 200 + 112 * Math.cos(radCenter);
+                              const ty = 200 + 112 * Math.sin(radCenter);
+
+                              const isSelected = selected16ZoneCode === z.code;
+
+                              let fillColor = '#1e293b'; // Slate default
+                              if (z.element === 'Water') fillColor = isSelected ? '#0284c7' : '#0369a1';
+                              if (z.element === 'Air') fillColor = isSelected ? '#0d9488' : '#0f766e';
+                              if (z.element === 'Fire') fillColor = isSelected ? '#e11d48' : '#be123c';
+                              if (z.element === 'Earth') fillColor = isSelected ? '#d97706' : '#b45309';
+                              if (z.element === 'Space') fillColor = isSelected ? '#7c3aed' : '#6d28d9';
+
+                              return (
+                                <g 
+                                  key={z.code} 
+                                  onClick={() => setSelected16ZoneCode(z.code)}
+                                  className="cursor-pointer transition-all hover:opacity-90"
+                                >
+                                  <path
+                                    d={pathD}
+                                    fill={fillColor}
+                                    stroke={isSelected ? '#fbbf24' : '#292524'}
+                                    strokeWidth={isSelected ? '3.5' : '1.5'}
+                                    className="transition-all duration-300"
+                                  />
+                                  <text
+                                    x={tx}
+                                    y={ty}
+                                    fill="#ffffff"
+                                    fontSize="11"
+                                    fontWeight="900"
+                                    textAnchor="middle"
+                                    dominantBaseline="central"
+                                    className="pointer-events-none select-none drop-shadow-md"
+                                  >
+                                    {z.code}
+                                  </text>
+                                </g>
+                              );
+                            })}
+
+                            {/* Center Brahmasthan Hub */}
+                            <circle cx="200" cy="200" r="58" fill="#0f172a" stroke="#fbbf24" strokeWidth="2.5" />
+                            <text x="200" y="193" fill="#fbbf24" fontSize="10" fontWeight="900" textAnchor="middle">
+                              BRAHMASTHAN
+                            </text>
+                            <text x="200" y="208" fill="#e2e8f0" fontSize="9" fontWeight="800" textAnchor="middle">
+                              16-ZONE MAP
+                            </text>
+                          </svg>
+                        </div>
+                        <p className="text-[11px] text-stone-400 mt-2 text-center font-medium">
+                          👈 Click any of the 16 sectors on the compass wheel to inspect zone energy
+                        </p>
+                      </div>
+
+                      {/* Sector Inspection Card Column */}
+                      <div className="lg:col-span-6">
+                        {(() => {
+                          const activeZone = aiReport.energyMap16Zones.find((z: QuantifiedVastu16Zone) => z.code === selected16ZoneCode) || aiReport.energyMap16Zones[0];
+                          return (
+                            <div className="bg-stone-900 p-6 rounded-3xl border-2 border-amber-400/90 shadow-xl space-y-4">
+                              <div className="flex items-start justify-between gap-3 border-b border-stone-800 pb-3">
+                                <div>
+                                  <span className="bg-amber-400/20 text-amber-300 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-amber-400/30">
+                                    {activeZone.degreeRange} • {activeZone.deity}
+                                  </span>
+                                  <h5 className="font-serif font-black text-2xl text-white mt-1">
+                                    {activeZone.name}
+                                  </h5>
+                                </div>
+                                <span className={`px-3 py-1 rounded-full text-xs font-black uppercase shrink-0 ${
+                                  activeZone.status === 'Highly Positive' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' :
+                                  activeZone.status === 'Balanced Energy' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40' :
+                                  'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                                }`}>
+                                  {activeZone.status}
+                                </span>
+                              </div>
+
+                              <div className="space-y-1">
+                                <span className="text-[11px] font-bold text-stone-400 uppercase block">Key Life Attribute:</span>
+                                <p className="text-sm font-extrabold text-amber-300 bg-amber-950/40 p-2.5 rounded-xl border border-amber-800/40">
+                                  ✨ {activeZone.attribute}
+                                </p>
+                              </div>
+
+                              {/* Dual Percentage Gauges */}
+                              <div className="grid grid-cols-2 gap-3 pt-1">
+                                <div className="bg-emerald-950/40 p-3 rounded-2xl border border-emerald-800/40 space-y-1.5">
+                                  <div className="flex items-center justify-between text-xs font-black text-emerald-300">
+                                    <span>Positivity %</span>
+                                    <span>{activeZone.positivityPct}%</span>
+                                  </div>
+                                  <div className="w-full bg-stone-800 h-2.5 rounded-full overflow-hidden">
+                                    <div 
+                                      className="bg-emerald-400 h-full rounded-full transition-all duration-500" 
+                                      style={{ width: `${activeZone.positivityPct}%` }}
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="bg-rose-950/40 p-3 rounded-2xl border border-rose-800/40 space-y-1.5">
+                                  <div className="flex items-center justify-between text-xs font-black text-rose-300">
+                                    <span>Negativity %</span>
+                                    <span>{activeZone.negativityPct}%</span>
+                                  </div>
+                                  <div className="w-full bg-stone-800 h-2.5 rounded-full overflow-hidden">
+                                    <div 
+                                      className="bg-rose-400 h-full rounded-full transition-all duration-500" 
+                                      style={{ width: `${activeZone.negativityPct}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="space-y-1">
+                                <span className="text-[11px] font-bold text-stone-400 uppercase block">Zone Observation:</span>
+                                <p className="text-xs text-stone-300 leading-relaxed bg-stone-800/80 p-3 rounded-xl border border-stone-700 font-medium">
+                                  {activeZone.observation}
+                                </p>
+                              </div>
+
+                              <div className="space-y-1">
+                                <span className="text-[11px] font-bold text-emerald-400 uppercase block">Non-Demolition Remedy:</span>
+                                <p className="text-xs text-emerald-200 leading-relaxed bg-emerald-950/50 p-3 rounded-xl border border-emerald-800/50 font-semibold">
+                                  🛡️ {activeZone.remedy}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* VIEW MODE 2: 16-ZONE MATRIX GRID (OR FILTERED LIST) */}
+                  {(energyMapViewMode === 'grid' || energyMapFilter !== 'All') && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+                      {aiReport.energyMap16Zones
+                        .filter((zone: QuantifiedVastu16Zone) => {
+                          if (energyMapFilter === 'HighPositive') return zone.positivityPct >= 80;
+                          if (energyMapFilter === 'Deficit') return zone.positivityPct < 80;
+                          if (['Water', 'Air', 'Fire', 'Earth', 'Space'].includes(energyMapFilter)) {
+                            return zone.element === energyMapFilter;
+                          }
+                          return true;
+                        })
+                        .map((zone: QuantifiedVastu16Zone) => (
+                          <div 
+                            key={zone.code}
+                            onClick={() => setSelected16ZoneCode(zone.code)}
+                            className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${
+                              selected16ZoneCode === zone.code
+                                ? 'bg-stone-800 border-2 border-amber-400 shadow-lg scale-[1.02]'
+                                : 'bg-stone-800/60 border-stone-700 hover:border-stone-500 hover:bg-stone-800'
+                            }`}
+                          >
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="bg-amber-400 text-stone-950 text-xs font-black px-2.5 py-0.5 rounded-lg">
+                                  {zone.code}
+                                </span>
+                                <span className="text-[10px] text-stone-400 font-mono font-bold">
+                                  {zone.degreeRange}
+                                </span>
+                              </div>
+
+                              <h6 className="font-bold text-white text-sm">
+                                {zone.name}
+                              </h6>
+
+                              <p className="text-[11px] text-amber-200/90 font-medium leading-tight line-clamp-2">
+                                {zone.attribute}
+                              </p>
+
+                              {/* Positivity & Negativity Progress Bars */}
+                              <div className="space-y-1.5 pt-1">
+                                <div className="flex items-center justify-between text-[10px] font-bold">
+                                  <span className="text-emerald-400">Positivity: {zone.positivityPct}%</span>
+                                  <span className="text-rose-400">Negativity: {zone.negativityPct}%</span>
+                                </div>
+                                <div className="w-full bg-stone-900 h-2 rounded-full overflow-hidden flex">
+                                  <div 
+                                    className="bg-emerald-400 h-full" 
+                                    style={{ width: `${zone.positivityPct}%` }}
+                                  />
+                                  <div 
+                                    className="bg-rose-500 h-full" 
+                                    style={{ width: `${zone.negativityPct}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="pt-2 border-t border-stone-700/80 text-[10px] text-emerald-300 font-medium line-clamp-2">
+                              🛡️ {zone.remedy}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Zonal Analysis Table */}
               <div className="space-y-4">

@@ -110,6 +110,10 @@ export const SoftwareTermsModal: React.FC<SoftwareTermsModalProps> = ({
                   <strong className="text-amber-900 font-bold block mb-0.5">📜 Bhrigu Nadi & Numerology</strong>
                   Uses thumb impressions, body markings, and Chaldean/Pythagorean name/birth numbers.
                 </div>
+                <div className="bg-stone-50 border border-stone-200 p-2.5 rounded-xl md:col-span-2">
+                  <strong className="text-amber-900 font-bold block mb-0.5">💍 Marriage Match Making (South & North Indian Systems)</strong>
+                  Supports classical South Indian Dasha Porutham (10 & 12 Poruthams, Rajju, Vedha, Sevvai Dosham & Papa Samyam balance) alongside North Indian Ashta Koota Guna Milan (36 Gunas).
+                </div>
               </div>
             </div>
 

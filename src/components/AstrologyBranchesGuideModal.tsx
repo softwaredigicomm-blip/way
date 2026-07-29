@@ -142,6 +142,17 @@ export const ASTROLOGICAL_BRANCHES_DATA = [
     significance: 'Unique branch of astrology prioritizing practical house-based remedies without complex Vedic rituals.',
     applicability: 'Used when quick relief from persistent obstacles (debts, legal trouble, marriage delays) is needed.',
     fallbackRole: 'Practical remedial shortcut.'
+  },
+  {
+    id: 'south-indian-matchmaking',
+    title: '13. South Indian Marriage Match Making (Dasha Porutham & Papa Samyam)',
+    icon: Compass,
+    color: 'from-amber-600 to-yellow-800',
+    primaryInput: 'Bride & Groom Birth Details (Nakshatra, Rasi, Lagna & Planetary Positions)',
+    uses: 'Evaluating 10 & 12 Poruthams (Dina, Gana, Mahendra, Stree Deergam, Yoni, Rasi, Rasi Adhipathi, Vasya, Rajju, Vedha), Rajju Mangalya Valam, Sevvai (Kuja) Dosham, and Papa Samyam (malefic point balance).',
+    significance: 'Ancient Dravidian & Classical South Indian Thirumana Porutham tradition. Focuses heavily on marital bond longevity (Rajju Porutham) and malefic energy equilibrium (Papa Samyam) beyond standard Guna Milan.',
+    applicability: 'Gold standard in Tamil Nadu, Kerala, Andhra Pradesh, Karnataka, and Telangana for marital compatibility and long life of spouse.',
+    fallbackRole: 'Ensures zero Rajju/Vedha affliction and balanced Sevvai (Mars) Dosham before marriage.'
   }
 ];
 
