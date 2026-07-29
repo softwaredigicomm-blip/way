@@ -3,9 +3,11 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Sparkles, HelpCircle, CheckCircle2, AlertCircle, FileText, 
   Send, ArrowRight, X, Shield, Clock, Award, User, Mail,
-  Briefcase, Heart, Gem, DollarSign, Activity, BookOpen, Home, Compass, Calendar, MapPin
+  Briefcase, Heart, Gem, DollarSign, Activity, BookOpen, Home, Compass, Calendar, MapPin, Scale, Wallet
 } from 'lucide-react';
 import { PaymentGatewayModal, PaymentReceipt } from './PaymentGatewayModal';
+import { SoftwareTermsModal } from './SoftwareTermsModal';
+import { AstrologyBranchesGuideModal } from './AstrologyBranchesGuideModal';
 import { User as UserType } from '../types';
 import jsPDF from 'jspdf';
 
@@ -81,6 +83,8 @@ export const Express3QuestionModal: React.FC<Express3QuestionModalProps> = ({
   // Results
   const [answers, setAnswers] = useState<string[] | null>(null);
   const [reportDate, setReportDate] = useState<string>('');
+  const [showTermsModal, setShowTermsModal] = useState<boolean>(false);
+  const [showBranchesGuide, setShowBranchesGuide] = useState<boolean>(false);
 
   if (!isOpen) return null;
 
@@ -366,6 +370,39 @@ export const Express3QuestionModal: React.FC<Express3QuestionModalProps> = ({
               </motion.div>
             ) : (
               <form onSubmit={handleProceedToPay} className="space-y-8">
+                {/* General Guidelines & Basis Banner */}
+                <div className="bg-gradient-to-r from-amber-50 via-orange-50 to-yellow-50 border-2 border-amber-300 p-4 rounded-2xl space-y-2 text-stone-800 text-xs shadow-xs">
+                  <div className="flex items-start justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2 font-black text-amber-950 text-sm">
+                      <Award size={18} className="text-amber-700 shrink-0" />
+                      <span>General Guidelines & Method Applicability Notice</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowBranchesGuide(true)}
+                        className="bg-amber-200/80 hover:bg-amber-300 text-amber-950 px-2.5 py-1 rounded-lg font-extrabold transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        <BookOpen size={12} /> 12 Branches Guide
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowTermsModal(true)}
+                        className="bg-stone-900 hover:bg-stone-800 text-white px-2.5 py-1 rounded-lg font-extrabold transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        <Scale size={12} /> Usage Terms & T&C
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-stone-700 font-medium leading-relaxed">
+                    📌 <strong>Primary Foundation:</strong> Predictions under this Ask 3 Questions model are primarily generated using your <strong>Birth Details (Date, Time & Place of Birth)</strong>. In case birth details are not accurately available or if you wish to supplement/cross-verify findings using other branches (Prashna Horary, Ramal Shastra, Palmistry, Face Reading, Signature Analysis, Numerology), please select your primary area of interest and provide context below.
+                  </p>
+                  <p className="text-amber-900 font-bold text-[11px] flex items-center gap-1">
+                    <Wallet size={13} className="text-amber-700 shrink-0" />
+                    <span><strong>Wallet / Package Requirement:</strong> This service is usable after purchasing the ₹50 Express Package or maintaining a sufficient wallet balance.</span>
+                  </p>
+                </div>
+
                 {error && (
                   <div className="bg-red-500/10 border border-red-500/20 text-red-600 p-4 rounded-2xl text-xs font-bold flex items-center gap-2.5">
                     <AlertCircle size={18} className="shrink-0" />
@@ -660,6 +697,18 @@ export const Express3QuestionModal: React.FC<Express3QuestionModalProps> = ({
         userWalletBalance={user?.wallet_balance || 0}
         allowWalletPayment={true}
         onSuccess={handlePaymentSuccess}
+      />
+
+      {/* Software Usage Terms Modal */}
+      <SoftwareTermsModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+      />
+
+      {/* Astrological Branches Directory Guide Modal */}
+      <AstrologyBranchesGuideModal
+        isOpen={showBranchesGuide}
+        onClose={() => setShowBranchesGuide(false)}
       />
     </>
   );

@@ -5,7 +5,7 @@ import {
   Wallet, User, ShoppingBag, BookOpen, LayoutDashboard,
   Sparkles, Compass, Heart, Calendar, Menu, X, Send,
   Download, CheckCircle2, AlertCircle, FileText,
-  ChevronLeft, ChevronRight, History, RefreshCw, Award, Shield, Lock, CreditCard, Smartphone, Building2, Languages, Globe, Zap, Eye, Flame, Layers, Radio, Cpu, Activity, Dices, Store, MapPin
+  ChevronLeft, ChevronRight, History, RefreshCw, Award, Shield, Lock, CreditCard, Smartphone, Building2, Languages, Globe, Zap, Eye, Flame, Layers, Radio, Cpu, Activity, Dices, Store, MapPin, Scale
 } from 'lucide-react';
 import { jsPDF } from "jspdf";
 import { Astrologer, User as UserType, ZODIAC_SIGNS, Category, Vendor, Product, Package, Banner, PanditRegistration as PanditType, PujaBooking as PujaBookingType } from './types';
@@ -13,6 +13,8 @@ import { storageApi, initStorage, apiFetch } from './services/storage';
 import { AIAstrologerPortal } from './components/AIAstrologerPortal';
 import { PaymentGatewayModal, PaymentReceipt } from './components/PaymentGatewayModal';
 import { Express3QuestionModal } from './components/Express3QuestionModal';
+import { SoftwareTermsModal } from './components/SoftwareTermsModal';
+import { AstrologyBranchesGuideModal } from './components/AstrologyBranchesGuideModal';
 import { LanguageSwitcherModal, SUPPORTED_LANGUAGES, LanguageOption, initGoogleTranslate, triggerGoogleTranslate } from './components/LanguageSwitcherModal';
 import { UndertakingAcceptanceModal } from './components/UndertakingAcceptanceModal';
 import { VastuConsultancy } from './components/VastuConsultancy';
@@ -55,6 +57,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [aiPortalTab, setAiPortalTab] = useState<'chat' | 'ephemeris' | 'ledger' | 'remedies'>('chat');
   const [showExpressQuestions, setShowExpressQuestions] = useState(false);
+  const [showGlobalSoftwareTerms, setShowGlobalSoftwareTerms] = useState(false);
+  const [showGlobalBranchesGuide, setShowGlobalBranchesGuide] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentLang, setCurrentLang] = useState<LanguageOption>(() => {
     try {
@@ -540,17 +544,20 @@ export default function App() {
 
           <div className="bg-gradient-to-br from-emerald-950/85 via-teal-950/80 to-slate-950/90 hover:from-emerald-900/90 hover:to-teal-900/90 backdrop-blur-lg p-6 rounded-3xl border-2 border-emerald-400/60 hover:border-emerald-300 shadow-2xl shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all duration-300 flex flex-col justify-between">
             <div>
-              <h4 className="font-extrabold mb-4 text-amber-300 text-base drop-shadow-sm">Support</h4>
+              <h4 className="font-extrabold mb-4 text-amber-300 text-base drop-shadow-sm">Support & Guidelines</h4>
               <ul className="space-y-2.5 text-sm text-slate-100 font-medium">
+                <li className="cursor-pointer hover:text-amber-300 transition-colors flex items-center gap-1.5" onClick={() => setShowGlobalBranchesGuide(true)}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" /> 12 Astrological Branches Directory
+                </li>
+                <li className="cursor-pointer hover:text-amber-300 transition-colors flex items-center gap-1.5" onClick={() => setShowGlobalSoftwareTerms(true)}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" /> Software Usage Terms & Guidelines
+                </li>
                 <li className="cursor-pointer hover:text-amber-300 transition-colors flex items-center gap-1.5" onClick={() => setActiveTab('admin')}>
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" /> Admin Access
                 </li>
                 <li className="cursor-pointer hover:text-amber-300 transition-colors flex items-center gap-1.5" onClick={() => setActiveTab('astrologer-register')}>
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" /> Register as Consultant
                 </li>
-                <li className="cursor-pointer hover:text-amber-300 transition-colors">Contact Us</li>
-                <li className="cursor-pointer hover:text-amber-300 transition-colors">Terms of Service</li>
-                <li className="cursor-pointer hover:text-amber-300 transition-colors">Privacy Policy</li>
               </ul>
             </div>
           </div>
@@ -597,6 +604,20 @@ export default function App() {
         onClose={() => setShowLangModal(false)}
         currentLangCode={currentLang.code}
         onSelectLang={handleSelectLanguage}
+      />
+
+      <SoftwareTermsModal
+        isOpen={showGlobalSoftwareTerms}
+        onClose={() => setShowGlobalSoftwareTerms(false)}
+        onRecharge={() => {
+          setShowGlobalSoftwareTerms(false);
+          setActiveTab('ai');
+        }}
+      />
+
+      <AstrologyBranchesGuideModal
+        isOpen={showGlobalBranchesGuide}
+        onClose={() => setShowGlobalBranchesGuide(false)}
       />
     </div>
   );

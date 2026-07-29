@@ -5,11 +5,13 @@ import {
   Upload, Image as ImageIcon, Camera, AlertCircle, CheckCircle2, 
   RefreshCw, Compass, Moon, Sun, Heart, Shield, BookOpen, 
   User, Users, ChevronRight, X, Award, HelpCircle, FileText, MessageSquare, Edit2, Dices,
-  Calendar, Globe, HeartPulse, Activity, ShieldAlert, ScanFace, FileSignature, PenTool, UserCheck
+  Calendar, Globe, HeartPulse, Activity, ShieldAlert, ScanFace, FileSignature, PenTool, UserCheck, Scale
 } from 'lucide-react';
 import { User as UserType } from '../types';
 import { NumerologyStudio } from './NumerologyStudio';
 import { calculateMulank, calculateBhagyank, calculateNamank } from '../utils/numerology';
+import { SoftwareTermsModal } from './SoftwareTermsModal';
+import { AstrologyBranchesGuideModal, ASTROLOGICAL_BRANCHES_DATA } from './AstrologyBranchesGuideModal';
 
 interface AIAstrologerPortalProps {
   user: UserType | null;
@@ -79,6 +81,8 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
   const [loadingWallet, setLoadingWallet] = useState<boolean>(true);
   const [showRechargeModal, setShowRechargeModal] = useState<boolean>(false);
+  const [showSoftwareTermsModal, setShowSoftwareTermsModal] = useState<boolean>(false);
+  const [showBranchesGuideModal, setShowBranchesGuideModal] = useState<boolean>(false);
   const [rechargeLoading, setRechargeLoading] = useState<boolean>(false);
   const [rechargeSuccessMsg, setRechargeSuccessMsg] = useState<string>('');
 
@@ -750,7 +754,21 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
           </div>
 
           {/* Wallet Duration Badge & Navigation Buttons */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              onClick={() => setShowBranchesGuideModal(true)}
+              className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-extrabold px-3.5 py-2.5 rounded-2xl border border-amber-400/30 transition-all flex items-center gap-1.5 text-xs cursor-pointer shadow-xs"
+            >
+              <BookOpen size={15} /> 12 Branches Directory
+            </button>
+
+            <button
+              onClick={() => setShowSoftwareTermsModal(true)}
+              className="bg-slate-800/80 hover:bg-slate-700 text-slate-200 font-extrabold px-3.5 py-2.5 rounded-2xl border border-slate-700 transition-all flex items-center gap-1.5 text-xs cursor-pointer shadow-xs"
+            >
+              <Scale size={15} /> Software Terms & T&C
+            </button>
+
             <div className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border ${
               aiMinutes > 5 ? 'bg-slate-800/80 border-amber-500/30 text-gold' : 'bg-rose-950/80 border-rose-500/50 text-rose-300 animate-bounce'
             }`}>
@@ -763,7 +781,7 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
 
             <button
               onClick={() => setShowRechargeModal(true)}
-              className="bg-gradient-to-r from-saffron to-amber-600 hover:from-amber-600 hover:to-saffron text-white font-bold px-4 py-2.5 rounded-2xl shadow-md flex items-center gap-2 transition-all transform hover:scale-105 text-sm"
+              className="bg-gradient-to-r from-saffron to-amber-600 hover:from-amber-600 hover:to-saffron text-white font-bold px-4 py-2.5 rounded-2xl shadow-md flex items-center gap-2 transition-all transform hover:scale-105 text-sm cursor-pointer"
             >
               <Plus size={16} /> Recharge Duration
             </button>
@@ -950,6 +968,87 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
               </span>
             </div>
           </div>
+
+          {/* Insufficient Balance / Wallet Recharge Required Banner */}
+          {(aiMinutes <= 0 && walletBalance <= 0) && (
+            <div className="bg-gradient-to-r from-rose-900 via-red-800 to-rose-950 text-white p-4 rounded-3xl shadow-md border-2 border-rose-400 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <AlertCircle size={24} className="text-amber-300 shrink-0" />
+                <div>
+                  <h4 className="font-extrabold text-sm text-amber-200">Payment or Wallet Recharge Required</h4>
+                  <p className="text-xs text-stone-200">
+                    Your AI Astrologer credit is empty. To consult AstroGuru AI across any astrological branch or Ask 3 Questions model, please recharge your wallet or purchase an AI package below.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowRechargeModal(true)}
+                className="bg-amber-400 hover:bg-amber-300 text-stone-950 font-black px-4 py-2 rounded-xl text-xs transition-all shadow-md shrink-0 cursor-pointer"
+              >
+                💳 Recharge Wallet / Buy Package Now
+              </button>
+            </div>
+          )}
+
+          {/* Branch Significance, Uses & Applicability Banner */}
+          {(() => {
+            const currentBranchGuide = ASTROLOGICAL_BRANCHES_DATA.find(b => {
+              if (analysisMode === 'Vedic & Family Q&A') return b.id === 'vedic-kundli';
+              if (analysisMode === 'Medical Astrology & Vedic Remedies') return b.id === 'medical-astrology';
+              if (analysisMode === 'K.P. System & Horary') return b.id === 'kp-system';
+              if (analysisMode === 'Nadi Astrology') return b.id === 'nadi-astrology';
+              if (analysisMode === 'Palm Line Analysis') return b.id === 'palmistry';
+              if (analysisMode === 'Face Reading (Mukh Samudrik)') return b.id === 'face-reading';
+              if (analysisMode === 'Signature Analysis (Hastakshar Vigyan)') return b.id === 'signature-analysis';
+              if (analysisMode === 'Tarot Card Reading') return b.id === 'tarot-reading';
+              if (analysisMode === 'Numerology') return b.id === 'numerology';
+              if (analysisMode === 'Lal Kitab & Remedies') return b.id === 'lal-kitab';
+              if (analysisMode === 'Ramal Shastra (Vedic Dice)') return b.id === 'ramal-shastra';
+              if (analysisMode === 'Shubh Muhurta & Travel Guidance') return b.id === 'shubh-muhurta';
+              return b.id === 'vedic-kundli';
+            }) || ASTROLOGICAL_BRANCHES_DATA[0];
+
+            return (
+              <div className="bg-gradient-to-r from-amber-50 via-orange-50 to-yellow-50 border-2 border-amber-300 p-4 rounded-3xl shadow-sm space-y-2 text-xs">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 font-black text-amber-950 text-sm">
+                    <Sparkles size={16} className="text-amber-700 shrink-0" />
+                    <span>Branch Significance & Applicability: {analysisMode}</span>
+                  </div>
+                  <button
+                    onClick={() => setShowBranchesGuideModal(true)}
+                    className="bg-amber-200/80 hover:bg-amber-300 text-amber-950 px-2.5 py-1 rounded-xl text-[11px] font-black transition-all flex items-center gap-1 cursor-pointer"
+                  >
+                    <BookOpen size={13} /> View All 12 Branches Directory
+                  </button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-stone-800">
+                  <div className="bg-white/80 p-2.5 rounded-xl border border-amber-200/80">
+                    <strong className="text-amber-900 font-extrabold block mb-0.5 text-[11px] uppercase">
+                      📌 Required Details / Inputs:
+                    </strong>
+                    <p className="text-stone-700 text-[11px] leading-snug">{currentBranchGuide.primaryInput}</p>
+                  </div>
+                  <div className="bg-white/80 p-2.5 rounded-xl border border-amber-200/80">
+                    <strong className="text-amber-900 font-extrabold block mb-0.5 text-[11px] uppercase">
+                      🎯 Main Uses & Applicability:
+                    </strong>
+                    <p className="text-stone-700 text-[11px] leading-snug">{currentBranchGuide.uses}</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[11px] pt-1 text-stone-700 border-t border-amber-200/60">
+                  <span>
+                    <strong>Scriptural Basis:</strong> {currentBranchGuide.significance}
+                  </span>
+                  <span className="font-extrabold text-amber-900 shrink-0">
+                    🔄 Fallback: {currentBranchGuide.fallbackRole}
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* TAB 1: CHAT ARENA */}
           {activeTab === 'chat' && (
@@ -2862,7 +2961,7 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
               <div className="text-center pt-2 border-t border-slate-100">
                 <button
                   onClick={() => setShowRechargeModal(false)}
-                  className="text-xs font-bold text-slate-400 hover:text-slate-600"
+                  className="text-xs font-bold text-slate-400 hover:text-slate-600 cursor-pointer"
                 >
                   Close & Resume Consultation
                 </button>
@@ -2871,6 +2970,19 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
           </div>
         )}
       </AnimatePresence>
+
+      {/* Software Usage Terms Modal */}
+      <SoftwareTermsModal
+        isOpen={showSoftwareTermsModal}
+        onClose={() => setShowSoftwareTermsModal(false)}
+        onRecharge={() => setShowRechargeModal(true)}
+      />
+
+      {/* Astrological Branches Directory Guide Modal */}
+      <AstrologyBranchesGuideModal
+        isOpen={showBranchesGuideModal}
+        onClose={() => setShowBranchesGuideModal(false)}
+      />
     </div>
   );
 };
