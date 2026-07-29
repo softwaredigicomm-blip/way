@@ -278,6 +278,60 @@ export const AstrologyBranchesGuideModal: React.FC<AstrologyBranchesGuideModalPr
                 </p>
               </div>
 
+              {/* Special Visual Demonstration for Ramal Shastra */}
+              {activeData.id === 'ramal-shastra' && (
+                <div className="space-y-2 bg-gradient-to-r from-amber-950 via-stone-900 to-amber-950 p-3.5 rounded-2xl border border-amber-500/40 text-white shadow-md">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-black uppercase text-amber-300 tracking-wider flex items-center gap-1.5">
+                      <Sparkles size={14} className="text-amber-400" /> Sacred Ramal Shastra Demonstration Artifacts
+                    </span>
+                    <span className="text-[10px] text-amber-200/80 font-bold bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-400/30">
+                      Traditional Divination Visuals
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div className="bg-black/50 p-2 rounded-xl border border-amber-500/30 space-y-1.5">
+                      <div className="h-32 rounded-lg overflow-hidden border border-amber-400/30 relative">
+                        <img 
+                          src="/ramal_dice_brass.jpg" 
+                          alt="Authentic Brass Ramal Pasas" 
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                      <div className="px-1">
+                        <strong className="text-xs text-amber-200 font-extrabold block">
+                          🎲 Traditional Brass Ramal Pasas (Dice)
+                        </strong>
+                        <p className="text-[10px] text-stone-300 leading-tight">
+                          Heavy brass rectangular dice sticks marked with dots 1-4, rolled in pairs to generate the 4 elemental rows (Fire, Air, Water, Earth).
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-black/50 p-2 rounded-xl border border-amber-500/30 space-y-1.5">
+                      <div className="h-32 rounded-lg overflow-hidden border border-amber-400/30 relative">
+                        <img 
+                          src="/ramal_shakal_chart.jpg" 
+                          alt="Ramal Shakals Reference Chart" 
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                      <div className="px-1">
+                        <strong className="text-xs text-amber-200 font-extrabold block">
+                          📜 16 Shakals & Symbol Matrix Chart
+                        </strong>
+                        <p className="text-[10px] text-stone-300 leading-tight">
+                          Master chart mapping the 7 planetary coordinates (s, c, m, b, g, v, t) and geometric symbol sequences used by Ramal Daivajnās.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Applicability & Fallback */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-2">
                 <div className="bg-sky-50 border border-sky-200 p-3 rounded-xl space-y-1">

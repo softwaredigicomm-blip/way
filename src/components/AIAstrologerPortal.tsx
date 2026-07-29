@@ -83,6 +83,7 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
   const [showRechargeModal, setShowRechargeModal] = useState<boolean>(false);
   const [showSoftwareTermsModal, setShowSoftwareTermsModal] = useState<boolean>(false);
   const [showBranchesGuideModal, setShowBranchesGuideModal] = useState<boolean>(false);
+  const [activeImageModal, setActiveImageModal] = useState<{ src: string; title: string; desc: string } | null>(null);
   const [rechargeLoading, setRechargeLoading] = useState<boolean>(false);
   const [rechargeSuccessMsg, setRechargeSuccessMsg] = useState<string>('');
 
@@ -2160,12 +2161,12 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                 </div>
               )}
               {analysisMode === 'Ramal Shastra (Vedic Dice)' && (
-                <div className="p-4 bg-gradient-to-r from-amber-950 via-stone-900 to-amber-950 text-white border-b border-amber-500/40 shrink-0">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                <div className="p-4 bg-gradient-to-r from-amber-950 via-stone-900 to-amber-950 text-white border-b border-amber-500/40 shrink-0 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 bg-amber-400 rounded-full animate-pulse" />
                       <h4 className="text-xs font-black uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
-                        🎲 Vedic Ramal Shastra Oracle • 16 Primary Shakals (Geomantic Figures)
+                        🎲 Vedic Ramal Shastra Divination Studio • 16 Primary Shakals
                       </h4>
                     </div>
                     <div className="flex items-center gap-2">
@@ -2176,12 +2177,77 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                         }}
                         className="text-[11px] bg-gradient-to-r from-amber-500 to-saffron hover:from-amber-600 hover:to-orange-600 text-white px-3 py-1 rounded-xl shadow transition-all font-bold flex items-center gap-1.5 cursor-pointer"
                       >
-                        🎲 Cast Vedic Pasa (Random Dice)
+                        🎲 Cast Sacred Pasa (Random Dice)
                       </button>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3 bg-black/30 p-3 rounded-2xl border border-amber-500/20">
+                  {/* Demonstration Gallery Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-black/40 p-2.5 rounded-2xl border border-amber-500/30">
+                    {/* Image 1: Traditional Brass Ramal Dice */}
+                    <div 
+                      onClick={() => setActiveImageModal({
+                        src: '/ramal_dice_brass.jpg',
+                        title: 'Authentic Sacred Brass Ramal Pasas (Traditional Dice)',
+                        desc: 'Sacred rectangular brass sticks (Pasas) marked with 1, 2, 3, and 4 dots. Cast in pairs by the Ramal Daivajna to determine the 4 elemental rows (Fire, Air, Water, Earth) forming each geomantic figure.'
+                      })}
+                      className="group relative overflow-hidden rounded-xl border border-amber-500/30 bg-stone-900 cursor-pointer transition-all hover:border-amber-400 hover:shadow-lg flex items-center gap-3 p-2"
+                    >
+                      <div className="w-20 h-16 rounded-lg overflow-hidden shrink-0 border border-amber-400/40 relative">
+                        <img 
+                          src="/ramal_dice_brass.jpg" 
+                          alt="Authentic Brass Ramal Pasas" 
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
+                      </div>
+                      <div className="space-y-0.5 pr-2">
+                        <span className="text-[10px] font-black uppercase text-amber-300 tracking-wider flex items-center gap-1">
+                          <Dices size={12} /> Sacred Brass Pasas
+                        </span>
+                        <h5 className="text-xs font-bold text-stone-100 group-hover:text-amber-200 transition-colors line-clamp-1">
+                          Vedic Divination Dice Sticks
+                        </h5>
+                        <p className="text-[10px] text-amber-200/70 line-clamp-1">
+                          Click to inspect authentic casting dice
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Image 2: Ramal Shakals Reference Chart */}
+                    <div 
+                      onClick={() => setActiveImageModal({
+                        src: '/ramal_shakal_chart.jpg',
+                        title: 'Ramal Shastra Geomancy Symbols & Shakals Matrix Chart',
+                        desc: 'Classical master chart table displaying the 7 planetary coordinates (s, c, m, b, g, v, t) and the corresponding geometric symbol sequences (red triangles, yellow dots, black squares, bowls) corresponding to the 16 primary Shakals.'
+                      })}
+                      className="group relative overflow-hidden rounded-xl border border-amber-500/30 bg-stone-900 cursor-pointer transition-all hover:border-amber-400 hover:shadow-lg flex items-center gap-3 p-2"
+                    >
+                      <div className="w-20 h-16 rounded-lg overflow-hidden shrink-0 border border-amber-400/40 relative">
+                        <img 
+                          src="/ramal_shakal_chart.jpg" 
+                          alt="Ramal Shakals Symbol Chart" 
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
+                      </div>
+                      <div className="space-y-0.5 pr-2">
+                        <span className="text-[10px] font-black uppercase text-amber-300 tracking-wider flex items-center gap-1">
+                          <BookOpen size={12} /> Shakals Matrix Chart
+                        </span>
+                        <h5 className="text-xs font-bold text-stone-100 group-hover:text-amber-200 transition-colors line-clamp-1">
+                          Geomancy Symbol Reference
+                        </h5>
+                        <p className="text-[10px] text-amber-200/70 line-clamp-1">
+                          Click to inspect 7-coordinate symbol grid
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-black/30 p-3 rounded-2xl border border-amber-500/20">
                     <div className="md:col-span-2">
                       <label className="text-[10px] font-bold text-amber-200 uppercase tracking-wider block mb-1">
                         Select / Cast from the 16 Classical Shastra Figures (Shakals):
@@ -2964,6 +3030,61 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                   className="text-xs font-bold text-slate-400 hover:text-slate-600 cursor-pointer"
                 >
                   Close & Resume Consultation
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Image Demonstration Lightbox Modal */}
+      <AnimatePresence>
+        {activeImageModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 10 }}
+              className="bg-stone-900 border border-amber-500/40 rounded-3xl p-5 max-w-3xl w-full text-white shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-amber-500/30 mb-4 shrink-0">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300 flex items-center justify-center">
+                    <Sparkles size={16} />
+                  </div>
+                  <h3 className="font-serif font-black text-sm sm:text-base text-amber-200">
+                    {activeImageModal.title}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setActiveImageModal(null)}
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-stone-200 flex items-center justify-center transition-all cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="overflow-y-auto space-y-4 flex-1">
+                <div className="rounded-2xl overflow-hidden border-2 border-amber-500/30 bg-black flex items-center justify-center min-h-[250px] shadow-inner">
+                  <img
+                    src={activeImageModal.src}
+                    alt={activeImageModal.title}
+                    className="max-h-[60vh] w-auto object-contain"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+                <div className="bg-stone-950 p-4 rounded-2xl border border-amber-500/20 text-xs text-stone-300 leading-relaxed">
+                  <span className="font-bold text-amber-400 block mb-1">📜 Shastra Demonstration Guidance:</span>
+                  {activeImageModal.desc}
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-amber-500/20 flex justify-end shrink-0">
+                <button
+                  onClick={() => setActiveImageModal(null)}
+                  className="bg-amber-500 hover:bg-amber-600 text-stone-950 font-black px-5 py-2 rounded-xl text-xs transition-all cursor-pointer"
+                >
+                  Close Inspection
                 </button>
               </div>
             </motion.div>
