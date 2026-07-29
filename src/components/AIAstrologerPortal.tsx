@@ -5,7 +5,7 @@ import {
   Upload, Image as ImageIcon, Camera, AlertCircle, CheckCircle2, 
   RefreshCw, Compass, Moon, Sun, Heart, Shield, BookOpen, 
   User, Users, ChevronRight, X, Award, HelpCircle, FileText, MessageSquare, Edit2, Dices,
-  Calendar, Globe, HeartPulse, Activity, ShieldAlert, ScanFace, FileSignature, PenTool, UserCheck, Scale
+  Calendar, Globe, HeartPulse, Activity, ShieldAlert, ScanFace, FileSignature, PenTool, UserCheck, Scale, Zap
 } from 'lucide-react';
 import { User as UserType } from '../types';
 import { NumerologyStudio } from './NumerologyStudio';
@@ -1068,7 +1068,9 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
           {/* TAB 1: CHAT ARENA */}
           {activeTab === 'chat' && (
             <div className={`bg-white rounded-3xl shadow-sm border border-slate-200 flex flex-col transition-all duration-300 overflow-hidden ${
-              extendedReadingView ? 'min-h-[1050px] lg:h-[1250px]' : 'h-[780px]'
+              extendedReadingView || analysisMode === 'Numerology' || analysisMode === 'Tarot Card Reading' || analysisMode === 'Ramal Shastra Divination'
+                ? 'min-h-[1150px] lg:min-h-[1350px]' 
+                : 'min-h-[820px] lg:h-[920px]'
             }`}>
               {/* Chat Arena Header */}
               <div className="p-4 bg-stone-50 border-b border-slate-200 flex items-center justify-between flex-wrap gap-2">
@@ -1204,12 +1206,25 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
               )}
 
               {analysisMode === 'Numerology' && (
-                <NumerologyStudio
-                  activeProfileName={familyMembers.find(f => f.id === activeProfile)?.name || 'Native (Self)'}
-                  activeProfileDob={familyMembers.find(f => f.id === activeProfile)?.dob || '1992-08-15'}
-                  familyMembers={familyMembers}
-                  onSendMessage={(prompt) => handleSendMessage(prompt)}
-                />
+                <div className="bg-amber-50/60 border-b-2 border-amber-300 shadow-xs shrink-0">
+                  <div className="px-4 py-2 bg-gradient-to-r from-amber-200 via-orange-100 to-amber-200 border-b border-amber-300 flex items-center justify-between text-xs font-black text-amber-950">
+                    <span className="flex items-center gap-1.5 uppercase tracking-wide">
+                      <Zap size={14} className="text-saffron fill-saffron" />
+                      <span>Interactive Vedic & Chaldean Numerology Studio</span>
+                    </span>
+                    <span className="text-[10px] text-stone-700 bg-white px-2 py-0.5 rounded-md border border-amber-300 font-bold">
+                      Clear Full Viewport Active
+                    </span>
+                  </div>
+                  <div className="max-h-[780px] lg:max-h-[880px] overflow-y-auto scrollbar-thin scrollbar-thumb-amber-400 p-1">
+                    <NumerologyStudio
+                      activeProfileName={familyMembers.find(f => f.id === activeProfile)?.name || 'Native (Self)'}
+                      activeProfileDob={familyMembers.find(f => f.id === activeProfile)?.dob || '1992-08-15'}
+                      familyMembers={familyMembers}
+                      onSendMessage={(prompt) => handleSendMessage(prompt)}
+                    />
+                  </div>
+                </div>
               )}
 
               {analysisMode === 'Palm Line Analysis' && (

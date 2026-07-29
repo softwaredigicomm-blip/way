@@ -37,6 +37,7 @@ export const NumerologyStudio: React.FC<NumerologyStudioProps> = ({
   const [correctionPrimaryGoal, setCorrectionPrimaryGoal] = useState<string>('Wealth & Financial Growth');
   const [correctionFilterCategory, setCorrectionFilterCategory] = useState<'All' | 'Addition' | 'Substitution' | 'Doubling'>('All');
   const [copiedSpelling, setCopiedSpelling] = useState<string | null>(null);
+  const [isFullPageView, setIsFullPageView] = useState<boolean>(true);
 
   // State for Partner Compatibility
   const [partnerSource, setPartnerSource] = useState<'family' | 'custom'>('family');
@@ -134,12 +135,14 @@ Please explain the emotional, practical, and karmic dynamics of this ${relationT
   };
 
   return (
-    <div className="p-4 bg-gradient-to-b from-amber-50/95 via-orange-50/60 to-amber-50/90 border-b border-amber-200 text-stone-900 space-y-5 shrink-0">
+    <div className={`bg-gradient-to-b from-amber-50/95 via-orange-50/60 to-amber-50/90 border-b border-amber-200 text-stone-900 transition-all ${
+      isFullPageView ? 'p-5 sm:p-6 space-y-6' : 'p-3.5 space-y-4'
+    }`}>
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200/80 pb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-saffron flex items-center justify-center text-white shadow-md shadow-amber-500/20">
-            <Award size={18} />
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-saffron flex items-center justify-center text-white shadow-md shadow-amber-500/20">
+            <Award size={20} />
           </div>
           <div>
             <h3 className="text-sm font-black uppercase tracking-wider text-amber-950 flex items-center gap-1.5">
@@ -150,9 +153,22 @@ Please explain the emotional, practical, and karmic dynamics of this ${relationT
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-1.5 bg-amber-200/80 text-amber-950 font-extrabold px-2.5 py-1 rounded-xl text-xs border border-amber-300 shadow-2xs">
-          <Sparkles size={13} className="text-saffron animate-spin" style={{ animationDuration: '6s' }} />
-          <span>Vedic, Chaldean & Pythagorean Engine</span>
+        
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsFullPageView(prev => !prev)}
+            className="flex items-center gap-1.5 bg-amber-100 hover:bg-amber-200 text-amber-950 font-black px-3 py-1.5 rounded-xl text-xs border border-amber-300 shadow-2xs transition-all cursor-pointer"
+            title="Toggle spacious full page view"
+          >
+            <Sliders size={13} className="text-saffron" />
+            <span>{isFullPageView ? '📖 Full Page View (Active)' : '📱 Compact View'}</span>
+          </button>
+          
+          <div className="hidden sm:flex items-center gap-1.5 bg-amber-200/80 text-amber-950 font-extrabold px-2.5 py-1 rounded-xl text-xs border border-amber-300 shadow-2xs">
+            <Sparkles size={13} className="text-saffron animate-spin" style={{ animationDuration: '6s' }} />
+            <span>Vedic, Chaldean & Pythagorean Engine</span>
+          </div>
         </div>
       </div>
 

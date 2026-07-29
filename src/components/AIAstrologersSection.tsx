@@ -973,7 +973,7 @@ export const AIAstrologersSection: React.FC<AIAstrologersSectionProps> = ({ user
 
                 {/* NUMEROLOGY STUDIO FOR NUMEROLOGY SPECIALISTS */}
                 {activeChatPersona.branch.includes('Numerology') && (
-                  <div className="my-2 rounded-3xl overflow-hidden border border-amber-300 shadow-md">
+                  <div className="my-3 rounded-3xl overflow-hidden border-2 border-amber-300 shadow-md max-h-[780px] overflow-y-auto scrollbar-thin scrollbar-thumb-amber-400">
                     <NumerologyStudio
                       activeProfileName={currentProfile?.name || user?.name || 'Native (Self)'}
                       activeProfileDob={currentProfile?.dob || user?.dob || '1992-08-15'}
