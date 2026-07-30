@@ -241,6 +241,29 @@ export const storageApi = {
     return users[index];
   },
 
+  deductWallet: async (email: string, amount: number, description?: string) => {
+    const users = get(STORAGE_KEYS.USERS);
+    const index = users.findIndex((u: any) => u.email?.toLowerCase() === email?.toLowerCase());
+    if (index === -1) throw new Error("User not found");
+    if ((users[index].wallet_balance || 0) < amount) {
+      throw new Error("Insufficient balance");
+    }
+    users[index].wallet_balance -= amount;
+    save(STORAGE_KEYS.USERS, users);
+    
+    const transactions = get(STORAGE_KEYS.TRANSACTIONS) || [];
+    transactions.push({
+      id: Date.now(),
+      user_id: users[index].id,
+      amount: -amount,
+      type: 'service_deduction',
+      description: description || 'Astrology Service / Report Payment',
+      timestamp: new Date().toISOString()
+    });
+    save(STORAGE_KEYS.TRANSACTIONS, transactions);
+    return users[index];
+  },
+
   // Chat
   requestChat: async (email: string, astrologerId: number) => {
     const user = await storageApi.getUser(email);
@@ -437,22 +460,43 @@ export const storageApi = {
   },
 
   // User Profile
-  purchasePackage: async (data: { email: string, packageId: number, contactNumber?: string, amount?: number, discount?: number }) => {
+  purchasePackage: async (data: { email: string, packageId: number, contactNumber?: string, amount?: number, discount?: number, paymentMethod?: string }) => {
     const users = get(STORAGE_KEYS.USERS);
-    const user = users.find((u: any) => u.email === data.email);
+    const user = users.find((u: any) => u.email?.toLowerCase() === data.email?.toLowerCase());
     if (!user) throw new Error("User not found");
 
     const pkgs = get(STORAGE_KEYS.PACKAGES);
     const pkg = pkgs.find((p: any) => p.id === data.packageId);
     if (!pkg) throw new Error("Package not found");
 
-    const userPkgs = get(STORAGE_KEYS.USER_PACKAGES);
+    const packageCost = data.amount || pkg.price;
+
+    if (data.paymentMethod === 'wallet' || !data.paymentMethod) {
+      if ((user.wallet_balance || 0) < packageCost) {
+        throw new Error("Insufficient balance");
+      }
+      user.wallet_balance -= packageCost;
+      save(STORAGE_KEYS.USERS, users);
+
+      const transactions = get(STORAGE_KEYS.TRANSACTIONS) || [];
+      transactions.push({
+        id: Date.now(),
+        user_id: user.id,
+        amount: -packageCost,
+        type: 'package_purchase',
+        description: `Package Purchase: ${pkg.name}`,
+        timestamp: new Date().toISOString()
+      });
+      save(STORAGE_KEYS.TRANSACTIONS, transactions);
+    }
+
+    const userPkgs = get(STORAGE_KEYS.USER_PACKAGES) || [];
     const newPurchase = {
       id: Date.now(),
       user_id: user.id,
       package_id: data.packageId,
       purchase_date: new Date().toISOString(),
-      amount: data.amount || pkg.price,
+      amount: packageCost,
       discount: data.discount || 0,
       contact_number: data.contactNumber || user.phone || '',
       email: data.email,
@@ -461,7 +505,7 @@ export const storageApi = {
     };
     userPkgs.push(newPurchase);
     save(STORAGE_KEYS.USER_PACKAGES, userPkgs);
-    return { success: true };
+    return { success: true, updatedBalance: user.wallet_balance };
   },
   getPurchasedPackages: async () => {
     const userPkgs = get(STORAGE_KEYS.USER_PACKAGES);
@@ -533,6 +577,7 @@ export const apiFetch = async (url: string, init?: any): Promise<any> => {
       return storageApi.getUser(email);
     } else if (method === 'POST') {
       if (path === 'user/recharge') return storageApi.rechargeWallet(body.email, body.amount);
+      if (path === 'user/deduct-wallet' || path === 'user/deduct') return storageApi.deductWallet(body.email, body.amount, body.description);
       if (path === 'user/register') return storageApi.registerUser(body);
       if (path === 'user/purchase') return { success: true }; // Simplified
       if (path === 'user/purchase-package') return storageApi.purchasePackage(body);
