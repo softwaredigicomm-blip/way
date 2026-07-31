@@ -957,6 +957,66 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
 
         {/* Right Content Area (3 Cols) */}
         <div className="lg:col-span-3 space-y-4">
+          {/* Branch Significance, Uses & Applicability Banner (Prominently Positioned) */}
+          {(() => {
+            const currentBranchGuide = ASTROLOGICAL_BRANCHES_DATA.find(b => {
+              if (analysisMode === 'Vedic & Family Q&A') return b.id === 'vedic-kundli';
+              if (analysisMode === 'Medical Astrology & Vedic Remedies') return b.id === 'medical-astrology';
+              if (analysisMode === 'K.P. System & Horary') return b.id === 'kp-system';
+              if (analysisMode === 'Nadi Astrology') return b.id === 'nadi-astrology';
+              if (analysisMode === 'Palm Line Analysis') return b.id === 'palmistry';
+              if (analysisMode === 'Face Reading (Mukh Samudrik)') return b.id === 'face-reading';
+              if (analysisMode === 'Signature Analysis (Hastakshar Vigyan)') return b.id === 'signature-analysis';
+              if (analysisMode === 'Tarot Card Reading') return b.id === 'tarot-reading';
+              if (analysisMode === 'Numerology') return b.id === 'numerology';
+              if (analysisMode === 'Lal Kitab & Remedies') return b.id === 'lal-kitab';
+              if (analysisMode === 'Ramal Shastra (Vedic Dice)') return b.id === 'ramal-shastra';
+              if (analysisMode === 'Shubh Muhurta & Travel Guidance') return b.id === 'shubh-muhurta';
+              return b.id === 'vedic-kundli';
+            }) || ASTROLOGICAL_BRANCHES_DATA[0];
+
+            return (
+              <div className="bg-gradient-to-r from-amber-50 via-orange-50 to-yellow-50 border-2 border-amber-400/90 p-4 rounded-3xl shadow-md space-y-2.5 text-xs overflow-hidden max-w-full">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 font-black text-amber-950 text-sm">
+                    <Sparkles size={16} className="text-amber-700 shrink-0" />
+                    <span>Branch Significance &amp; Applicability: {analysisMode}</span>
+                  </div>
+                  <button
+                    onClick={() => setShowBranchesGuideModal(true)}
+                    className="bg-amber-200/90 hover:bg-amber-300 text-amber-950 px-2.5 py-1 rounded-xl text-[11px] font-black transition-all flex items-center gap-1 cursor-pointer shadow-xs"
+                  >
+                    <BookOpen size={13} /> View All 12 Branches Directory
+                  </button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-stone-800">
+                  <div className="bg-white/80 p-2.5 rounded-xl border border-amber-200/80 min-w-0">
+                    <strong className="text-amber-900 font-extrabold block mb-0.5 text-[11px] uppercase">
+                      📌 Required Details / Inputs:
+                    </strong>
+                    <p className="text-stone-700 text-[11px] leading-snug break-words">{currentBranchGuide.primaryInput}</p>
+                  </div>
+                  <div className="bg-white/80 p-2.5 rounded-xl border border-amber-200/80 min-w-0">
+                    <strong className="text-amber-900 font-extrabold block mb-0.5 text-[11px] uppercase">
+                      🎯 Main Uses &amp; Applicability:
+                    </strong>
+                    <p className="text-stone-700 text-[11px] leading-snug break-words">{currentBranchGuide.uses}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 pt-1.5 text-[11px] text-stone-700 border-t border-amber-200/60 min-w-0">
+                  <div className="leading-snug break-words">
+                    <strong className="text-amber-950">Scriptural Basis:</strong> {currentBranchGuide.significance}
+                  </div>
+                  <div className="bg-amber-100/70 border border-amber-200/90 p-2 rounded-xl text-amber-950 leading-snug break-words">
+                    <strong className="font-extrabold text-amber-900">🔄 Fallback:</strong> {currentBranchGuide.fallbackRole}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* GLOBAL KUNDLI AUTO-SYNC BANNER */}
           <div className="bg-gradient-to-r from-amber-50 via-orange-50/70 to-amber-50 border border-gold/50 rounded-2xl p-3.5 px-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -1005,66 +1065,6 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
               </button>
             </div>
           )}
-
-          {/* Branch Significance, Uses & Applicability Banner */}
-          {(() => {
-            const currentBranchGuide = ASTROLOGICAL_BRANCHES_DATA.find(b => {
-              if (analysisMode === 'Vedic & Family Q&A') return b.id === 'vedic-kundli';
-              if (analysisMode === 'Medical Astrology & Vedic Remedies') return b.id === 'medical-astrology';
-              if (analysisMode === 'K.P. System & Horary') return b.id === 'kp-system';
-              if (analysisMode === 'Nadi Astrology') return b.id === 'nadi-astrology';
-              if (analysisMode === 'Palm Line Analysis') return b.id === 'palmistry';
-              if (analysisMode === 'Face Reading (Mukh Samudrik)') return b.id === 'face-reading';
-              if (analysisMode === 'Signature Analysis (Hastakshar Vigyan)') return b.id === 'signature-analysis';
-              if (analysisMode === 'Tarot Card Reading') return b.id === 'tarot-reading';
-              if (analysisMode === 'Numerology') return b.id === 'numerology';
-              if (analysisMode === 'Lal Kitab & Remedies') return b.id === 'lal-kitab';
-              if (analysisMode === 'Ramal Shastra (Vedic Dice)') return b.id === 'ramal-shastra';
-              if (analysisMode === 'Shubh Muhurta & Travel Guidance') return b.id === 'shubh-muhurta';
-              return b.id === 'vedic-kundli';
-            }) || ASTROLOGICAL_BRANCHES_DATA[0];
-
-            return (
-              <div className="bg-gradient-to-r from-amber-50 via-orange-50 to-yellow-50 border-2 border-amber-300 p-4 rounded-3xl shadow-sm space-y-2 text-xs">
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <div className="flex items-center gap-2 font-black text-amber-950 text-sm">
-                    <Sparkles size={16} className="text-amber-700 shrink-0" />
-                    <span>Branch Significance & Applicability: {analysisMode}</span>
-                  </div>
-                  <button
-                    onClick={() => setShowBranchesGuideModal(true)}
-                    className="bg-amber-200/80 hover:bg-amber-300 text-amber-950 px-2.5 py-1 rounded-xl text-[11px] font-black transition-all flex items-center gap-1 cursor-pointer"
-                  >
-                    <BookOpen size={13} /> View All 12 Branches Directory
-                  </button>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-stone-800">
-                  <div className="bg-white/80 p-2.5 rounded-xl border border-amber-200/80">
-                    <strong className="text-amber-900 font-extrabold block mb-0.5 text-[11px] uppercase">
-                      📌 Required Details / Inputs:
-                    </strong>
-                    <p className="text-stone-700 text-[11px] leading-snug">{currentBranchGuide.primaryInput}</p>
-                  </div>
-                  <div className="bg-white/80 p-2.5 rounded-xl border border-amber-200/80">
-                    <strong className="text-amber-900 font-extrabold block mb-0.5 text-[11px] uppercase">
-                      🎯 Main Uses & Applicability:
-                    </strong>
-                    <p className="text-stone-700 text-[11px] leading-snug">{currentBranchGuide.uses}</p>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[11px] pt-1 text-stone-700 border-t border-amber-200/60">
-                  <span>
-                    <strong>Scriptural Basis:</strong> {currentBranchGuide.significance}
-                  </span>
-                  <span className="font-extrabold text-amber-900 shrink-0">
-                    🔄 Fallback: {currentBranchGuide.fallbackRole}
-                  </span>
-                </div>
-              </div>
-            );
-          })()}
 
           {/* TAB 1: CHAT ARENA */}
           {activeTab === 'chat' && (
