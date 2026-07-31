@@ -1070,8 +1070,10 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
           {activeTab === 'chat' && (
             <div className={`bg-white rounded-3xl shadow-sm border border-slate-200 flex flex-col transition-all duration-300 overflow-hidden ${
               extendedReadingView || analysisMode === 'Numerology' || analysisMode === 'Tarot Card Reading' || analysisMode === 'Ramal Shastra Divination'
-                ? 'min-h-[1150px] lg:min-h-[1350px]' 
-                : 'min-h-[820px] lg:h-[920px]'
+                ? 'min-h-[900px] lg:min-h-[1100px]' 
+                : messages.length <= 2
+                  ? 'min-h-[360px] lg:h-[460px]'
+                  : 'min-h-[600px] lg:h-[750px]'
             }`}>
               {/* Chat Arena Header */}
               <div className="p-4 bg-stone-50 border-b border-slate-200 flex items-center justify-between flex-wrap gap-2">
@@ -2365,7 +2367,7 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
               )}
 
               {/* Messages Container */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-gradient-to-b from-stone-50/50 to-white">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 bg-gradient-to-b from-stone-50/50 to-white">
                 {messages.map((msg, idx) => (
                   <motion.div
                     key={idx}
