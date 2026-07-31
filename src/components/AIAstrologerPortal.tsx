@@ -2367,35 +2367,61 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
               {/* Messages Container */}
               <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-gradient-to-b from-stone-50/50 to-white">
                 {messages.map((msg, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    {msg.role === 'ai' && (
-                      <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-gold to-saffron flex items-center justify-center text-deep-blue flex-shrink-0 shadow-sm">
-                        <Sparkles size={18} />
-                      </div>
-                    )}
-                    <div className={`max-w-[96%] sm:max-w-[92%] rounded-3xl p-5 sm:p-6 shadow-xs ${
-                      msg.role === 'user'
-                        ? 'bg-gradient-to-br from-saffron to-orange-600 text-white rounded-tr-none max-w-[85%]'
-                        : 'bg-white text-slate-800 border border-slate-200/90 rounded-tl-none shadow-stone-100/80'
-                    }`}>
-                      {msg.imageUrl && (
-                        <div className="mb-3 rounded-2xl overflow-hidden border border-white/20 shadow-sm max-w-sm">
-                          <img src={msg.imageUrl} alt="Attached Chart/Palm" className="w-full h-auto object-cover max-h-56" />
+                  <React.Fragment key={idx}>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      {msg.role === 'ai' && (
+                        <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-gold to-saffron flex items-center justify-center text-deep-blue flex-shrink-0 shadow-sm">
+                          <Sparkles size={18} />
                         </div>
                       )}
-                      <div className="text-sm">
-                        {msg.role === 'ai' ? renderFormattedText(msg.text) : <p className="leading-relaxed">{msg.text}</p>}
+                      <div className={`max-w-[96%] sm:max-w-[92%] rounded-3xl p-5 sm:p-6 shadow-xs ${
+                        msg.role === 'user'
+                          ? 'bg-gradient-to-br from-saffron to-orange-600 text-white rounded-tr-none max-w-[85%]'
+                          : 'bg-white text-slate-800 border border-slate-200/90 rounded-tl-none shadow-stone-100/80'
+                      }`}>
+                        {msg.imageUrl && (
+                          <div className="mb-3 rounded-2xl overflow-hidden border border-white/20 shadow-sm max-w-sm">
+                            <img src={msg.imageUrl} alt="Attached Chart/Palm" className="w-full h-auto object-cover max-h-56" />
+                          </div>
+                        )}
+                        <div className="text-sm">
+                          {msg.role === 'ai' ? renderFormattedText(msg.text) : <p className="leading-relaxed">{msg.text}</p>}
+                        </div>
+                        <p className={`text-[10px] mt-2 text-right font-medium ${msg.role === 'user' ? 'text-amber-100' : 'text-slate-400'}`}>
+                          {msg.timestamp}
+                        </p>
                       </div>
-                      <p className={`text-[10px] mt-2 text-right font-medium ${msg.role === 'user' ? 'text-amber-100' : 'text-slate-400'}`}>
-                        {msg.timestamp}
-                      </p>
-                    </div>
-                  </motion.div>
+                    </motion.div>
+
+                    {/* Quick Prompt Chips positioned right below the initial welcome message (idx === 0) */}
+                    {idx === 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="my-3 pl-0 sm:pl-12 pr-2"
+                      >
+                        <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-amber-900 mb-2">
+                          <Sparkles size={13} className="text-amber-600 shrink-0" />
+                          <span>Suggested Exploration Topics for {analysisMode}:</span>
+                        </div>
+                        <div className="flex gap-2 overflow-x-auto pb-2 pt-0.5 scrollbar-thin scrollbar-thumb-amber-300">
+                          {activePrompts.map((item, pIdx) => (
+                            <button
+                              key={pIdx}
+                              onClick={() => handleSendMessage(item.prompt)}
+                              className="text-xs bg-white hover:bg-amber-100/80 text-stone-800 font-bold px-3.5 py-2 rounded-2xl border border-amber-300/80 whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs hover:shadow-md hover:scale-[1.02] active:scale-98 shrink-0"
+                            >
+                              {item.label}
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </React.Fragment>
                 ))}
 
                 {loadingChat && (
@@ -2414,19 +2440,6 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                   </div>
                 )}
                 <div ref={messagesEndRef} />
-              </div>
-
-              {/* Quick Prompt Chips */}
-              <div className="px-6 py-2 bg-stone-50 border-t border-slate-100 flex gap-2 overflow-x-auto">
-                {activePrompts.map((item, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleSendMessage(item.prompt)}
-                    className="text-xs bg-white hover:bg-amber-50 text-slate-700 font-medium px-3 py-1.5 rounded-xl border border-slate-200 whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                  >
-                    {item.label}
-                  </button>
-                ))}
               </div>
 
               {/* Input Footer */}
