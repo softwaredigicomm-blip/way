@@ -394,6 +394,7 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
     if ((!queryText.trim() && !selectedImage) || loadingChat) return;
 
     if (aiMinutes <= 0) {
+      alert("⚠️ Insufficient balance / No balance! Your AI Cosmic consultation minutes are exhausted. Full payment or wallet recharge as fixed by Admin is required before proceeding with report generation or consultation.");
       setShowRechargeModal(true);
       return;
     }
@@ -3002,6 +3003,18 @@ export const AIAstrologerPortal: React.FC<AIAstrologerPortalProps> = ({ user, on
                   <X size={20} />
                 </button>
               </div>
+
+              {aiMinutes <= 0 && (
+                <div className="mb-4 p-3.5 bg-red-500/10 border-2 border-red-500/30 text-red-700 dark:text-red-300 rounded-2xl text-xs font-bold flex items-start gap-2.5">
+                  <ShieldAlert size={18} className="text-red-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="uppercase tracking-wider text-[11px] font-black text-red-800 dark:text-red-200">Insufficient Balance / No Balance</p>
+                    <p className="font-medium text-[11px] text-red-700 dark:text-red-300 mt-0.5">
+                      Full payment or wallet recharge is required as fixed by Admin before proceeding with report generation or consultation under any branch of astrology. Please select a pack below to recharge.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {rechargeSuccessMsg && (
                 <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-bold flex items-center gap-2 animate-bounce">

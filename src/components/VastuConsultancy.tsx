@@ -2271,15 +2271,16 @@ export function VastuConsultancy({ user, onRecharge, onOpenChat }: VastuConsulta
                 <button
                   onClick={() => {
                     if (!user) {
-                      alert("Please login or register to book a consultation.");
+                      alert("⚠️ No balance / Not logged in! Please login or register to book a Vastu consultation.");
                       setSelectedConsultantForBooking(null);
                       return;
                     }
-                    if (onRecharge && (user.wallet_balance || 0) < 500) {
-                      alert("Insufficient wallet balance. Please recharge your wallet to confirm booking.");
-                      onRecharge();
+                    const serviceVal = selectedConsultantForBooking.price_per_min ? (selectedConsultantForBooking.price_per_min * 10) : 500;
+                    if ((user.wallet_balance || 0) < serviceVal) {
+                      alert(`⚠️ Insufficient balance / No balance! Your current wallet balance is ₹${user.wallet_balance || 0}. Full payment of ₹${serviceVal} as fixed by Admin for this consultancy service is required before confirming booking. Please recharge your wallet.`);
+                      if (onRecharge) onRecharge();
                     } else {
-                      alert(`Booking confirmed with ${selectedConsultantForBooking.name}! Your Vastu consultation is scheduled.`);
+                      alert(`🎉 Booking confirmed with ${selectedConsultantForBooking.name}! Your Vastu consultation is scheduled.`);
                       setSelectedConsultantForBooking(null);
                     }
                   }}
@@ -2440,9 +2441,9 @@ export function VastuConsultancy({ user, onRecharge, onOpenChat }: VastuConsulta
                       alert("Please enter a valid WhatsApp or contact number for appointment coordination.");
                       return;
                     }
-                    if (onRecharge && (user.wallet_balance || 0) < selectedPackageForBooking.price) {
-                      alert(`Insufficient wallet balance (₹${user.wallet_balance || 0}). Please recharge your wallet with ₹${selectedPackageForBooking.price - (user.wallet_balance || 0)} or more.`);
-                      onRecharge();
+                    if ((user.wallet_balance || 0) < selectedPackageForBooking.price) {
+                      alert(`⚠️ Insufficient balance / No balance! Your current wallet balance is ₹${user.wallet_balance || 0}. Full payment of ₹${selectedPackageForBooking.price} as fixed by Admin for package '${selectedPackageForBooking.name}' is required. Please recharge your wallet.`);
+                      if (onRecharge) onRecharge();
                     } else {
                       alert(`🎉 Success! You have booked the '${selectedPackageForBooking.name}' for ₹${selectedPackageForBooking.price}. Your assigned ${selectedPackageForBooking.consultantLevel} will contact you on ${packageBookingPhone} shortly!`);
                       setSelectedPackageForBooking(null);

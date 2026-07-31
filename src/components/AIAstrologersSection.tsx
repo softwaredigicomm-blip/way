@@ -386,7 +386,7 @@ export const AIAstrologersSection: React.FC<AIAstrologersSectionProps> = ({ user
     if (!activeChatPersona) return;
 
     if (aiMinutesRemaining <= 0) {
-      alert("⚠️ Your AI Consultation duration has exhausted! Please recharge your wallet or AI Cosmic minutes to continue chatting with this specialist.");
+      alert("⚠️ Insufficient balance / No balance! Your AI Consultation duration has exhausted. Full payment or wallet recharge as fixed by Admin is required before proceeding with report generation or consultation. Please recharge your wallet.");
       if (onRecharge) onRecharge();
       return;
     }

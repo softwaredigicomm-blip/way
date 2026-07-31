@@ -1981,8 +1981,39 @@ function Kundli({ user, onViewPackages }: { user: UserType | null, onViewPackage
 
   const generateReport = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!user) {
+      alert("⚠️ No balance / Not logged in! Please login or register and recharge your wallet to proceed with Kundli & Match Making report generation.");
+      return;
+    }
+
+    const reportFee = 100; // Fixed value for report generation by Admin
+    const userBalance = user.wallet_balance || 0;
+
+    if (!hasPremiumAccess && userBalance < reportFee) {
+      alert(`⚠️ Insufficient balance / No balance! Your current wallet balance is ₹${userBalance}. Full payment of ₹${reportFee} as fixed by Admin (or an active Kundli package) is required before generating this astrological report. Please recharge your wallet or purchase a package to proceed.`);
+      if (onViewPackages) onViewPackages();
+      return;
+    }
+
     setLoading(true);
     setReport(null);
+
+    if (!hasPremiumAccess) {
+      try {
+        await localFetch('/api/user/deduct-wallet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: user.email,
+            amount: reportFee,
+            description: `Astrological Report Generation Fee (${activeTab === 'making' ? 'Vedic Kundli' : 'Compatibility Match Making'})`
+          })
+        });
+      } catch (err) {
+        console.error("Wallet deduction error:", err);
+      }
+    }
 
     const prompt = activeTab === 'making' 
       ? `Generate a comprehensive and highly detailed Vedic Kundli report for:
@@ -6875,8 +6906,8 @@ function Puja({ user, onRegisterPandit, onBooked }: { user?: UserType | null, on
     const qty = Number(bookingForm.quantity) || 1;
     const totalAmount = selectedPandit.listed_rate * qty;
 
-    if (user.wallet_balance < totalAmount) {
-      alert(`Insufficient wallet balance (₹${user.wallet_balance}). Total rate for ${qty} quantity is ₹${totalAmount}. Please recharge your wallet.`);
+    if ((user.wallet_balance || 0) < totalAmount) {
+      alert(`⚠️ Insufficient balance / No balance! Your current wallet balance is ₹${user.wallet_balance || 0}. Full payment of ₹${totalAmount} as fixed by Admin for this service booking (${qty} × ₹${selectedPandit.listed_rate}) is required before proceeding. Please recharge your wallet.`);
       return;
     }
 
@@ -7082,9 +7113,24 @@ function Puja({ user, onRegisterPandit, onBooked }: { user?: UserType | null, on
                 <p className="text-sm text-slate-600 line-clamp-3">{service.description}</p>
                 <div className="flex items-center justify-between">
                   <span className="text-red-700 font-bold text-sm">Price: ₹{service.price}</span>
-                  <button onClick={() => {
-                    if (!user) { alert("Please login to book this package."); return; }
-                    alert(`Booking package "${service.name}" for ₹${service.price}. Please check your bookings in profile.`);
+                  <button onClick={async () => {
+                    if (!user) { alert("⚠️ No balance / Not logged in! Please login or register to book this package."); return; }
+                    const userBal = user.wallet_balance || 0;
+                    if (userBal < service.price) {
+                      alert(`⚠️ Insufficient balance / No balance! Your current wallet balance is ₹${userBal}. Full payment of ₹${service.price} as fixed by Admin for package "${service.name}" is required before booking. Please recharge your wallet.`);
+                      return;
+                    }
+                    try {
+                      await localFetch('/api/user/deduct-wallet', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: user.email, amount: service.price, description: `Puja Package Booking: ${service.name}` })
+                      });
+                      alert(`🎉 Success! Full payment of ₹${service.price} received. Package "${service.name}" is booked successfully. Please check your bookings in profile.`);
+                      fetchUser(user.email);
+                    } catch (e) {
+                      alert("⚠️ Booking failed due to processing error. Please check your wallet balance.");
+                    }
                   }} className="bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-red-800 transition-colors">
                     BOOK NOW
                   </button>
