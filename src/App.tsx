@@ -257,20 +257,22 @@ export default function App() {
       )}
 
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 glass px-4 py-3 flex items-center justify-between">
+      <nav className="sticky top-0 z-50 header-image1-bg px-4 py-3 flex items-center justify-between text-white">
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('home')}>
-          <div className="w-10 h-10 bg-saffron rounded-full flex items-center justify-center text-white shadow-lg">
-            <Sparkles size={24} />
+          <div className="w-10 h-10 bg-gradient-to-br from-amber-500 via-saffron to-amber-600 rounded-full flex items-center justify-center text-white shadow-lg ring-2 ring-amber-300/40">
+            <Sparkles size={22} />
           </div>
-          <span className="text-2xl font-serif font-bold text-deep-blue tracking-tight">AstroWay</span>
+          <span className="text-2xl font-serif font-black text-white tracking-tight drop-shadow-md">AstroWay</span>
         </div>
 
-        <div className="hidden md:flex items-center gap-6 lg:gap-7 text-xs lg:text-sm font-medium text-slate-600">
+        <div className="hidden md:flex items-center gap-5 lg:gap-6 text-xs lg:text-sm font-semibold text-amber-100/90">
           {['Home', 'Daily Panchang', 'Horoscope', 'Kundli', 'Chat', 'Puja', 'Shop', 'Packages', 'AI', 'Vastu'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab.toLowerCase())}
-              className={`hover:text-saffron transition-colors ${activeTab === tab.toLowerCase() ? 'text-saffron border-b-2 border-saffron' : ''}`}
+              className={`hover:text-amber-300 transition-all duration-200 py-1 ${
+                activeTab === tab.toLowerCase() ? 'text-amber-300 font-extrabold border-b-2 border-amber-400 drop-shadow-sm' : ''
+              }`}
             >
               {tab}
             </button>
@@ -278,7 +280,7 @@ export default function App() {
           {user?.role === 'admin' && (
             <button
               onClick={() => setActiveTab('admin')}
-              className={`hover:text-saffron transition-colors ${activeTab === 'admin' ? 'text-saffron border-b-2 border-saffron' : ''}`}
+              className={`hover:text-amber-300 transition-all duration-200 py-1 ${activeTab === 'admin' ? 'text-amber-300 font-extrabold border-b-2 border-amber-400' : ''}`}
             >
               Admin
             </button>
@@ -286,14 +288,14 @@ export default function App() {
           {user?.role === 'vendor' ? (
             <button
               onClick={() => setActiveTab('vendor-panel')}
-              className={`hover:text-saffron transition-colors ${activeTab === 'vendor-panel' ? 'text-saffron border-b-2 border-saffron' : ''}`}
+              className={`hover:text-amber-300 transition-all duration-200 py-1 ${activeTab === 'vendor-panel' ? 'text-amber-300 font-extrabold border-b-2 border-amber-400' : ''}`}
             >
               Vendor Panel
             </button>
           ) : user?.role === 'user' && (
             <button
               onClick={() => setActiveTab('vendor-register')}
-              className={`hover:text-saffron transition-colors ${activeTab === 'vendor-register' ? 'text-saffron border-b-2 border-saffron' : ''}`}
+              className={`hover:text-amber-300 transition-all duration-200 py-1 ${activeTab === 'vendor-register' ? 'text-amber-300 font-extrabold border-b-2 border-amber-400' : ''}`}
             >
               Become a Vendor
             </button>
@@ -303,10 +305,10 @@ export default function App() {
         <div className="flex items-center gap-3 sm:gap-4">
           <button
             onClick={() => setShowLangModal(true)}
-            className="flex items-center gap-1.5 bg-gradient-to-r from-red-950 to-slate-900 hover:from-saffron hover:to-amber-600 text-white px-3 py-1.5 rounded-full text-xs font-bold transition-all border border-amber-500/40 shadow-sm cursor-pointer"
+            className="flex items-center gap-1.5 bg-purple-950/70 hover:bg-purple-900/90 text-amber-100 px-3 py-1.5 rounded-full text-xs font-bold transition-all border border-amber-400/40 shadow-sm cursor-pointer"
             title="Auto Translation • North & South Indian Languages"
           >
-            <Languages size={14} className="text-amber-400 shrink-0" />
+            <Languages size={14} className="text-amber-300 shrink-0" />
             <span className="text-sm">{currentLang.flag}</span>
             <span className="hidden sm:inline font-sans">{currentLang.nativeName}</span>
             <span className="sm:hidden font-sans">{currentLang.code.toUpperCase()}</span>
@@ -314,50 +316,50 @@ export default function App() {
           {isUserAuthenticated && (
             <button
               onClick={() => setActiveTab('profile')}
-              className="flex items-center gap-1.5 bg-green-500/10 hover:bg-green-500/20 text-green-700 dark:text-green-400 px-3 py-1.5 rounded-full text-xs font-black transition-all border border-green-500/20 shadow-sm"
+              className="flex items-center gap-1.5 bg-emerald-950/70 hover:bg-emerald-900/80 text-emerald-300 px-3 py-1.5 rounded-full text-xs font-black transition-all border border-emerald-500/40 shadow-sm"
               title="Click to view Instantaneous Wallet Balance & Ledger"
             >
-              <Wallet size={14} className="text-green-600 shrink-0" />
+              <Wallet size={14} className="text-emerald-400 shrink-0" />
               <span>₹{user?.wallet_balance || 0}</span>
             </button>
           )}
           <button
             onClick={() => setShowExpressQuestions(true)}
-            className="hidden sm:flex items-center gap-1 bg-gradient-to-r from-saffron to-amber-600 hover:from-amber-600 hover:to-saffron text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-md hover:shadow-lg transition-all"
+            className="hidden sm:flex items-center gap-1 bg-gradient-to-r from-amber-500 to-saffron hover:from-saffron hover:to-amber-500 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-md hover:shadow-lg transition-all border border-amber-300/30"
           >
             <Sparkles size={13} /> Ask 3 Qs (₹50)
           </button>
           {!isUserAuthenticated && (
             <button 
               onClick={() => setActiveTab('chat')} 
-              className="text-sm font-bold text-saffron hover:underline"
+              className="text-sm font-bold text-amber-300 hover:text-white hover:underline"
             >
               Login
             </button>
           )}
           <button 
             onClick={() => setActiveTab('astrologer')} 
-            className="text-sm font-bold text-deep-blue hover:underline hidden lg:block"
+            className="text-sm font-bold text-amber-100 hover:text-amber-300 hover:underline hidden lg:block"
           >
             Astrologer Panel
           </button>
           <button 
             onClick={() => setActiveTab('admin')}
-            className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-600"
+            className="p-2 hover:bg-white/10 rounded-full transition-colors text-amber-100 hover:text-amber-300"
             title="Admin Panel"
           >
             <LayoutDashboard size={20} />
           </button>
           <button 
             onClick={() => setActiveTab('profile')}
-            className="p-2 hover:bg-slate-100 rounded-full transition-colors relative"
+            className="p-2 hover:bg-white/10 rounded-full transition-colors relative text-amber-100 hover:text-amber-300"
             title="User Profile & Ledger"
           >
-            <User size={20} className="text-slate-600" />
-            {isUserAuthenticated && <span className="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full" />}
+            <User size={20} />
+            {isUserAuthenticated && <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-400 rounded-full" />}
           </button>
-          <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            {isMenuOpen ? <X /> : <Menu />}
+          <button className="md:hidden text-amber-100 p-1" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </nav>
@@ -369,14 +371,14 @@ export default function App() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="md:hidden glass absolute top-16 left-0 right-0 p-4 z-40 flex flex-col gap-4"
+            className="md:hidden header-image1-bg absolute top-16 left-0 right-0 p-5 z-40 flex flex-col gap-3 shadow-2xl border-b border-amber-500/40 text-amber-100"
           >
             <button
               onClick={() => {
                 setShowLangModal(true);
                 setIsMenuOpen(false);
               }}
-              className="text-left py-2.5 text-base font-bold text-red-700 flex items-center gap-2 border-b border-slate-100"
+              className="text-left py-2.5 text-base font-bold text-amber-300 flex items-center gap-2 border-b border-amber-500/30"
             >
               <Languages size={18} className="text-saffron" />
               <span>🌐 Auto Translation ({currentLang.nativeName})</span>
@@ -388,7 +390,9 @@ export default function App() {
                   setActiveTab(tab.toLowerCase());
                   setIsMenuOpen(false);
                 }}
-                className="text-left py-2 text-lg font-medium border-b border-slate-100"
+                className={`text-left py-2 text-lg font-medium border-b border-amber-500/20 hover:text-amber-300 ${
+                  activeTab === tab.toLowerCase() ? 'text-amber-300 font-extrabold' : ''
+                }`}
               >
                 {tab}
               </button>
@@ -398,7 +402,7 @@ export default function App() {
                 setActiveTab('astrologer');
                 setIsMenuOpen(false);
               }}
-              className="text-left py-2 text-lg font-medium border-b border-slate-100 text-deep-blue"
+              className="text-left py-2 text-lg font-medium border-b border-amber-500/20 text-amber-200"
             >
               Astrologer Panel
             </button>
