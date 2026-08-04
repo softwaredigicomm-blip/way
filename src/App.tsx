@@ -1115,7 +1115,7 @@ function Home({ astrologers, testimonials, banners, onOpenExpress, onOpenKundli,
           <strong className="text-amber-300 font-bold">100% Verified Presence:</strong> All Astrologers & Scholars Legally Bound by Pre-Presence Declaration
         </span>
         <span className="hidden md:inline text-purple-400">•</span>
-        <span className="text-slate-200">⚡ 100,000+ Consultations Completed</span>
+        <span className="text-slate-200">⚡ Trusted Expert Astrological Guidance</span>
         <span className="hidden md:inline text-purple-400">•</span>
         <span className="text-amber-300 font-semibold">🔒 Encrypted 24/7 Counseling</span>
       </div>
